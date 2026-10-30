@@ -3,9 +3,29 @@ import RecuperacionLayout from '../layouts/RecuperacionLayout';
 import Field from '../components/Field';
 import Button from '../components/Button';
 import InfoBox from '../components/InfoBox';
-import ImagenNoEncontrada from '../components/ImagenNoEncontrada';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { requestPasswordReset } from '../services/authService';
 
 export default function RecuperarAccesoPage() {
+  const navigate = useNavigate();
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      await requestPasswordReset(new FormData(event.currentTarget).get('correo'));
+      navigate('/instrucciones-recuperacion');
+    } catch (submitError) {
+      setError(submitError.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <RecuperacionLayout
       paso={1}
@@ -13,7 +33,6 @@ export default function RecuperarAccesoPage() {
       subtitulo="Solicita un enlace para crear una nueva contraseña."
       lateral={
         <>
-          <ImagenNoEncontrada className="h-[260px] w-full rounded-2xl" />
           <h2 className="mt-5 text-heading-sm font-semibold text-text">El Llano nos mueve.</h2>
           <p className="mt-3 text-label text-text-muted">Tu cuenta reúne tus equipos, favoritos y valoraciones.</p>
           <InfoBox title="Cuida tu acceso" className="mt-5">
@@ -27,10 +46,13 @@ export default function RecuperarAccesoPage() {
         <p className="mt-3 text-label text-text-muted md:text-body">
           Escribe el correo que usas en Rentia. Si está asociado a una cuenta, recibirás las instrucciones.
         </p>
-        <form className="mt-5 space-y-3">
-          <Field id="correo" label="Correo electrónico" type="email" defaultValue="maria.lopez@correo.com" trailingIcon={Mail} />
-          <Button type="submit" size="lg" fullWidth icon={ArrowRight}>Enviar enlace de recuperación</Button>
+        <form className="mt-5 space-y-3" onSubmit={handleSubmit}>
+          <Field id="correo" name="correo" label="Correo electrónico" type="email" required autoComplete="email" trailingIcon={Mail} />
+          <Button type="submit" size="lg" fullWidth icon={ArrowRight} disabled={submitting}>
+            {submitting ? 'Enviando...' : 'Enviar enlace de recuperación'}
+          </Button>
           <Button as="a" href="/ingresar" variant="secondary" size="lg" fullWidth>Volver a ingresar</Button>
+          {error && <p role="alert" className="text-small text-danger">{error}</p>}
         </form>
       </section>
 

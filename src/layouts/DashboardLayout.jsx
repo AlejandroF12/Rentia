@@ -3,10 +3,15 @@ import { CircleHelp, LogOut, ArrowUpRight } from 'lucide-react';
 import Avatar from '../components/Avatar';
 import { menusLaterales } from '../data/menuLateral';
 import { getUser } from '../data/users';
+import { useAuth } from '../context/AuthContext';
 
 /** Barra bajo el navbar en móvil: "Arrendador | Carlos Rojas". */
 function BarraRol({ rol, className = '' }) {
-  const usuario = getUser(rol);
+  const { profile } = useAuth();
+  const usuarioDemo = getUser(rol);
+  const usuario = profile
+    ? { label: rol === 'cliente' ? 'Cliente' : 'Arrendador', name: profile.full_name }
+    : usuarioDemo;
   return (
     <div className={`flex h-10 items-center justify-between border-b border-border bg-surface px-5 text-small ${className}`}>
       <span className="font-semibold text-text">{usuario.label}</span>

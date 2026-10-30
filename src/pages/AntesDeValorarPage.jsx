@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { PaginaCuenta } from '../layouts/DashboardLayout';
+import DashboardLayout from '../layouts/DashboardLayout';
 import PageHeader from '../components/PageHeader';
 import Avatar from '../components/Avatar';
 import Button from '../components/Button';
@@ -33,9 +33,9 @@ function BloqueNormas({ titulo, children, boton }) {
 /** Política de valoraciones (paso previo a valorar). */
 export default function AntesDeValorarPage() {
   return (
-    <PaginaCuenta rol="cliente">
+    <DashboardLayout rol="cliente" activo="valoraciones">
       <PageHeader
-        volver={{ to: '/perfil-publico', texto: 'Volver al perfil de Carlos' }}
+        volver={{ to: '/cliente/valoraciones', texto: 'Volver a mis valoraciones' }}
         eyebrow="Política de valoraciones"
         titulo="La confianza empieza por la honestidad."
         subtitulo="Antes de valorar, confirma que conoces la experiencia que vas a compartir."
@@ -65,7 +65,7 @@ export default function AntesDeValorarPage() {
 
             <div className="mt-5 space-y-3">
               <Button as={Link} to="/valoraciones/cliente-a-arrendador" size="lg" icon={ArrowRight} fullWidth>Continuar a valorar</Button>
-              <Button as={Link} to="/perfil-publico" variant="secondary" size="lg" fullWidth>No he tenido contacto · Volver</Button>
+              <Button as={Link} to="/cliente/valoraciones" variant="secondary" size="lg" fullWidth>No he tenido contacto · Volver</Button>
             </div>
           </Card>
 
@@ -96,6 +96,6 @@ export default function AntesDeValorarPage() {
           </Card>
         </aside>
       </div>
-    </PaginaCuenta>
+    </DashboardLayout>
   );
 }

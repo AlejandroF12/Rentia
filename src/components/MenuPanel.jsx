@@ -3,26 +3,49 @@ import Avatar from './Avatar';
 import Badge from './Badge';
 import Button from './Button';
 import { menus } from '../data/menuConfig';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 /** Contenido de cada menú según el rol. `activo` marca el ítem resaltado. */
 export default function MenuPanel({ variant = 'public', onClose }) {
+  const { profile, signOut } = useAuth();
+  const { pathname } = useLocation();
   const m = menus[variant];
-  const handleItemClick = (event, item) => {
+  const user = m.usuario && profile
+    ? {
+      ...m.usuario,
+      nombre: profile.full_name,
+      detalle: profile.municipality ? `${profile.role === 'cliente' ? 'Cliente' : 'Arrendador'} · ${profile.municipality}` : m.usuario.detalle,
+    }
+    : m.usuario;
+  const activeItem = m.items
+    .filter((item) => (
+      item.href
+      && !item.salida
+      && (pathname === item.href || pathname.startsWith(`${item.href}/`))
+    ))
+    .sort((first, second) => second.href.length - first.href.length)[0];
+  const handleItemClick = async (event, item) => {
     if (item.salida) {
-      window.localStorage.removeItem('rentia.demoUser');
+      event.preventDefault();
+      const { error } = await signOut();
+      if (error) {
+        console.error(`No se pudo cerrar la sesión: ${error.message}`);
+        return;
+      }
+      window.location.assign('/');
     }
     onClose?.();
   };
 
   return (
     <div className="w-full bg-surface p-5 shadow-[0_8px_24px_var(--color-shadow-alpha-7)] md:w-[348px] md:rounded-2xl md:border md:border-border">
-      {m.usuario ? (
+      {user ? (
         <div className="flex items-center gap-3">
-          {!m.usuario.sinAvatar && <Avatar className="size-14" />}
+          {!user.sinAvatar && <Avatar className="size-14" />}
           <div>
-            <p className={`text-heading-sm text-text ${m.usuario.sinAvatar ? '' : 'font-semibold'}`}>{m.usuario.nombre}</p>
-            {m.usuario.detalle && <p className="text-small text-text-muted">{m.usuario.detalle}</p>}
+            <p className={`text-heading-sm text-text ${user.sinAvatar ? '' : 'font-semibold'}`}>{user.nombre}</p>
+            {user.detalle && <p className="text-small text-text-muted">{user.detalle}</p>}
           </div>
         </div>
       ) : (
@@ -41,7 +64,9 @@ export default function MenuPanel({ variant = 'public', onClose }) {
               to={item.href ?? '#'}
               onClick={(event) => handleItemClick(event, item)}
               className={`flex h-12 items-center justify-between rounded-lg px-4 text-body ${
-                item.activo ? 'bg-primary font-semibold text-primary-foreground' : 'text-text hover:bg-surface-muted'
+                item === activeItem || (!activeItem && item.activo)
+                  ? 'bg-primary font-semibold text-primary-foreground'
+                  : 'text-text hover:bg-surface-muted'
               }`}
             >
               <span className="inline-flex items-center gap-1.5">

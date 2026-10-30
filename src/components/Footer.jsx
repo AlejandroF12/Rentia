@@ -1,11 +1,7 @@
 import Logo from './Logo';
+import { Link } from 'react-router-dom';
 
-/**
- * links: texto de enlaces legales. copyright: texto de derechos.
- * Ej. perfil público: links="Privacidad · Términos · Normas · Ayuda"
- */
 export default function Footer({
-  links = 'Privacidad · Términos · Ayuda',
   copyright = '© 2026 Rentia',
   className = '',
 }) {
@@ -19,7 +15,11 @@ export default function Footer({
         </div>
         <div className="mt-8 flex flex-col gap-3 text-small text-text-muted md:flex-row md:items-center md:justify-between">
           <p>{copyright}</p>
-          <p>{links}</p>
+          <nav aria-label="Información legal" className="flex flex-wrap gap-x-4 gap-y-2">
+            <Link to="/privacidad" className="hover:text-text">Privacidad</Link>
+            <Link to="/terminos" className="hover:text-text">Términos</Link>
+            <Link to="/normas" className="hover:text-text">Normas</Link>
+          </nav>
         </div>
       </div>
     </footer>

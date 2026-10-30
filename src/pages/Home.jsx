@@ -176,7 +176,7 @@ export const Home = () => {
             {/* Sección CTA */}
             <section className='w-full h-auto'>
                 <div className='mx-auto w-full max-w-[90rem] flex flex-col gap-10 px-4 pb-12 sm:px-8 lg:gap-12 lg:px-16 lg:pb-16'>
-                    <div className='w-full grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-4'>
+                    <div id='como-funciona' className='w-full scroll-mt-6 grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-4'>
                         <div className='flex gap-[1rem]'>
                             <div>
                                 <span className='text-success text-label font-semibold'>01</span>

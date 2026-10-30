@@ -1,4 +1,4 @@
-import { MapPin, Star, Heart, Share2, Images, MessageCircle, Phone, ArrowUpRight, Flag } from 'lucide-react';
+import { MapPin, Heart, Share2, Images, MessageCircle, Phone, ArrowUpRight, Flag } from 'lucide-react';
 import Breadcrumb from '../components/Breadcrumb';
 import Button from '../components/Button';
 import Avatar from '../components/Avatar';
@@ -7,17 +7,14 @@ import { EstadoBadge } from '../components/Badge';
 import StarRating from '../components/StarRating';
 import InfoBox from '../components/InfoBox';
 import MapaEstatico from '../components/MapaEstatico';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { loadEquipmentById } from '../services/equipmentService';
 
-const ficha = [
-  ['Marca', 'Caterpillar'],
-  ['Modelo', '420F · 2018'],
-  ['Potencia', '93 HP'],
-  ['Tracción', '4 × 4'],
-  ['Peso operativo', '8,4 toneladas'],
-  ['Operador', 'Consultar con Carlos'],
-];
-
-function TarjetaPropietario() {
+function TarjetaPropietario({ owner }) {
+  const phone = owner?.phone || '';
+  const phoneDigits = phone.replace(/\D/g, '');
+  const ownerName = owner?.full_name || 'Propietario de Rentia';
   return (
     <div className="rounded-2xl border border-border bg-surface p-5">
       <p className="text-caption font-medium uppercase tracking-wide text-text-muted">Habla con el propietario</p>
@@ -25,29 +22,26 @@ function TarjetaPropietario() {
       <div className="mt-4 flex items-center gap-3">
         <Avatar className="size-12" />
         <div>
-          <p className="text-body-lg font-semibold text-text">Carlos Rojas</p>
-          <p className="text-small text-text-muted">Arrendador · Yopal</p>
-          <p className="mt-0.5 inline-flex items-center gap-1 text-small text-text">
-            <Star size={12} fill="currentColor" strokeWidth={0} aria-hidden="true" /> 4,9 · 24 valoraciones
-          </p>
+          <p className="text-body-lg font-semibold text-text">{ownerName}</p>
+          <p className="text-small text-text-muted">Arrendador · {owner?.municipality || 'Casanare'}</p>
         </div>
       </div>
 
       <p className="mt-4 text-small text-text-muted">En Rentia desde marzo de 2024</p>
 
       <div className="mt-4 space-y-3">
-        <Button as="a" href="https://wa.me/573104567820" target="_blank" rel="noreferrer" size="lg" fullWidth icon={MessageCircle} trailingIcon={ArrowUpRight}>
+        <Button as="a" href={phoneDigits ? `https://wa.me/${phoneDigits}` : '#'} target="_blank" rel="noreferrer" size="lg" fullWidth icon={MessageCircle} trailingIcon={ArrowUpRight} disabled={!phoneDigits}>
           Contactar por WhatsApp
         </Button>
-        <Button as="a" href="tel:+573104567820" variant="secondary" size="lg" fullWidth icon={Phone} trailingIcon={ArrowUpRight}>
-          Llamar a Carlos
+        <Button as="a" href={phone ? `tel:${phone}` : '#'} variant="secondary" size="lg" fullWidth icon={Phone} trailingIcon={ArrowUpRight} disabled={!phone}>
+          Llamar a {ownerName}
         </Button>
       </div>
 
-      <p className="mt-4 text-center text-small text-text-muted">+57 310 456 7820</p>
+      <p className="mt-4 text-center text-small text-text-muted">{phone || 'Teléfono no autorizado'}</p>
 
       <InfoBox icon={ArrowUpRight} className="mt-4">
-        El contacto y la negociación son directos con Carlos, fuera de Rentia.
+        El contacto y la negociación son directos con el propietario, fuera de Rentia.
       </InfoBox>
 
       <a href="/perfil-publico" className="mt-4 inline-block text-small font-semibold text-text">Ver perfil y valoraciones →</a>
@@ -60,6 +54,35 @@ function TarjetaPropietario() {
 }
 
 export default function DetalleEquipoPage() {
+  const [searchParams] = useSearchParams();
+  const equipmentId = searchParams.get('id');
+  const [equipment, setEquipment] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!equipmentId) {
+      return;
+    }
+    loadEquipmentById(equipmentId).then(setEquipment).catch((loadError) => setError(loadError.message));
+  }, [equipmentId]);
+
+  if (!equipmentId) {
+    return <main className="mx-auto max-w-[1440px] px-5 py-16 text-danger">No se indicó el equipo que deseas consultar.</main>;
+  }
+  if (error) {
+    return <main className="mx-auto max-w-[1440px] px-5 py-16 text-danger">{error}</main>;
+  }
+  if (!equipment) {
+    return <main className="mx-auto max-w-[1440px] px-5 py-16 text-text-muted">Cargando equipo...</main>;
+  }
+
+  const owner = equipment.owner;
+  const fichaReal = [
+    ['Marca', equipment.brand || 'No especificada'],
+    ['Modelo', equipment.model || equipment.model_year || 'No especificado'],
+    ['Característica', equipment.main_feature || 'Consultar con el propietario'],
+  ];
+
   return (
     <div className="min-h-screen bg-surface font-sans text-text">
       <main className="mx-auto max-w-[1440px] px-5 pb-16 pt-6 md:px-8 lg:px-16">
@@ -77,13 +100,12 @@ export default function DetalleEquipoPage() {
 
         {/* Encabezado */}
         <div className="mt-5 flex items-center gap-3">
-          <p className="text-caption font-medium uppercase tracking-wide text-text-muted">Movimiento de tierra</p>
-          <EstadoBadge disponible />
+          <p className="text-caption font-medium uppercase tracking-wide text-text-muted">{equipment.category}</p>
+          <EstadoBadge disponible={equipment.is_available} />
         </div>
-        <h1 className="mt-3 text-title-mobile font-semibold text-text md:text-title-desktop">Retroexcavadora CAT 420F</h1>
+        <h1 className="mt-3 text-title-mobile font-semibold text-text md:text-title-desktop">{equipment.name}</h1>
         <div className="mt-3 flex flex-col gap-1 text-label text-text-muted md:flex-row md:items-center md:gap-6">
-          <span className="inline-flex items-center gap-1.5"><MapPin size={14} aria-hidden="true" /> Yopal, Casanare · a 5 km</span>
-          <span className="inline-flex items-center gap-1.5"><Star size={12} fill="currentColor" strokeWidth={0} aria-hidden="true" /> 4,9 · 24 valoraciones del arrendador</span>
+          <span className="inline-flex items-center gap-1.5"><MapPin size={14} aria-hidden="true" /> {equipment.municipality}</span>
         </div>
 
         {/* Galería */}
@@ -103,18 +125,15 @@ export default function DetalleEquipoPage() {
         {/* Contenido + propietario */}
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_340px] lg:gap-12">
           <aside className="lg:col-start-2 lg:row-start-1">
-            <TarjetaPropietario />
+            <TarjetaPropietario owner={owner} />
           </aside>
 
           <div className="min-w-0 lg:col-start-1 lg:row-start-1">
-            <h2 className="text-heading-md font-semibold text-text md:text-heading-lg">Lista para tu próximo proyecto.</h2>
-            <p className="mt-3 text-body-lg text-text-muted">
-              Retroexcavadora en excelente estado para excavación, movimiento de tierra y adecuación de terrenos.
-              Disponible en Yopal y municipios cercanos. Consulta con Carlos las condiciones de operación y traslado.
-            </p>
+            <h2 className="text-heading-md font-semibold text-text md:text-heading-lg">{equipment.name}</h2>
+                <p className="mt-3 text-body-lg text-text-muted">{equipment.description}</p>
 
             <dl className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
-              {ficha.map(([etiqueta, valor]) => (
+              {fichaReal.map(([etiqueta, valor]) => (
                 <div key={etiqueta} className="rounded-lg bg-background p-4">
                   <dt className="text-small text-text-muted">{etiqueta}</dt>
                   <dd className="mt-1 text-label font-semibold text-text">{valor}</dd>

@@ -1,11 +1,12 @@
 import { Star } from 'lucide-react';
 
 /** Cinco estrellas llenas (valor visual fijo por ahora). */
-export default function StarRating({ size = 16, className = '' }) {
+export default function StarRating({ size = 16, className = '', value = 5 }) {
+  const roundedValue = Math.round(value);
   return (
-    <div className={`flex gap-0.5 text-accent ${className}`} aria-label="5 de 5 estrellas">
+    <div className={`flex gap-0.5 text-accent ${className}`} aria-label={`${value} de 5 estrellas`}>
       {Array.from({ length: 5 }).map((_, i) => (
-        <Star key={i} size={size} fill="currentColor" strokeWidth={0} aria-hidden="true" />
+        <Star key={i} size={size} fill={i < roundedValue ? 'currentColor' : 'none'} strokeWidth={i < roundedValue ? 0 : 1.5} aria-hidden="true" />
       ))}
     </div>
   );

@@ -1,14 +1,15 @@
 import { MapPin } from 'lucide-react';
 import Logo from '../components/Logo';
-import ImagenNoEncontrada from '../components/ImagenNoEncontrada';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { Link } from 'react-router-dom';
+import regLogImage from '../media/regLogImage.webp';
 
 /** Panel izquierdo con foto (solo escritorio). */
 function PanelEditorial() {
   return (
     <aside className="relative hidden overflow-hidden lg:block">
-      <ImagenNoEncontrada className="absolute inset-0 size-full" />
+      <img src={regLogImage} alt="Equipo de trabajo en Casanare" className="absolute inset-0 size-full object-cover" />
       <div className="absolute inset-0 bg-linear-to-t from-overlay-editorial via-overlay/20 to-transparent" aria-hidden="true" />
       <div className="relative flex h-full flex-col justify-between p-10 text-text-inverse">
         <Logo inverse />
@@ -50,8 +51,10 @@ export default function AuthLayout({ enlaceSuperior, children }) {
             <Link to={enlaceSuperior === 'Ya tengo cuenta' ? '/ingresar' : '/crear-cuenta'} className="hidden text-label font-semibold text-text lg:block">{enlaceSuperior}</Link>
           </div>
 
+          <img src={regLogImage} alt="Equipo de trabajo en Casanare" className="mt-6 aspect-[2/1] w-full rounded-2xl object-cover lg:hidden" />
           <div className="mt-8 flex-1 lg:flex lg:flex-col lg:justify-center">{children}</div>
         </div>
+        <Footer />
       </div>
     </div>
   );

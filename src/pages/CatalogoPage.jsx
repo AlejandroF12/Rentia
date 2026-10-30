@@ -1,10 +1,12 @@
 import { Search, MapPin, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import Breadcrumb from '../components/Breadcrumb';
 import Button from '../components/Button';
 import Checkbox from '../components/Checkbox';
 import Pagination from '../components/Pagination';
 import EquipoCard from '../components/EquipoCard';
-import { equipos, tiposEquipo } from '../data/muestra';
+import { tiposEquipo } from '../data/muestra';
+import { loadPublishedEquipment } from '../services/equipmentService';
 
 function Filtros() {
   return (
@@ -66,6 +68,26 @@ function ChipSelect({ children }) {
 }
 
 export default function CatalogoPage() {
+  const [equipment, setEquipment] = useState([]);
+  const [search, setSearch] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    loadPublishedEquipment().then(setEquipment).catch((loadError) => setError(loadError.message));
+  }, []);
+
+  const visibleEquipment = useMemo(() => equipment
+    .filter((item) => `${item.name} ${item.category} ${item.municipality}`.toLowerCase().includes(search.toLowerCase()))
+    .map((item) => ({
+      ...item,
+      nombre: item.name,
+      categoria: item.category,
+      lugar: item.municipality,
+      distancia: 'ubicación aproximada',
+      puntaje: '—',
+      disponible: item.is_available,
+    })), [equipment, search]);
+
   return (
     <div className="min-h-screen bg-background font-sans text-text">
       <main className="mx-auto max-w-[1440px] px-5 pb-16 pt-6 md:px-8 lg:px-16 lg:pt-8">
@@ -78,12 +100,15 @@ export default function CatalogoPage() {
         <p className="mt-2 text-body-lg text-text-muted">Maquinaria y vehículos de propietarios de Casanare.</p>
 
         {/* Buscador */}
-        <form role="search" className="mt-8 flex items-center gap-3 rounded-2xl bg-surface-muted p-3 md:pl-5">
+        <form role="search" className="mt-8 flex items-center gap-3 rounded-2xl bg-surface-muted p-3 md:pl-5" onSubmit={(event) => event.preventDefault()}>
           <Search size={18} aria-hidden="true" className="hidden shrink-0 text-text-muted sm:block" />
           <input
             type="search"
             aria-label="Buscar maquinaria o vehículo"
+            name="busqueda"
             placeholder="Buscar maquinaria o vehículo"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
             className="h-10 min-w-0 flex-1 bg-transparent px-2 text-body text-text placeholder:text-text-muted focus:outline-none"
           />
           <span className="hidden text-label text-text lg:block">Yopal, Casanare</span>
@@ -112,7 +137,7 @@ export default function CatalogoPage() {
 
           <section aria-labelledby="resultados">
             <div className="flex items-center justify-between">
-              <h2 id="resultados" className="text-label text-text md:text-body">18 equipos cerca de Yopal</h2>
+              <h2 id="resultados" className="text-label text-text md:text-body">{visibleEquipment.length} equipos publicados</h2>
               <button type="button" className="inline-flex items-center gap-2 text-small text-text-muted">
                 Más cercanos <ChevronDown size={14} aria-hidden="true" />
               </button>
@@ -124,7 +149,9 @@ export default function CatalogoPage() {
             </div>
 
             <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {equipos.map((equipo) => (
+              {error && <p role="alert" className="text-small text-danger">{error}</p>}
+              {!error && visibleEquipment.length === 0 && <p className="text-body text-text-muted">No hay equipos publicados que coincidan con tu búsqueda.</p>}
+              {visibleEquipment.map((equipo) => (
                 <EquipoCard key={equipo.id} equipo={equipo} />
               ))}
             </div>

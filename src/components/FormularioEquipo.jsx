@@ -12,6 +12,10 @@ import Select from './Select';
 import Textarea from './Textarea';
 import Toggle from './Toggle';
 import { categoriasEquipo, municipios } from '../data/panel';
+import { useAuth } from '../context/AuthContext';
+import { createEquipment } from '../services/equipmentService';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Formulario de vehículo. Un solo componente para tres pantallas:
@@ -130,15 +134,15 @@ function SeccionDatos({ equipo, revision, errores }) {
     <Card>
       <TituloSeccion numero="02" chip={!revision}>Cuéntanos sobre tu equipo</TituloSeccion>
       <div className="mt-5 grid gap-5 md:grid-cols-2">
-        <Field id="nombre" label="Nombre del vehículo o maquinaria *" defaultValue={equipo.nombre} className="md:col-span-2" />
-        <Select id="categoria" label="Categoría *" defaultValue={errores.categoria ? '' : equipo.categoria} error={errores.categoria}>
+        <Field id="nombre" name="nombre" label="Nombre del vehículo o maquinaria *" defaultValue={equipo.nombre} required className="md:col-span-2" />
+        <Select id="categoria" name="categoria" label="Categoría *" defaultValue={errores.categoria ? '' : equipo.categoria} required error={errores.categoria}>
           <option value="" disabled>Selecciona una categoría</option>
           {categoriasEquipo.map((c) => <option key={c} value={c}>{c}</option>)}
         </Select>
-        <Field id="marca" label="Marca y modelo" defaultValue={equipo.marca} />
-        <Field id="anio" label="Año" defaultValue={equipo.anio} inputMode="numeric" />
-        <Field id="caracteristica" label="Característica principal" defaultValue={equipo.caracteristica} />
-        <Textarea id="descripcion" label="Descripción *" rows={4} defaultValue={equipo.descripcion} className="md:col-span-2" />
+        <Field id="marca" name="marca" label="Marca y modelo" defaultValue={equipo.marca} />
+        <Field id="anio" name="anio" label="Año" defaultValue={equipo.anio} inputMode="numeric" />
+        <Field id="caracteristica" name="caracteristica" label="Característica principal" defaultValue={equipo.caracteristica} />
+        <Textarea id="descripcion" name="descripcion" label="Descripción *" rows={4} defaultValue={equipo.descripcion} required className="md:col-span-2" />
       </div>
     </Card>
   );
@@ -150,11 +154,11 @@ function SeccionUbicacion({ equipo, revision, errores }) {
       <TituloSeccion numero="03" chip={!revision}>¿Dónde se encuentra?</TituloSeccion>
       <p className="mt-2 text-body-lg text-text-muted md:text-body">Solo mostraremos una ubicación aproximada en el catálogo.</p>
       <div className="mt-5 grid gap-5 md:grid-cols-2">
-        <Select id="municipio" label="Municipio *" defaultValue={errores.municipio ? '' : equipo.municipio} error={errores.municipio}>
+        <Select id="municipio" name="municipio" label="Municipio *" defaultValue={errores.municipio ? '' : equipo.municipio} required error={errores.municipio}>
           <option value="" disabled>Selecciona un municipio</option>
           {municipios.map((m) => <option key={m} value={m}>{m}</option>)}
         </Select>
-        <Field id="sector" label="Sector o vereda" defaultValue={equipo.sector} />
+        <Field id="sector" name="sector" label="Sector o vereda" defaultValue={equipo.sector} />
       </div>
 
       <MapaEstatico municipio={equipo.municipioCorto} sector={revision ? '' : equipo.sector} className="mt-5 h-44 md:h-[190px]" />
@@ -248,7 +252,7 @@ function PanelResumen({ equipo, modo }) {
   );
 }
 
-function AccionesEscritorio({ modo }) {
+function AccionesEscritorio({ modo, submitting }) {
   return (
     <div className="mt-6 hidden lg:block">
       <div className="flex items-center justify-between gap-3">
@@ -261,12 +265,12 @@ function AccionesEscritorio({ modo }) {
           {modo === 'editar' ? (
             <>
               <Button as={Link} to="/arrendador/equipos/gestionar" variant="secondary" size="lg">Ver publicación</Button>
-              <Button type="button" size="lg" icon={Check}>Guardar cambios</Button>
+              <Button type="submit" size="lg" icon={Check} disabled={submitting}>Guardar cambios</Button>
             </>
           ) : (
             <>
               <Button type="button" variant="secondary" size="lg">Guardar borrador</Button>
-              <Button type="button" size="lg" icon={Check}>Publicar equipo</Button>
+              <Button type="submit" size="lg" icon={Check} disabled={submitting}>{submitting ? 'Publicando...' : 'Publicar equipo'}</Button>
             </>
           )}
         </div>
@@ -278,11 +282,11 @@ function AccionesEscritorio({ modo }) {
   );
 }
 
-function AccionesMovil({ modo, resultado, equipo }) {
+function AccionesMovil({ modo, resultado, equipo, submitting }) {
   const editar = modo === 'editar';
   return (
     <div className="mt-6 flex flex-col gap-3 lg:hidden">
-      <Button type="button" size="lg" icon={Check} fullWidth>{editar ? 'Guardar cambios' : 'Publicar equipo'}</Button>
+      <Button type="submit" size="lg" icon={Check} fullWidth disabled={submitting}>{submitting ? 'Publicando...' : editar ? 'Guardar cambios' : 'Publicar equipo'}</Button>
       {editar ? (
         <Button as={Link} to="/arrendador/equipos/gestionar" variant="secondary" size="lg" fullWidth>Ver publicación</Button>
       ) : (
@@ -302,6 +306,10 @@ function AccionesMovil({ modo, resultado, equipo }) {
 }
 
 export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {}, resultado = false }) {
+  const { session } = useAuth();
+  const navigate = useNavigate();
+  const [submitError, setSubmitError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const revision = modo === 'revision';
   const cuenta = Object.values(errores).filter(Boolean).length;
   const insignia = revision
@@ -310,8 +318,35 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
       ? <Badge tone="success">Publicada</Badge>
       : <Badge tone="warning">Borrador sin publicar</Badge>;
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setSubmitError('');
+    setSubmitting(true);
+    const formData = new FormData(event.currentTarget);
+    try {
+      await createEquipment(session.user.id, {
+        name: formData.get('nombre'),
+        category: formData.get('categoria'),
+        brand: formData.get('marca'),
+        model: '',
+        modelYear: formData.get('anio'),
+        mainFeature: formData.get('caracteristica'),
+        description: formData.get('descripcion'),
+        municipality: formData.get('municipio'),
+        sector: formData.get('sector'),
+        isAvailable: true,
+      });
+      navigate('/arrendador/equipos');
+    } catch (error) {
+      setSubmitError(error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <>
+    <form onSubmit={handleSubmit}>
+      {submitError && <p role="alert" className="mt-6 text-small text-danger">{submitError}</p>}
       {revision && cuenta > 0 && (
         <InfoBox tone="danger" title={`Revisa ${cuenta} campos para publicar`} className="mt-6 md:mt-8">
           Faltan fotos del equipo, categoría y ubicación. Conservamos los datos que ya escribiste.
@@ -327,7 +362,7 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
             <SeccionDatos equipo={equipo} revision={revision} errores={errores} />
             <SeccionUbicacion equipo={equipo} revision={revision} errores={errores} />
           </div>
-          <AccionesEscritorio modo={modo} />
+          <AccionesEscritorio modo={modo} submitting={submitting} />
         </div>
 
         <aside className="space-y-4">
@@ -338,7 +373,7 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
         </aside>
       </div>
 
-      <AccionesMovil modo={modo} resultado={resultado} equipo={equipo} />
-    </>
+      <AccionesMovil modo={modo} resultado={resultado} equipo={equipo} submitting={submitting} />
+    </form>
   );
 }

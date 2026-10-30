@@ -46,7 +46,7 @@ export default function EquipoCard({ equipo, favorito = true, estadoEnCuerpo = f
           </span>
           <Puntaje valor={puntaje} />
         </div>
-        <Link to="/detalle-equipo" className="mt-3 flex items-center justify-between border-t border-border pt-3 text-label font-semibold text-text">
+        <Link to={`/detalle-equipo?id=${equipo.id}`} className="mt-3 flex items-center justify-between border-t border-border pt-3 text-label font-semibold text-text">
           Ver equipo
           <ArrowUpRight size={14} aria-hidden="true" />
         </Link>

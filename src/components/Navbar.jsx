@@ -2,7 +2,7 @@ import { MapPin, Plus, Menu, X, ChevronDown, ArrowUpRight } from 'lucide-react';
 import Logo from './Logo';
 import Button from './Button';
 import Badge from './Badge';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import MenuPanel from './MenuPanel';
 import { getUser } from '../data/users';
@@ -18,6 +18,7 @@ import { getUser } from '../data/users';
  * menuOpen: solo cambia el icono (X en vez de hamburguesa/chevron).
  */
 export default function Navbar({ variant = 'public', menuOpen = false }) {
+  const { pathname, hash } = useLocation();
   const esAdmin = variant === 'admin';
   const textoPublico = variant === 'publicTexto';
   const textoCliente = variant === 'clienteTexto';
@@ -28,6 +29,14 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
   const [isOpen, setIsOpen] = useState(menuOpen);
   const isMenuOpen = menuOpen || isOpen;
   const MenuIcon = isMenuOpen ? X : Menu;
+  const handleComoFuncionaClick = (event) => {
+    if (pathname !== '/' || hash !== '#como-funciona') {
+      return;
+    }
+
+    event.preventDefault();
+    document.getElementById('como-funciona')?.scrollIntoView();
+  };
 
   return (
     <header className="relative z-30 border-b border-border bg-surface">
@@ -46,7 +55,7 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
           ) : (
             <>
               <Link to="/catalogo" className="font-semibold text-text">Explorar equipos</Link>
-              <a href="#como-funciona" className="text-text-muted">Cómo funciona</a>
+              <Link to="/#como-funciona" onClick={handleComoFuncionaClick} className="text-text-muted">Cómo funciona</Link>
             </>
           )}
           <span className="inline-flex items-center gap-1.5 text-text-muted">

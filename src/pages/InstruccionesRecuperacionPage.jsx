@@ -1,6 +1,5 @@
 import { MailCheck, ArrowUpRight } from 'lucide-react';
 import RecuperacionLayout from '../layouts/RecuperacionLayout';
-import Footer from '../components/Footer';
 import Button from '../components/Button';
 import InfoBox from '../components/InfoBox';
 
@@ -19,7 +18,6 @@ export default function InstruccionesRecuperacionPage() {
           <Button variant="secondary" size="lg" fullWidth trailingIcon={ArrowUpRight} className="mt-5">Centro de ayuda</Button>
         </div>
       }
-      pie={<Footer className="-mx-5 mt-12 md:hidden" copyright="© 2026 Rentia · Hecho en Casanare" links="Privacidad · Términos · Normas · Ayuda" />}
     >
       <section className="rounded-2xl border border-border bg-surface p-5 md:p-6">
         <span className="flex size-14 items-center justify-center rounded-full bg-success-subtle text-accent">

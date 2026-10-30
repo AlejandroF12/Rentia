@@ -1,6 +1,8 @@
 import Navbar from '../components/Navbar';
 import Eyebrow from '../components/Eyebrow';
 import { Link } from 'react-router-dom';
+import Footer from '../components/Footer';
+import regLogImage from '../media/regLogImage.webp';
 
 /**
  * Estructura común de los 3 pasos de recuperación.
@@ -17,13 +19,18 @@ export default function RecuperacionLayout({ paso, titulo, subtitulo, lateral, c
         <Eyebrow className="mt-6">Recuperar contraseña · Paso {paso} de 3</Eyebrow>
         <h1 className="mt-3 text-title-mobile font-semibold text-text md:text-title-desktop">{titulo}</h1>
         <p className="mt-2 text-body-lg text-text-muted">{subtitulo}</p>
+        <img src={regLogImage} alt="Equipo de trabajo en Casanare" className="mt-6 aspect-[2/1] w-full rounded-2xl object-cover lg:hidden" />
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_300px] lg:gap-10">
           <div className="min-w-0">{children}</div>
-          {lateral && <aside className="hidden lg:block">{lateral}</aside>}
+          <aside className="hidden lg:block">
+            <img src={regLogImage} alt="Equipo de trabajo en Casanare" className="h-[260px] w-full rounded-2xl object-cover" />
+            {lateral}
+          </aside>
         </div>
         {pie}
       </main>
+      {!pie && <Footer />}
     </div>
   );
 }

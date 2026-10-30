@@ -10,7 +10,9 @@ import Toggle from '../components/Toggle';
 import InfoBox from '../components/InfoBox';
 import Avatar from '../components/Avatar';
 import ImagenNoEncontrada from '../components/ImagenNoEncontrada';
-import { misEquipos, resumenArrendador } from '../data/panel';
+import { useAuth } from '../context/AuthContext';
+import { loadOwnerEquipment } from '../services/equipmentService';
+import { useEffect, useState } from 'react';
 
 const COLUMNAS = 'md:grid-cols-[1fr_130px_180px_160px]';
 
@@ -63,12 +65,33 @@ function FilaEquipo({ equipo }) {
 }
 
 export default function PanelArrendadorPage() {
+  const { session, profile } = useAuth();
+  const [equipment, setEquipment] = useState([]);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    loadOwnerEquipment(session.user.id).then(setEquipment).catch((loadError) => setError(loadError.message));
+  }, [session?.user?.id]);
+
+  const published = equipment.filter((item) => item.publication_status === 'publicada');
+  const draft = equipment.filter((item) => item.publication_status === 'borrador');
+  const formatDate = (date) => `Actualizado el ${new Date(date).toLocaleDateString('es-CO')}`;
+  const items = equipment.map((item) => ({
+    ...item,
+    lugar: item.municipality,
+    actualizado: formatDate(item.updated_at),
+    publicada: item.publication_status === 'publicada',
+    disponible: item.is_available,
+    textoDisponibilidad: item.is_available ? 'Disponible' : 'No disponible',
+  }));
+
   return (
     <DashboardLayout rol="arrendador" activo="equipos" movil="pestanas">
       <PageHeader
         eyebrow="Mi negocio / Arrendador"
         titulo="Tu equipo mueve el Llano."
-        subtitulo="Hola, Carlos. Mantén tus publicaciones al día."
+        subtitulo={`Hola, ${profile?.full_name?.split(' ')[0] || 'arrendador'}. Mantén tus publicaciones al día.`}
         accion={
           <Button as={Link} to="/arrendador/equipos/nuevo" size="lg" icon={Plus} className="w-full md:w-auto">
             Agregar vehículo
@@ -77,9 +100,9 @@ export default function PanelArrendadorPage() {
       />
 
       <div className="mt-6 grid grid-cols-3 gap-3 md:mt-8 md:gap-5">
-        <Estadistica valor={resumenArrendador.equipos} etiqueta="Equipos" />
-        <Estadistica valor={resumenArrendador.publicados} etiqueta="Publicados" />
-        <Estadistica valor={resumenArrendador.valoracion} etiqueta="Tu valoración" />
+        <Estadistica valor={equipment.length} etiqueta="Equipos" />
+        <Estadistica valor={published.length} etiqueta="Publicados" />
+        <Estadistica valor="—" etiqueta="Tu valoración" />
       </div>
 
       <section aria-label="Mis equipos" className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface md:mt-8">
@@ -87,9 +110,9 @@ export default function PanelArrendadorPage() {
           <Tabs
             label="Filtrar equipos"
             items={[
-              { id: 'todas', label: 'Todas (3)', activo: true },
-              { id: 'publicadas', label: 'Publicadas (2)' },
-              { id: 'borrador', label: 'Borrador (1)' },
+              { id: 'todas', label: `Todas (${equipment.length})`, activo: true },
+              { id: 'publicadas', label: `Publicadas (${published.length})` },
+              { id: 'borrador', label: `Borrador (${draft.length})` },
             ]}
           />
         </div>
@@ -102,7 +125,9 @@ export default function PanelArrendadorPage() {
         </div>
 
         <ul>
-          {misEquipos.map((equipo) => (
+          {error && <li className="p-5 text-small text-danger">{error}</li>}
+          {!error && items.length === 0 && <li className="p-5 text-small text-text-muted">Aún no tienes equipos publicados.</li>}
+          {items.map((equipo) => (
             <FilaEquipo key={equipo.id} equipo={equipo} />
           ))}
         </ul>

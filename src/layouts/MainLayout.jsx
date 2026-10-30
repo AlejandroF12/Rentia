@@ -1,12 +1,13 @@
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { useState } from 'react'
+import { useAuth } from '../context/AuthContext'
 
 export const MainLayout = ({ children, navVariant, footer = true, footerProps = {} }) => {
-    const [storedRole] = useState(() => window.localStorage.getItem('rentia.demoUser') || 'public')
+    const { profile } = useAuth()
+    const activeRole = profile?.status === 'activo' ? profile.role : 'public'
     return (
         <div>
-            <Navbar variant={navVariant || storedRole} />
+            <Navbar variant={navVariant || activeRole} />
             <main>{children}</main>
             {footer && <Footer {...footerProps} />}
         </div>

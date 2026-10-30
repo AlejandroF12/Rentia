@@ -6,14 +6,27 @@ import Avatar from '../components/Avatar';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
 import Card from '../components/Card';
+import InfoBox from '../components/InfoBox';
 import EquipoCard from '../components/EquipoCard';
 import StarRating from '../components/StarRating';
 import Tabs from '../components/Tabs';
 import { equipos } from '../data/muestra';
-import { clienteMuestra, reputacionCliente, valoracionEnviada } from '../data/panel';
+import { clienteMuestra } from '../data/panel';
+import { useAuth } from '../context/AuthContext';
+import { loadClientReviewSummary } from '../services/clientService';
+import { useEffect, useState } from 'react';
 
 function TarjetaPerfil({ className = '' }) {
-  const c = clienteMuestra;
+  const { profile } = useAuth();
+  const c = {
+    nombre: profile?.full_name || 'Tu perfil',
+    detalle: profile?.municipality ? `Cliente · ${profile.municipality}` : 'Cliente',
+    correo: profile?.email || 'Correo no disponible',
+    celular: profile?.phone || 'No registrado',
+    desde: profile?.created_at
+      ? new Date(profile.created_at).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
+      : 'Fecha no disponible',
+  };
   const dato = (etiqueta, valor) => (
     <div>
       <p className="text-caption text-text-muted">{etiqueta}</p>
@@ -35,25 +48,29 @@ function TarjetaPerfil({ className = '' }) {
         {dato('Celular', c.celular)}
         {dato('En la comunidad desde', c.desde)}
       </div>
-      <Button as={Link} to="/perfil-publico" variant="secondary" size="lg" icon={Pencil} fullWidth className="mt-5">
+      <Button as={Link} to="/cliente/perfil" variant="secondary" size="lg" icon={Pencil} fullWidth className="mt-5">
         Editar mi perfil
       </Button>
     </Card>
   );
 }
 
-function TarjetaReputacion({ className = '' }) {
-  const r = reputacionCliente;
+function TarjetaReputacion({ className = '', reviewSummary }) {
+  const r = reviewSummary;
   return (
     <section className={`rounded-2xl bg-primary p-5 text-primary-foreground md:p-6 ${className}`}>
       <p className="text-small text-text-inverse-muted">Tu reputación como cliente</p>
-      <p className="mt-3 text-title-desktop font-semibold leading-none">
-        {r.puntaje} <span className="text-body-lg font-normal text-text-inverse-muted">/ 5</span>
-      </p>
-      <StarRating size={16} className="mt-4 text-primary-foreground" />
-      <p className="mt-3 text-small text-text-inverse-muted">{r.total}</p>
-      <p className="mt-5 text-label">{r.cita}</p>
-      <p className="mt-4 text-caption text-text-inverse-muted">{r.autor}</p>
+      {r?.received.length ? (
+        <>
+          <p className="mt-3 text-title-desktop font-semibold leading-none">
+            {r.average.toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} <span className="text-body-lg font-normal text-text-inverse-muted">/ 5</span>
+          </p>
+          <StarRating size={16} value={r.average} className="mt-4 text-primary-foreground" />
+          <p className="mt-3 text-small text-text-inverse-muted">{r.received.length} valoraciones recibidas</p>
+        </>
+      ) : (
+        <p className="mt-5 text-label">Aún no tienes valoraciones recibidas.</p>
+      )}
     </section>
   );
 }
@@ -68,14 +85,21 @@ function Estadistica({ valor, etiqueta }) {
 }
 
 export default function MiEspacioClientePage() {
+  const { profile, session } = useAuth();
+  const [reviewSummary, setReviewSummary] = useState(null);
+  const [reviewError, setReviewError] = useState('');
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    loadClientReviewSummary(session.user.id).then(setReviewSummary).catch((error) => setReviewError(error.message));
+  }, [session?.user?.id]);
   const favoritos = [equipos[0], equipos[2]];
-  const v = valoracionEnviada;
+  const v = reviewSummary?.sent[0];
 
   return (
     <DashboardLayout rol="cliente" activo="espacio">
       <PageHeader
         eyebrow="Mi cuenta / Cliente"
-        titulo="Hola, María."
+        titulo={`Hola, ${profile?.full_name?.split(' ')[0] || 'de nuevo'}.`}
         subtitulo="Tu próximo proyecto empieza con un buen equipo."
         accion={
           <Button as={Link} to="/catalogo" size="lg" icon={ArrowUpRight} className="w-full md:w-auto">
@@ -109,36 +133,39 @@ export default function MiEspacioClientePage() {
           <Card aria-labelledby="titulo-comunidad">
             <div className="flex items-center justify-between gap-4">
               <h2 id="titulo-comunidad" className="text-heading-md font-semibold text-text">Tu voz hace comunidad</h2>
-              <Link to="/perfil-publico" className="hidden text-small font-semibold text-text lg:inline">Ver todas →</Link>
+              <Link to="/cliente/valoraciones" className="hidden text-small font-semibold text-text lg:inline">Ver todas →</Link>
             </div>
 
             <Tabs
               label="Valoraciones"
               className="mt-4 hidden lg:flex"
               items={[
-                { id: 'enviadas', label: 'Enviadas (1)', activo: true },
-                { id: 'recibidas', label: 'Recibidas (3)' },
+                { id: 'enviadas', label: `Enviadas (${reviewSummary?.sent.length || 0})`, activo: true },
+                { id: 'recibidas', label: `Recibidas (${reviewSummary?.received.length || 0})` },
               ]}
             />
-            <p className="mt-3 text-small text-text-muted lg:hidden">Enviadas (1) · Recibidas (3)</p>
+            <p className="mt-3 text-small text-text-muted lg:hidden">Enviadas ({reviewSummary?.sent.length || 0}) · Recibidas ({reviewSummary?.received.length || 0})</p>
 
-            <div className="mt-5 flex items-start gap-3">
+            {reviewError && <p role="alert" className="mt-5 text-small text-danger">{reviewError}</p>}
+            {v ? <div className="mt-5 flex items-start gap-3">
               <Avatar className="size-11 shrink-0" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-label font-semibold text-text">{v.titulo}</p>
-                    <p className="mt-1 text-caption text-text-muted">{v.meta}</p>
+                    <p className="text-label font-semibold text-text">Valoración para {v.target?.full_name || 'usuario de Rentia'}</p>
+                    <p className="mt-1 text-caption text-text-muted">{v.equipment?.name || 'Equipo relacionado'}</p>
                   </div>
-                  <StarRating size={12} className="hidden shrink-0 lg:flex" />
+                  <StarRating size={12} value={v.rating} className="hidden shrink-0 lg:flex" />
                 </div>
-                <StarRating size={16} className="mt-3 lg:hidden" />
-                <p className="mt-3 text-small text-text-muted">{v.texto}</p>
+                <StarRating size={16} value={v.rating} className="mt-3 lg:hidden" />
+                <p className="mt-3 text-small text-text-muted">{v.comment}</p>
                 <Link to="/valoraciones/cliente-a-arrendador" className="mt-3 hidden text-small font-semibold text-text lg:inline-block">
                   Editar mi valoración
                 </Link>
               </div>
-            </div>
+            </div> : <InfoBox title="Aún no tienes valoraciones publicadas" className="mt-5">
+                Cuando valores a un arrendador después de contactarlo, tu opinión aparecerá aquí.
+              </InfoBox>}
 
             <div className="mt-5 flex flex-col gap-3 lg:hidden">
               <Button as={Link} to="/valoraciones/cliente-a-arrendador" variant="secondary" size="lg" fullWidth>Editar mi valoración</Button>
@@ -154,15 +181,15 @@ export default function MiEspacioClientePage() {
             </div>
           </Card>
 
-          <TarjetaReputacion className="lg:hidden" />
-          <Button as={Link} to="/perfil-publico" variant="secondary" size="lg" fullWidth className="lg:hidden">
-            Ver las 3 valoraciones recibidas
+          <TarjetaReputacion className="lg:hidden" reviewSummary={reviewSummary} />
+          <Button as={Link} to="/cliente/valoraciones" variant="secondary" size="lg" fullWidth className="lg:hidden">
+            Ver valoraciones
           </Button>
         </div>
 
         <aside className="hidden space-y-4 lg:block">
           <TarjetaPerfil />
-          <TarjetaReputacion />
+          <TarjetaReputacion reviewSummary={reviewSummary} />
         </aside>
       </div>
     </DashboardLayout>

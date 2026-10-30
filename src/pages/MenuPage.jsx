@@ -3,6 +3,7 @@ import MenuPanel from '../components/MenuPanel';
 import Eyebrow from '../components/Eyebrow';
 import EquipoCard from '../components/EquipoCard';
 import { equipos } from '../data/muestra';
+import Footer from '../components/Footer';
 
 /** Contenido de fondo de cada pantalla con el menú abierto. */
 const fondos = {
@@ -57,6 +58,7 @@ export default function MenuPage({ variant = 'public' }) {
       <div className="absolute inset-x-0 top-16 z-30 md:inset-x-auto md:right-8 md:top-[88px] lg:right-16">
         <MenuPanel variant={variant} />
       </div>
+      <Footer />
     </div>
   );
 }
