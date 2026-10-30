@@ -1,6 +1,7 @@
 import { ArrowUpRight, Disc, Search, MapPin, ListFilter, ArrowRight, TractorIcon, Truck, Sprout, Construction } from 'lucide-react'
 import heroImage from '../media/heroImage.webp'
 import EquipoCard from '../components/EquipoCard'
+import { Link } from 'react-router-dom'
 
 export const Home = () => {
     return (
@@ -77,12 +78,12 @@ export const Home = () => {
                         </div>
                     </div>
                     <div className='sm:col-span-2 lg:col-span-1'>
-                        <button className='flex h-[2.875rem] w-full items-center justify-center gap-[0.625rem] rounded-[0.5rem] bg-primary px-[1.125rem] py-[0.8125rem] cursor-pointer lg:w-[10.625rem]'>
+                        <Link to='/catalogo' className='flex h-[2.875rem] w-full items-center justify-center gap-[0.625rem] rounded-[0.5rem] bg-primary px-[1.125rem] py-[0.8125rem] cursor-pointer lg:w-[10.625rem]'>
                             <ArrowRight className='w-[1.125rem] shrink-0 text-text-inverse' />
                             <span className='whitespace-nowrap text-label text-text-inverse font-semibold'>
                                 Explorar equipos
                             </span>
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </section>
@@ -157,10 +158,10 @@ export const Home = () => {
                             <div className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
                                 <h2 className='text-text text-title-mobile font-semibold md:text-title-desktop'>Grandes equipos, gente de aquí.</h2>
                                 <div className='flex items-end'>
-                                    <button className='flex h-[2.875rem] w-full items-center justify-center gap-2 rounded-lg border border-border bg-primary-foreground px-4 py-3 cursor-pointer sm:w-[9rem]'>
+                                    <Link to='/catalogo' className='flex h-[2.875rem] w-full items-center justify-center gap-2 rounded-lg border border-border bg-primary-foreground px-4 py-3 cursor-pointer sm:w-[9rem]'>
                                         <ArrowUpRight className='text-text w-[1.125rem]' />
                                         <span className='text-text text-label font-semibold'>Ver catálogo</span>
-                                    </button>
+                                    </Link>
                                 </div>
                             </div>
                         </div>
@@ -215,12 +216,12 @@ export const Home = () => {
                                     <p className='text-text-inverse-muted text-body'>Publica tus equipos y conecta con nuevos clientes en tu región.</p>
                                 </div>
                                 <div>
-                                    <button className='flex h-12 w-full items-center justify-center gap-3 rounded-lg bg-primary-foreground px-5 py-4 cursor-pointer sm:w-[14.3125rem]'>
+                                    <Link to='/crear-cuenta' className='flex h-12 w-full items-center justify-center gap-3 rounded-lg bg-primary-foreground px-5 py-4 cursor-pointer sm:w-[14.3125rem]'>
                                         <span className='whitespace-nowrap text-label text-text font-semibold'>
                                             Quiero publicar mi equipo
                                         </span>
                                         <ArrowUpRight className='w-[1.125rem] shrink-0 text-text' />
-                                    </button>
+                                    </Link>
                                 </div>
                             </div>
                         </div>

@@ -24,6 +24,13 @@ export const users = {
     password: 'arrendador123',
     home: '/arrendador/equipos',
   },
+  suspendido: {
+    role: 'suspendido',
+    label: 'Suspendido',
+    name: 'Pablo Ortega',
+    initials: 'PO',
+    detail: 'Arrendador · Aguazul',
+  },
   admin: {
     role: 'admin',
     label: 'Administración',
@@ -32,7 +39,7 @@ export const users = {
     detail: 'Administración / Moderación',
     email: 'andrea.perez@rentia.com',
     password: 'admin123',
-    home: '/menu-administracion',
+    home: '/admin/usuarios',
   },
 };
 

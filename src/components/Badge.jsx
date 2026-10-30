@@ -2,6 +2,7 @@ const tones = {
   success: 'bg-success-subtle text-success',
   warning: 'bg-warning-subtle text-warning',
   neutral: 'bg-surface-muted text-text-muted',
+  danger: 'bg-danger-subtle text-danger',
 };
 
 /** Píldora con punto: "• Disponible", "• No disponible", "• Cliente"... */

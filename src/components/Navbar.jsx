@@ -12,11 +12,19 @@ import { getUser } from '../data/users';
  *  - "public"     visitante (Ingresar + Publicar equipo)
  *  - "cliente" | "arrendador" | "admin"   sesión iniciada (rol + iniciales)
  *  - "simple"     páginas de recuperación de contraseña
+ *  - "publicTexto"  visitante con "Ingresar · Publicar equipo" como texto (legales, catálogo sin resultados)
+ *  - "clienteTexto" cliente con "Cliente · ML" como texto (reportar publicación)
+ *  - "suspendido"   cuenta suspendida (insignia "Suspendido" + iniciales)
  * menuOpen: solo cambia el icono (X en vez de hamburguesa/chevron).
  */
 export default function Navbar({ variant = 'public', menuOpen = false }) {
   const esAdmin = variant === 'admin';
-  const rol = variant === 'public' || variant === 'simple' ? null : getUser(variant);
+  const textoPublico = variant === 'publicTexto';
+  const textoCliente = variant === 'clienteTexto';
+  const sinPin = variant === 'simple' || textoPublico || textoCliente;
+  const sinSesion = variant === 'public' || variant === 'simple' || textoPublico;
+  const rol = sinSesion ? null : getUser(textoCliente ? 'cliente' : variant);
+  const variantMenu = textoPublico ? 'public' : textoCliente ? 'cliente' : variant;
   const [isOpen, setIsOpen] = useState(menuOpen);
   const isMenuOpen = menuOpen || isOpen;
   const MenuIcon = isMenuOpen ? X : Menu;
@@ -30,7 +38,7 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
         <nav aria-label="Principal" className="hidden items-center gap-8 text-label md:flex">
           {esAdmin ? (
             <>
-              <Link to="/menu-administracion" className="font-semibold text-text">Centro de moderación</Link>
+              <Link to="/admin/usuarios" className="font-semibold text-text">Centro de moderación</Link>
               <Link to="/" className="inline-flex items-center gap-1 text-text-muted">
                 Ver sitio público <ArrowUpRight size={12} aria-hidden="true" />
               </Link>
@@ -42,14 +50,20 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
             </>
           )}
           <span className="inline-flex items-center gap-1.5 text-text-muted">
-            {variant !== 'simple' && <MapPin size={14} aria-hidden="true" />}
+            {!sinPin && <MapPin size={14} aria-hidden="true" />}
             Casanare, Colombia
           </span>
         </nav>
 
         {/* Acciones (escritorio) */}
         <div className="hidden items-center justify-end gap-5 md:flex">
-          {rol ? (
+          {rol && textoCliente ? (
+            <p className="flex items-center gap-3 text-label font-semibold text-text">
+              <span>{rol.label}</span>
+              <span aria-hidden="true">·</span>
+              <span>{rol.initials}</span>
+            </p>
+          ) : rol ? (
             <>
               <Badge tone="neutral">{rol.label}</Badge>
               <span className="flex size-8 items-center justify-center rounded-full bg-surface-muted text-small font-semibold text-text">
@@ -59,7 +73,7 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
                 {isMenuOpen ? <X size={18} /> : <ChevronDown size={18} />}
               </button>
             </>
-          ) : variant === 'simple' ? (
+          ) : variant === 'simple' || textoPublico ? (
             <p className="flex items-center gap-3 text-label font-semibold text-text">
               <Link to="/ingresar">Ingresar</Link>
               <span aria-hidden="true">·</span>
@@ -87,7 +101,7 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
         <>
           <button type="button" aria-label="Cerrar menú" className="fixed inset-0 top-16 z-10 bg-overlay/40 md:top-[72px]" onClick={() => setIsOpen(false)} />
           <div className="absolute right-0 top-full z-20 w-full md:right-8 md:top-[80px] md:w-auto lg:right-16">
-            <MenuPanel variant={variant} onClose={() => setIsOpen(false)} />
+            <MenuPanel variant={variantMenu} onClose={() => setIsOpen(false)} />
           </div>
         </>
       )}

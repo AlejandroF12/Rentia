@@ -1,6 +1,7 @@
 const variants = {
   primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
   secondary: 'border border-border bg-surface text-text hover:bg-surface-muted',
+  danger: 'bg-danger-subtle text-danger hover:bg-danger-subtle/70',
 };
 
 const sizes = {
@@ -27,7 +28,7 @@ export default function Button({
 }) {
   return (
     <Tag
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
       {...props}
     >
       {Icon && <Icon size={16} aria-hidden="true" />}

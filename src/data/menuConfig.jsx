@@ -34,13 +34,23 @@ export const menus = {
       { texto: 'Cerrar sesión', salida: true, href: '/' },
     ],
   },
+  suspendido: {
+    usuario: { nombre: getUser('suspendido').name, detalle: getUser('suspendido').detail },
+    rol: 'Suspendido',
+    items: [
+      { texto: 'Explorar equipos', href: '/catalogo' },
+      { texto: 'Estado de cuenta', activo: true, href: '/cuenta-suspendida' },
+      { texto: 'Normas de publicación', href: '/normas' },
+      { texto: 'Cerrar sesión', salida: true, href: '/' },
+    ],
+  },
   admin: {
     usuario: { nombre: getUser('admin').name, sinAvatar: true },
     rol: 'Administración',
     items: [
-      { texto: 'Usuarios', activo: true, href: '/menu-administracion' },
-      { texto: 'Publicaciones', href: '/menu-administracion' },
-      { texto: 'Reportes', href: '/menu-administracion' },
+      { texto: 'Usuarios', activo: true, href: '/admin/usuarios' },
+      { texto: 'Publicaciones', href: '/admin/publicaciones' },
+      { texto: 'Reportes', href: '/admin/reportes' },
       { texto: 'Ver sitio público', externo: true, href: '/' },
       { texto: 'Cerrar sesión', salida: true, href: '/' },
     ],

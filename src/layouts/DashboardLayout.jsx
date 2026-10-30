@@ -89,12 +89,22 @@ export default function DashboardLayout({ rol = 'arrendador', activo, movil = 'r
   );
 }
 
-/** Contenedor de las páginas privadas SIN menú lateral (valoraciones). */
-export function PaginaCuenta({ rol = 'cliente', children }) {
+/**
+ * Contenedor de las páginas SIN menú lateral (valoraciones, reportes, legales...).
+ * rol: null = sin barra "Rol | Nombre" en móvil  ·  ancho: "amplio" (1312 px útiles) | "estrecho" (1248 px)
+ * fondo: "background" (gris claro) | "surface" (blanco)
+ */
+export function PaginaCuenta({ rol = 'cliente', ancho = 'amplio', fondo = 'background', children }) {
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-background md:min-h-[calc(100vh-72px)]">
-      <BarraRol rol={rol} className="md:hidden" />
-      <div className="mx-auto w-full max-w-[1440px] px-5 py-6 md:px-8 lg:px-16 lg:py-10">{children}</div>
+    <div className={`min-h-[calc(100vh-64px)] md:min-h-[calc(100vh-72px)] ${fondo === 'surface' ? 'bg-surface' : 'bg-background'}`}>
+      {rol && <BarraRol rol={rol} className="md:hidden" />}
+      <div
+        className={`mx-auto w-full px-5 py-6 md:px-8 lg:py-10 ${
+          ancho === 'estrecho' ? 'max-w-[1312px]' : 'max-w-[1440px] lg:px-16'
+        }`}
+      >
+        {children}
+      </div>
     </div>
   );
 }

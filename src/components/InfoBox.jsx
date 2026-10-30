@@ -4,6 +4,7 @@ const tones = {
   neutral: { box: 'bg-surface-muted', text: 'text-text', icon: Info },
   success: { box: 'bg-success-subtle', text: 'text-success', icon: CircleCheck },
   danger: { box: 'bg-danger-subtle', text: 'text-danger', icon: CircleAlert },
+  warning: { box: 'bg-warning-subtle', text: 'text-warning', icon: Info },
 };
 
 /** Aviso con icono, título y texto (privacidad, éxito, error). */
