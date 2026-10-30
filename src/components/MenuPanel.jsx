@@ -8,6 +8,12 @@ import { Link } from 'react-router-dom';
 /** Contenido de cada menú según el rol. `activo` marca el ítem resaltado. */
 export default function MenuPanel({ variant = 'public', onClose }) {
   const m = menus[variant];
+  const handleItemClick = (event, item) => {
+    if (item.salida) {
+      window.localStorage.removeItem('rentia.demoUser');
+    }
+    onClose?.();
+  };
 
   return (
     <div className="w-full bg-surface p-5 shadow-[0_8px_24px_var(--color-shadow-alpha-7)] md:w-[348px] md:rounded-2xl md:border md:border-border">
@@ -33,6 +39,7 @@ export default function MenuPanel({ variant = 'public', onClose }) {
           <li key={item.texto}>
             <Link
               to={item.href ?? '#'}
+              onClick={(event) => handleItemClick(event, item)}
               className={`flex h-12 items-center justify-between rounded-lg px-4 text-body ${
                 item.activo ? 'bg-primary font-semibold text-primary-foreground' : 'text-text hover:bg-surface-muted'
               }`}

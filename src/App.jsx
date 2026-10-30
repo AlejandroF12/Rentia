@@ -13,6 +13,17 @@ import MenuPublicoPage from './pages/MenuPublicoPage'
 import NuevaContrasenaPage from './pages/NuevaContrasenaPage'
 import PerfilPublicoPage from './pages/PerfilPublicoPage'
 import RecuperarAccesoPage from './pages/RecuperarAccesoPage'
+import PanelArrendadorPage from './pages/PanelArrendadorPage'
+import AgregarVehiculoPage from './pages/AgregarVehiculoPage'
+import EditarVehiculoPage from './pages/EditarVehiculoPage'
+import ValidacionPublicarPage from './pages/ValidacionPublicarPage'
+import GestionarPublicacionPage from './pages/GestionarPublicacionPage'
+import ConfirmarEliminacionPage from './pages/ConfirmarEliminacionPage'
+import MiEspacioClientePage from './pages/MiEspacioClientePage'
+import SinFavoritosPage from './pages/SinFavoritosPage'
+import AntesDeValorarPage from './pages/AntesDeValorarPage'
+import ClienteCalificaArrendadorPage from './pages/ClienteCalificaArrendadorPage'
+import ArrendadorCalificaClientePage from './pages/ArrendadorCalificaClientePage'
 
 function App() {
   return (
@@ -31,6 +42,24 @@ function App() {
           <Route path='/menu-cliente' element={<MenuClientePage />} />
           <Route path='/menu-arrendador' element={<MenuArrendadorPage />} />
           <Route path='/menu-administracion' element={<MenuAdministracionPage />} />
+
+        {/* Arrendador */}
+        <Route path='/arrendador/equipos' element={<MainLayout navVariant='arrendador' footer={false}><PanelArrendadorPage /></MainLayout>} />
+        <Route path='/arrendador/equipos/nuevo' element={<MainLayout navVariant='arrendador' footer={false}><AgregarVehiculoPage /></MainLayout>} />
+        <Route path='/arrendador/equipos/nuevo/revision' element={<MainLayout navVariant='arrendador' footer={false}><ValidacionPublicarPage /></MainLayout>} />
+        <Route path='/arrendador/equipos/editar' element={<MainLayout navVariant='arrendador' footer={false}><EditarVehiculoPage /></MainLayout>} />
+        <Route path='/arrendador/equipos/gestionar' element={<MainLayout navVariant='arrendador' footer={false}><GestionarPublicacionPage /></MainLayout>} />
+        <Route path='/arrendador/equipos/eliminar' element={<MainLayout navVariant='arrendador' footerProps={{ links: 'Privacidad · Términos · Normas · Ayuda' }}><ConfirmarEliminacionPage /></MainLayout>} />
+
+        {/* Cliente */}
+        <Route path='/cliente' element={<MainLayout navVariant='cliente' footer={false}><MiEspacioClientePage /></MainLayout>} />
+        <Route path='/cliente/favoritos' element={<MainLayout navVariant='cliente' footer={false}><SinFavoritosPage /></MainLayout>} />
+
+        {/* Valoraciones */}
+        <Route path='/valoraciones/politica' element={<MainLayout navVariant='cliente' footer={false}><AntesDeValorarPage /></MainLayout>} />
+        <Route path='/valoraciones/cliente-a-arrendador' element={<MainLayout navVariant='cliente' footer={false}><ClienteCalificaArrendadorPage /></MainLayout>} />
+        <Route path='/valoraciones/arrendador-a-cliente' element={<MainLayout navVariant='arrendador' footer={false}><ArrendadorCalificaClientePage /></MainLayout>} />
+
         <Route path='*' element={<Navigate to='/' replace />} />
       </Routes>
     </BrowserRouter>

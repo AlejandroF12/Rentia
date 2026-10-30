@@ -15,8 +15,8 @@ export const menus = {
     rol: 'Cliente',
     items: [
       { texto: 'Explorar equipos', href: '/catalogo' },
-      { texto: 'Mi espacio', activo: true, href: '/menu-cliente' },
-      { texto: 'Favoritos', href: '/menu-cliente' },
+      { texto: 'Mi espacio', activo: true, href: '/cliente' },
+      { texto: 'Favoritos', href: '/cliente/favoritos' },
       { texto: 'Valoraciones', href: '/perfil-publico' },
       { texto: 'Mi perfil', href: '/perfil-publico' },
       { texto: 'Cerrar sesión', salida: true, href: '/' },
@@ -27,8 +27,8 @@ export const menus = {
     rol: 'Arrendador',
     items: [
       { texto: 'Explorar equipos', href: '/catalogo' },
-      { texto: 'Mis equipos', activo: true, href: '/menu-arrendador' },
-      { texto: 'Agregar vehículo', href: '/menu-arrendador' },
+      { texto: 'Mis equipos', activo: true, href: '/arrendador/equipos' },
+      { texto: 'Agregar vehículo', href: '/arrendador/equipos/nuevo' },
       { texto: 'Valoraciones', href: '/perfil-publico' },
       { texto: 'Mi perfil', href: '/perfil-publico' },
       { texto: 'Cerrar sesión', salida: true, href: '/' },

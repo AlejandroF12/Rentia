@@ -1,7 +1,7 @@
 import { Info, MapPin } from 'lucide-react';
 
-/** Ilustración estática del mapa (colores map-*). */
-export default function MapaEstatico({ className = '' }) {
+/** Ilustración estática del mapa (colores map-*). municipio y sector son los rótulos. */
+export default function MapaEstatico({ municipio = 'Yopal', sector = 'El Morro', className = '' }) {
   return (
     <div className={`relative overflow-hidden rounded-2xl bg-map-background ${className}`}>
       <svg viewBox="0 0 600 200" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 size-full" aria-hidden="true">
@@ -10,8 +10,8 @@ export default function MapaEstatico({ className = '' }) {
         <path d="M-10 60 C 80 10, 160 120, 260 80 S 420 30, 610 150" fill="none" strokeWidth="14" strokeLinecap="round" className="stroke-map-water" />
         <circle cx="300" cy="100" r="42" className="fill-primary-alpha-14 stroke-primary-alpha-40" strokeWidth="1" />
       </svg>
-      <span className="absolute left-5 top-4 text-label font-semibold text-text">Yopal</span>
-      <span className="absolute left-[56%] top-[68%] text-caption text-text-muted">El Morro</span>
+      <span className="absolute left-5 top-4 text-label font-semibold text-text">{municipio}</span>
+      <span className="absolute left-[56%] top-[68%] text-caption text-text-muted">{sector}</span>
       <span className="absolute left-1/2 top-1/2 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground">
         <MapPin size={16} aria-hidden="true" />
       </span>

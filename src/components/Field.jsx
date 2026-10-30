@@ -3,8 +3,9 @@ import { EyeOff } from 'lucide-react';
 /**
  * Campo de formulario con etiqueta, ayuda opcional e icono final opcional.
  * Usa defaultValue para mostrar los datos de ejemplo del diseño.
+ * error: texto del mensaje; activa el borde de error (opcional).
  */
-export default function Field({ label, id, type = 'text', hint, trailingIcon: TrailingIcon, className = '', ...props }) {
+export default function Field({ label, id, type = 'text', hint, error, trailingIcon: TrailingIcon, className = '', ...props }) {
   return (
     <div className={className}>
       <label htmlFor={id} className="mb-2 block text-label font-semibold text-text">
@@ -14,7 +15,11 @@ export default function Field({ label, id, type = 'text', hint, trailingIcon: Tr
         <input
           id={id}
           type={type}
-          className="h-12 w-full rounded-lg border border-border bg-surface px-4 text-body text-text placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-alpha-14"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
+          className={`h-12 w-full rounded-lg border bg-surface px-4 text-body text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary-alpha-14 ${
+            error ? 'border-danger' : 'border-border focus:border-primary'
+          }`}
           {...props}
         />
         {TrailingIcon && (
@@ -25,7 +30,12 @@ export default function Field({ label, id, type = 'text', hint, trailingIcon: Tr
           />
         )}
       </div>
-      {hint && <p className="mt-2 text-small text-text-muted">{hint}</p>}
+      {error && (
+        <p id={`${id}-error`} className="mt-2 text-small text-danger">
+          {error}
+        </p>
+      )}
+      {hint && !error && <p className="mt-2 text-small text-text-muted">{hint}</p>}
     </div>
   );
 }

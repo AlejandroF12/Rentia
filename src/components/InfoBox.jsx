@@ -1,11 +1,12 @@
-import { Info, CircleCheck } from 'lucide-react';
+import { Info, CircleCheck, CircleAlert } from 'lucide-react';
 
 const tones = {
   neutral: { box: 'bg-surface-muted', text: 'text-text', icon: Info },
   success: { box: 'bg-success-subtle', text: 'text-success', icon: CircleCheck },
+  danger: { box: 'bg-danger-subtle', text: 'text-danger', icon: CircleAlert },
 };
 
-/** Aviso con icono, título y texto (privacidad, éxito, etc.). */
+/** Aviso con icono, título y texto (privacidad, éxito, error). */
 export default function InfoBox({ tone = 'neutral', icon, title, children, className = '' }) {
   const { box, text, icon: DefaultIcon } = tones[tone];
   const Icon = icon ?? DefaultIcon;
