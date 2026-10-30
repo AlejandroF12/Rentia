@@ -1,10 +1,10 @@
 import { ArrowUpRight, Disc, Search, MapPin, ListFilter, ArrowRight, TractorIcon, Truck, Sprout, Construction } from 'lucide-react'
 import heroImage from '../media/heroImage.webp'
-import { EquipmentCard } from '../components/EquipmentCard'
+import EquipoCard from '../components/EquipoCard'
 
 export const Home = () => {
     return (
-        <div className='w-full'>
+        <div id='inicio' className='w-full'>
             {/* Hero section */}
             <section className='w-full bg-surface flex flex-col gap-8 items-center px-4 py-8 sm:px-8 sm:py-10 lg:px-16 lg:py-11'>
                 {/* Sección 1 */}
@@ -149,13 +149,13 @@ export const Home = () => {
                             </div>
                         </div>
                     </div>
-                    <div className='w-full flex flex-col gap-6'>
+                    <div id='catalogo' className='w-full flex flex-col gap-6'>
                         <div className='flex flex-col'>
                             <div>
                                 <p className='text-success text-caption font-semibold'>CERCA DE TU PROYECTO</p>
                             </div>
                             <div className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
-                                <h2 className='text-text text-title-desktop font-semibold'>Grandes equipos, Gente de aquí.</h2>
+                                <h2 className='text-text text-title-mobile font-semibold md:text-title-desktop'>Grandes equipos, gente de aquí.</h2>
                                 <div className='flex items-end'>
                                     <button className='flex h-[2.875rem] w-full items-center justify-center gap-2 rounded-lg border border-border bg-primary-foreground px-4 py-3 cursor-pointer sm:w-[9rem]'>
                                         <ArrowUpRight className='text-text w-[1.125rem]' />
@@ -165,9 +165,9 @@ export const Home = () => {
                             </div>
                         </div>
                         <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'>
-                            <EquipmentCard></EquipmentCard>
-                            <EquipmentCard></EquipmentCard>
-                            <EquipmentCard></EquipmentCard>
+                            <EquipoCard equipo={{ categoria: 'Movimiento de tierra', nombre: 'Retroexcavadora CAT 420F', lugar: 'Yopal', distancia: '5 km', puntaje: '4,9', disponible: true }} />
+                            <EquipoCard equipo={{ categoria: 'Transporte de carga', nombre: 'Volqueta International 7600', lugar: 'Yopal', distancia: '12 km', puntaje: '4,7', disponible: true }} />
+                            <EquipoCard equipo={{ categoria: 'Movimiento de tierra', nombre: 'Excavadora Komatsu PC200', lugar: 'Aguazul', distancia: '28 km', puntaje: '4,8', disponible: true }} />
                         </div>
                     </div>
                 </div>
@@ -211,7 +211,7 @@ export const Home = () => {
                             </div>
                             <div className='flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between'>
                                 <div>
-                                    <h2 className='text-text-inverse text-title-desktop'>Tus vehiculos tiene mucho por hacer.</h2>
+                                    <h2 className='text-text-inverse text-title-mobile md:text-title-desktop'>Tus vehículos tienen mucho por hacer.</h2>
                                     <p className='text-text-inverse-muted text-body'>Publica tus equipos y conecta con nuevos clientes en tu región.</p>
                                 </div>
                                 <div>

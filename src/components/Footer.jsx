@@ -1,27 +1,27 @@
-import Rentia_logo from '../assets/Rentia_logo.webp'
+import Logo from './Logo';
 
-export const Footer = () => {
-    return (
-        <footer className='w-full px-4 py-8 sm:px-8 lg:px-16'>
-            <div className='mx-auto w-full max-w-[90rem]'>
-                <div className='grid grid-cols-1 items-center gap-4 sm:grid-cols-3'>
-                    <img className='h-auto w-[6.25rem] sm:w-[7.5rem]' src={Rentia_logo} alt='Logo de Rentia' />
-                    <p className='text-body text-text-muted text-center'>La fuerza de nuestra región, más cerca.</p>
-                    <p className='text-small text-text-muted text-end'>Hecho en Casanare</p>
-                </div>
-                <div className='mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between'>
-                    <p className='text-caption text-text-muted'>
-                        &copy; Rentia
-                    </p>
-                    <div className='text-caption text-text-muted flex gap-[0.625rem]'>
-                        <a href='#' className='hover:underline'>Privacidad</a>
-                        <a href='#' className='hover:underline'>Terminos</a>
-                        <a href='#' className='hover:underline'>Ayuda</a>
-                    </div>
-                </div>
-            </div>
-        </footer>
-    )
+/**
+ * links: texto de enlaces legales. copyright: texto de derechos.
+ * Ej. perfil público: links="Privacidad · Términos · Normas · Ayuda"
+ */
+export default function Footer({
+  links = 'Privacidad · Términos · Ayuda',
+  copyright = '© 2026 Rentia',
+  className = '',
+}) {
+  return (
+    <footer className={`border-t border-border bg-surface ${className}`}>
+      <div className="mx-auto max-w-[1440px] px-5 py-8 md:px-8 lg:px-16">
+        <div className="flex items-center justify-between md:grid md:grid-cols-3">
+          <Logo />
+          <p className="hidden text-center text-body text-text-muted md:block">La fuerza de nuestra región, más cerca.</p>
+          <p className="text-small text-text-muted md:text-right">Hecho en Casanare</p>
+        </div>
+        <div className="mt-8 flex flex-col gap-3 text-small text-text-muted md:flex-row md:items-center md:justify-between">
+          <p>{copyright}</p>
+          <p>{links}</p>
+        </div>
+      </div>
+    </footer>
+  );
 }
-
-export default Footer

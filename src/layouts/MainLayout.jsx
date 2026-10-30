@@ -1,12 +1,12 @@
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 
-export const MainLayout = ({ children }) => {
+export const MainLayout = ({ children, navVariant = 'public', footer = true }) => {
     return (
         <div>
-            <Navbar />
+            <Navbar variant={navVariant} />
             <main>{children}</main>
-            <Footer />
+            {footer && <Footer />}
         </div>
     )
 }

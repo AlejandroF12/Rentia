@@ -1,37 +1,96 @@
-import Rentia_logo from '../assets/Rentia_logo.webp'
-import { MapPin } from 'lucide-react'
+import { MapPin, Plus, Menu, X, ChevronDown, ArrowUpRight } from 'lucide-react';
+import Logo from './Logo';
+import Button from './Button';
+import Badge from './Badge';
+import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import MenuPanel from './MenuPanel';
+import { getUser } from '../data/users';
 
-const Navbar = () => {
+/**
+ * variant:
+ *  - "public"     visitante (Ingresar + Publicar equipo)
+ *  - "cliente" | "arrendador" | "admin"   sesión iniciada (rol + iniciales)
+ *  - "simple"     páginas de recuperación de contraseña
+ * menuOpen: solo cambia el icono (X en vez de hamburguesa/chevron).
+ */
+export default function Navbar({ variant = 'public', menuOpen = false }) {
+  const esAdmin = variant === 'admin';
+  const rol = variant === 'public' || variant === 'simple' ? null : getUser(variant);
+  const [isOpen, setIsOpen] = useState(menuOpen);
+  const isMenuOpen = menuOpen || isOpen;
+  const MenuIcon = isMenuOpen ? X : Menu;
+
   return (
-    <header className='w-full border-b border-border bg-surface px-4 sm:px-8 lg:px-16'>
-      <nav className='mx-auto grid min-h-[4.75rem] max-w-[90rem] grid-cols-2 items-center gap-x-4 gap-y-3 py-3 md:min-h-[6rem] md:grid-cols-3 md:gap-4 md:py-0'>
-        {/*Columna 1 */}
-        <div><img className='h-auto w-[6.25rem] sm:w-[7.5rem]' src={Rentia_logo} alt='Logo Rentia' /></div>
-        {/* Columna 2 */}
-        <div className='order-3 col-span-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-body md:order-none md:col-span-1 md:gap-4 lg:gap-8'>
-          <a className='text-center font-semibold text-primary cursor-pointer' href='#catalogo'>
-            Explorar equipos
-          </a>
-          <a className='text-center text-text-muted cursor-pointer' href='#como-funciona'>
-            Cómo funciona
-          </a>
-          <div className='flex items-center'>
-            <MapPin className='w-[0.9375rem] shrink-0 text-center text-text-muted' />
-            <p className='text-label text-center text-text-muted'>Casanare, Colombia</p>
-          </div>
-        </div>
-        {/* Columna 3 */}
-        <div className='flex items-center justify-end gap-3 sm:gap-[1.375rem]'>
-          <button className='whitespace-nowrap text-label text-primary cursor-pointer sm:text-body'>Ingresar</button>
-          <button className='flex h-[2.625rem] items-center justify-center gap-2 whitespace-nowrap rounded-[0.5rem] bg-primary px-3 text-label font-semibold text-text-inverse cursor-pointer sm:h-[2.875rem] sm:px-[1.125rem]'>
-            <span>+</span>
-            <span className='hidden sm:inline'>Publicar Equipo</span>
-            <span className='sm:hidden'>Publicar</span>
-          </button>
-        </div>
-      </nav>
-    </header>
-  )
-}
+    <header className="relative z-30 border-b border-border bg-surface">
+      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-5 md:grid md:h-[72px] md:grid-cols-[1fr_auto_1fr] md:px-8 lg:px-16">
+        <Logo />
 
-export default Navbar
+        {/* Navegación central (escritorio) */}
+        <nav aria-label="Principal" className="hidden items-center gap-8 text-label md:flex">
+          {esAdmin ? (
+            <>
+              <Link to="/menu-administracion" className="font-semibold text-text">Centro de moderación</Link>
+              <Link to="/" className="inline-flex items-center gap-1 text-text-muted">
+                Ver sitio público <ArrowUpRight size={12} aria-hidden="true" />
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/catalogo" className="font-semibold text-text">Explorar equipos</Link>
+              <a href="#como-funciona" className="text-text-muted">Cómo funciona</a>
+            </>
+          )}
+          <span className="inline-flex items-center gap-1.5 text-text-muted">
+            {variant !== 'simple' && <MapPin size={14} aria-hidden="true" />}
+            Casanare, Colombia
+          </span>
+        </nav>
+
+        {/* Acciones (escritorio) */}
+        <div className="hidden items-center justify-end gap-5 md:flex">
+          {rol ? (
+            <>
+              <Badge tone="neutral">{rol.label}</Badge>
+              <span className="flex size-8 items-center justify-center rounded-full bg-surface-muted text-small font-semibold text-text">
+                {rol.initials}
+              </span>
+              <button type="button" aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'} className="text-text" onClick={() => setIsOpen((open) => !open)}>
+                {isMenuOpen ? <X size={18} /> : <ChevronDown size={18} />}
+              </button>
+            </>
+          ) : variant === 'simple' ? (
+            <p className="flex items-center gap-3 text-label font-semibold text-text">
+              <Link to="/ingresar">Ingresar</Link>
+              <span aria-hidden="true">·</span>
+              <Link to="/crear-cuenta">Publicar equipo</Link>
+            </p>
+          ) : (
+            <>
+              <Link to="/ingresar" className="text-label text-text">Ingresar</Link>
+              <Button as={Link} to="/crear-cuenta" size="lg" icon={Plus}>Publicar equipo</Button>
+              {isMenuOpen && (
+                <button type="button" aria-label="Cerrar menú" className="text-text">
+                  <X size={18} />
+                </button>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Hamburguesa (móvil) */}
+        <button type="button" aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'} className="text-text-muted md:hidden" onClick={() => setIsOpen((open) => !open)}>
+          <MenuIcon size={24} />
+        </button>
+      </div>
+      {isMenuOpen && variant !== 'simple' && (
+        <>
+          <button type="button" aria-label="Cerrar menú" className="fixed inset-0 top-16 z-10 bg-overlay/40 md:top-[72px]" onClick={() => setIsOpen(false)} />
+          <div className="absolute right-0 top-full z-20 w-full md:right-8 md:top-[80px] md:w-auto lg:right-16">
+            <MenuPanel variant={variant} onClose={() => setIsOpen(false)} />
+          </div>
+        </>
+      )}
+    </header>
+  );
+}
