@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { CircleHelp, LogOut, ArrowUpRight } from 'lucide-react';
+import { CircleHelp, LogOut, ArrowUpRight, ChevronDown, X } from 'lucide-react';
 import Avatar from '../components/Avatar';
 import { menusLaterales } from '../data/menuLateral';
 import { getUser } from '../data/users';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 /** Barra bajo el navbar en móvil: "Arrendador | Carlos Rojas". */
@@ -22,16 +23,46 @@ function BarraRol({ rol, className = '' }) {
 
 /** Variante del panel del arrendador en móvil: pestañas + avatar. */
 function BarraPestanas({ rol, activo, className = '' }) {
-  const items = menusLaterales[rol].items.filter((item) => item.id !== 'resumen');
+  const [open, setOpen] = useState(false);
+  const items = menusLaterales[rol].items;
+  const activeItem = items.find((item) => item.id === activo) || items[0];
   return (
-    <nav aria-label="Secundaria" className={`flex h-14 items-center justify-between border-b border-border bg-surface px-5 text-small ${className}`}>
-      {items.map((item) => (
-        <Link key={item.id} to={item.href} className={item.id === activo ? 'font-semibold text-text' : 'text-text-muted'}>
-          {item.texto}
-        </Link>
-      ))}
-      <Avatar className="size-7" />
-    </nav>
+    <div className={`relative border-b border-border bg-surface ${className}`}>
+      <div className="flex h-14 items-center justify-between px-5">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls="menu-movil-privado"
+          className="inline-flex min-w-0 items-center gap-2 text-small font-semibold text-text"
+          onClick={() => setOpen((current) => !current)}
+        >
+          <span className="truncate">{activeItem.texto}</span>
+          {open ? <X size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
+        </button>
+        <Avatar className="size-7 shrink-0" />
+      </div>
+
+      {open && (
+        <nav id="menu-movil-privado" aria-label="Secundaria" className="border-t border-border px-5 py-3">
+          <div className="space-y-1">
+            {items.map((item) => (
+              <Link
+                key={item.id}
+                to={item.href}
+                aria-current={item.id === activo ? 'page' : undefined}
+                onClick={() => setOpen(false)}
+                className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-small ${
+                  item.id === activo ? 'bg-primary font-semibold text-primary-foreground' : 'text-text-muted'
+                }`}
+              >
+                <item.icono size={16} aria-hidden="true" />
+                {item.texto}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      )}
+    </div>
   );
 }
 
@@ -88,16 +119,12 @@ function MenuLateral({ rol, activo }) {
  * rol: "arrendador" | "cliente"  ·  activo: id del ítem resaltado (ver data/menuLateral.jsx)
  * movil: "rol" (barra Rol | Nombre) o "pestanas" (solo panel del arrendador).
  */
-export default function DashboardLayout({ rol = 'arrendador', activo, movil = 'rol', children }) {
+export default function DashboardLayout({ rol = 'arrendador', activo, children }) {
   return (
     <div className="bg-background lg:flex lg:min-h-[calc(100vh-72px)]">
       <MenuLateral rol={rol} activo={activo} />
       <div className="min-w-0 flex-1">
-        {movil === 'pestanas' ? (
-          <BarraPestanas rol={rol} activo={activo} className="lg:hidden" />
-        ) : (
-          <BarraRol rol={rol} className="lg:hidden" />
-        )}
+        <BarraPestanas rol={rol} activo={activo} className="lg:hidden" />
         <div className="mx-auto w-full max-w-[1224px] px-5 py-6 lg:px-10 lg:py-10">{children}</div>
       </div>
     </div>

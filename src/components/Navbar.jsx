@@ -117,7 +117,7 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
         <>
           <button type="button" aria-label="Cerrar menú" className="fixed inset-0 top-16 z-10 bg-overlay/40 md:top-[72px]" onClick={() => setIsOpen(false)} />
           <div className="fixed right-0 top-16 z-20 w-full md:right-8 md:top-[80px] md:w-auto lg:right-16">
-            <MenuPanel variant={variantMenu} onClose={() => setIsOpen(false)} />
+            <MenuPanel variant={variantMenu} accountOnly={Boolean(rol)} onClose={() => setIsOpen(false)} />
           </div>
         </>
       )}

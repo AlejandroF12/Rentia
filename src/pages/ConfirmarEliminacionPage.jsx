@@ -56,7 +56,7 @@ export default function ConfirmarEliminacionPage() {
       />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_288px] lg:items-start lg:gap-8">
-        <ConfirmarEliminacion nombre={equipment.name} resultado={deleted} onConfirm={handleDelete} />
+        <ConfirmarEliminacion nombre={equipment.name} equipoId={equipment.id} resultado={deleted} onConfirm={handleDelete} />
         <aside className="space-y-4">
           <InfoBox title="Equipo seleccionado">{equipment.name} · {equipment.municipality}</InfoBox>
           <Card className="p-5">

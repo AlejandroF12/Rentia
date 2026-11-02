@@ -7,7 +7,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 /** Contenido de cada menú según el rol. `activo` marca el ítem resaltado. */
-export default function MenuPanel({ variant = 'public', onClose }) {
+export default function MenuPanel({ variant = 'public', onClose, accountOnly = false }) {
   const { profile, signOut } = useAuth();
   const { pathname } = useLocation();
   const m = menus[variant];
@@ -25,6 +25,9 @@ export default function MenuPanel({ variant = 'public', onClose }) {
       && (pathname === item.href || pathname.startsWith(`${item.href}/`))
     ))
     .sort((first, second) => second.href.length - first.href.length)[0];
+  const items = accountOnly
+    ? m.items.filter((item) => item.salida || item.texto === 'Mi perfil' || item.href === '/catalogo')
+    : m.items;
   const handleItemClick = async (event, item) => {
     if (item.salida) {
       event.preventDefault();
@@ -39,7 +42,7 @@ export default function MenuPanel({ variant = 'public', onClose }) {
   };
 
   return (
-    <div className="w-full bg-surface p-5 shadow-[0_8px_24px_var(--color-shadow-alpha-7)] md:w-[348px] md:rounded-2xl md:border md:border-border">
+    <div className="max-h-[calc(100dvh-4rem)] w-full overflow-y-auto bg-surface p-5 shadow-[0_8px_24px_var(--color-shadow-alpha-7)] md:max-h-[calc(100dvh-5rem)] md:w-[348px] md:rounded-2xl md:border md:border-border">
       {user ? (
         <div className="flex items-center gap-3">
           {!user.sinAvatar && <Avatar className="size-14" />}
@@ -58,18 +61,18 @@ export default function MenuPanel({ variant = 'public', onClose }) {
       {m.rol && <Badge tone="neutral" className="mt-4">{m.rol}</Badge>}
 
       <ul className={m.rol ? 'mt-4' : 'mt-8'}>
-        {m.items.map((item) => (
+        {items.map((item) => (
           <li key={item.texto}>
             <Link
               to={item.href ?? '#'}
               onClick={(event) => handleItemClick(event, item)}
-              className={`flex h-12 items-center justify-between rounded-lg px-4 text-body ${
+              className={`flex min-h-12 items-center justify-between gap-3 rounded-lg px-4 py-2 text-body ${
                 item === activeItem || (!activeItem && item.activo)
                   ? 'bg-primary font-semibold text-primary-foreground'
                   : 'text-text hover:bg-surface-muted'
               }`}
             >
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex min-w-0 items-center gap-1.5">
                 {item.texto}
                 {item.externo && <ArrowUpRight size={12} aria-hidden="true" />}
               </span>

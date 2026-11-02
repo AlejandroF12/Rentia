@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { PaginaCuenta } from '../layouts/DashboardLayout';
 import PageHeader from '../components/PageHeader';
@@ -8,6 +8,9 @@ import InfoBox from '../components/InfoBox';
 import TileEquipo from '../components/TileEquipo';
 
 export default function ReporteEnviadoPage() {
+  const [searchParams] = useSearchParams();
+  const equipmentId = searchParams.get('id');
+  const equipmentQuery = equipmentId ? `?id=${encodeURIComponent(equipmentId)}` : '';
   return (
     <PaginaCuenta rol="cliente" ancho="estrecho">
       <PageHeader
@@ -40,7 +43,7 @@ export default function ReporteEnviadoPage() {
 
           <div className="mt-5 flex flex-col gap-3">
             <Button as={Link} to="/catalogo" size="lg" fullWidth>Volver al catálogo</Button>
-            <Button as={Link} to="/detalle-equipo" variant="secondary" size="lg" fullWidth>Volver a la publicación</Button>
+            <Button as={Link} to={`/detalle-equipo${equipmentQuery}`} variant="secondary" size="lg" fullWidth>Volver a la publicación</Button>
           </div>
         </section>
 

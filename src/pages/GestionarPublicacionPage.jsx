@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowUpRight, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { PaginaCuenta } from '../layouts/DashboardLayout';
+import DashboardLayout from '../layouts/DashboardLayout';
 import PageHeader from '../components/PageHeader';
 import Badge, { EstadoBadge } from '../components/Badge';
 import Button from '../components/Button';
@@ -68,21 +68,22 @@ export default function GestionarPublicacionPage() {
 
   if (missingIdError || error) {
     return (
-      <PaginaCuenta rol="arrendador">
+      <DashboardLayout rol="arrendador" activo="equipos">
         <p role="alert" className="text-small text-danger">{error || missingIdError}</p>
-      </PaginaCuenta>
+      </DashboardLayout>
     );
   }
 
   if (!equipment) {
-    return <PaginaCuenta rol="arrendador"><p className="text-small text-text-muted">Cargando publicación...</p></PaginaCuenta>;
+    return <DashboardLayout rol="arrendador" activo="equipos"><p className="text-small text-text-muted">Cargando publicación...</p></DashboardLayout>;
   }
 
   const published = equipment.publication_status === 'publicada';
+  const draft = equipment.publication_status === 'borrador';
   const query = `?id=${encodeURIComponent(equipment.id)}`;
 
   return (
-    <PaginaCuenta rol="arrendador">
+    <DashboardLayout rol="arrendador" activo="equipos">
       <PageHeader
         volver={{ to: '/arrendador/equipos', texto: 'Volver a mis equipos' }}
         eyebrow={`Mis equipos / ${equipment.name}`}
@@ -97,7 +98,7 @@ export default function GestionarPublicacionPage() {
           <Card>
             <h2 className="text-heading-lg font-semibold text-text md:text-heading-md">Visibilidad actual</h2>
             <Badge tone={published ? 'success' : 'warning'} className="mt-4">
-              {published ? 'Publicada' : 'Oculta'} · {equipment.is_available ? 'Disponible' : 'No disponible'}
+              {published ? 'Publicada' : draft ? 'Borrador' : 'Oculta'} · {equipment.is_available ? 'Disponible' : 'No disponible'}
             </Badge>
             <p className="mt-4 text-body text-text-muted">{equipment.name} · {equipment.municipality}</p>
 
@@ -110,13 +111,15 @@ export default function GestionarPublicacionPage() {
               disabled={updating}
               onClick={() => changePublication(published ? 'oculta' : 'publicada')}
             >
-              {updating ? 'Guardando...' : published ? 'Dejar de publicar' : 'Volver a publicar'}
+              {updating ? 'Guardando...' : published ? 'Dejar de publicar' : 'Publicar equipo'}
             </Button>
 
-            <InfoBox tone="muted" className="mt-4">
+            <InfoBox tone="neutral" className="mt-4">
               {published
                 ? 'Ocultar conserva los datos y permite volver a publicar el equipo.'
-                : 'Volver a publicar mostrará la ficha en el catálogo; no cambia su disponibilidad.'}
+                : draft
+                  ? 'Publicar mostrará la ficha en el catálogo; primero verifica que los datos estén completos.'
+                  : 'Volver a publicar mostrará la ficha en el catálogo; no cambia su disponibilidad.'}
             </InfoBox>
           </Card>
 
@@ -153,6 +156,6 @@ export default function GestionarPublicacionPage() {
           </Card>
         </aside>
       </div>
-    </PaginaCuenta>
+    </DashboardLayout>
   );
 }

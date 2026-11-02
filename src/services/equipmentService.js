@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 
-export async function createEquipment(ownerId, values) {
+export async function createEquipment(ownerId, values, publicationStatus = 'publicada') {
   const { data, error } = await supabase
     .from('equipment')
     .insert({
@@ -15,16 +15,16 @@ export async function createEquipment(ownerId, values) {
       municipality: values.municipality,
       sector: values.sector || null,
       is_available: values.isAvailable,
-      publication_status: 'publicada',
+      publication_status: publicationStatus,
     })
     .select()
     .single();
 
-  if (error) throw new Error(`No se pudo publicar el equipo: ${error.message}`);
+  if (error) throw new Error(`No se pudo guardar el equipo: ${error.message}`);
   return data;
 }
 
-export async function updateEquipment(equipmentId, ownerId, values) {
+export async function updateEquipment(equipmentId, ownerId, values, publicationStatus) {
   const { data, error } = await supabase
     .from('equipment')
     .update({
@@ -38,6 +38,7 @@ export async function updateEquipment(equipmentId, ownerId, values) {
       municipality: values.municipality,
       sector: values.sector || null,
       is_available: values.isAvailable,
+      ...(publicationStatus ? { publication_status: publicationStatus } : {}),
     })
     .eq('id', equipmentId)
     .eq('owner_id', ownerId)

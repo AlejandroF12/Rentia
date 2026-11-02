@@ -1,9 +1,8 @@
 import DashboardLayout from '../layouts/DashboardLayout';
 import PageHeader from '../components/PageHeader';
 import FormularioEquipo from '../components/FormularioEquipo';
-import { equipoKomatsu } from '../data/panel';
 
-/** Agregar vehículo con errores de validación (maqueta: errores fijos). */
+/** Revisión de una publicación incompleta sin rellenar datos ficticios. */
 const errores = {
   fotos: 'Agrega al menos una fotografía del equipo.',
   categoria: 'Selecciona la categoría del equipo.',
@@ -19,7 +18,24 @@ export default function ValidacionPublicarPage() {
         titulo="Completa tu publicación."
         subtitulo="Tu información sigue aquí. Corrige los campos señalados para publicar."
       />
-      <FormularioEquipo modo="revision" equipo={{ ...equipoKomatsu, fotos: 0 }} errores={errores} />
+      <FormularioEquipo
+        modo="revision"
+        equipo={{
+          nombre: '',
+          categoria: '',
+          marca: '',
+          anio: '',
+          caracteristica: '',
+          descripcion: '',
+          municipio: '',
+          municipioCorto: '',
+          sector: '',
+          fotos: 0,
+          disponible: true,
+          celular: '',
+        }}
+        errores={errores}
+      />
     </DashboardLayout>
   );
 }

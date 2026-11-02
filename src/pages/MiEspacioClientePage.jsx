@@ -10,10 +10,8 @@ import InfoBox from '../components/InfoBox';
 import EquipoCard from '../components/EquipoCard';
 import StarRating from '../components/StarRating';
 import Tabs from '../components/Tabs';
-import { equipos } from '../data/muestra';
-import { clienteMuestra } from '../data/panel';
 import { useAuth } from '../context/AuthContext';
-import { loadClientReviewSummary } from '../services/clientService';
+import { loadClientFavorites, loadClientReviewSummary } from '../services/clientService';
 import { useEffect, useState } from 'react';
 
 function TarjetaPerfil({ className = '' }) {
@@ -87,13 +85,39 @@ function Estadistica({ valor, etiqueta }) {
 export default function MiEspacioClientePage() {
   const { profile, session } = useAuth();
   const [reviewSummary, setReviewSummary] = useState(null);
+  const [favorites, setFavorites] = useState([]);
   const [reviewError, setReviewError] = useState('');
+  const [favoriteError, setFavoriteError] = useState('');
   useEffect(() => {
     if (!session?.user?.id) return;
-    loadClientReviewSummary(session.user.id).then(setReviewSummary).catch((error) => setReviewError(error.message));
+    Promise.all([
+      loadClientReviewSummary(session.user.id),
+      loadClientFavorites(session.user.id),
+    ])
+      .then(([summary, loadedFavorites]) => {
+        setReviewSummary(summary);
+        setFavorites(loadedFavorites);
+      })
+      .catch((error) => {
+        setReviewError(error.message);
+        setFavoriteError(error.message);
+      });
   }, [session?.user?.id]);
-  const favoritos = [equipos[0], equipos[2]];
+  const favoritos = favorites
+    .filter(({ equipment }) => equipment)
+    .map(({ equipment }) => ({
+      ...equipment,
+      lugar: equipment.municipality,
+      distancia: '',
+      puntaje: '—',
+      disponible: equipment.is_available && equipment.publication_status === 'publicada',
+    }));
   const v = reviewSummary?.sent[0];
+  const stats = {
+    favoritos: favorites.length,
+    enviadas: reviewSummary?.sent.length || 0,
+    recibidas: reviewSummary?.received.length || 0,
+  };
 
   return (
     <DashboardLayout rol="cliente" activo="espacio">
@@ -112,17 +136,18 @@ export default function MiEspacioClientePage() {
         {/* Móvil: perfil y cifras antes de los equipos */}
         <TarjetaPerfil className="lg:hidden" />
         <div className="grid grid-cols-3 gap-3 lg:hidden">
-          <Estadistica valor={clienteMuestra.favoritos} etiqueta="Favoritos" />
-          <Estadistica valor={clienteMuestra.enviadas} etiqueta="Enviadas" />
-          <Estadistica valor={clienteMuestra.recibidas} etiqueta="Recibidas" />
+          <Estadistica valor={stats.favoritos} etiqueta="Favoritos" />
+          <Estadistica valor={stats.enviadas} etiqueta="Enviadas" />
+          <Estadistica valor={stats.recibidas} etiqueta="Recibidas" />
         </div>
 
         <div className="min-w-0 space-y-6">
           <section aria-labelledby="titulo-favoritos">
             <div className="flex items-baseline justify-between gap-4">
               <h2 id="titulo-favoritos" className="text-heading-md font-semibold text-text lg:text-heading-lg">Equipos que te interesan</h2>
-              <span className="hidden text-small text-text-muted lg:inline">2 favoritos</span>
+              <span className="hidden text-small text-text-muted lg:inline">{favorites.length} favoritos</span>
             </div>
+            {favoriteError && <p role="alert" className="mt-4 text-small text-danger">{favoriteError}</p>}
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
               {favoritos.map((equipo) => (
                 <EquipoCard key={equipo.id} equipo={equipo} />

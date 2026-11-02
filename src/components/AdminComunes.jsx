@@ -43,14 +43,14 @@ export function PestanasAdmin({ activa }) {
   return (
     <nav
       aria-label="Secciones de moderación"
-      className="mt-6 flex items-center gap-x-5 text-label md:mt-8 md:border-b md:border-border md:pb-4"
+      className="mt-6 flex max-w-full items-center gap-x-5 overflow-x-auto text-label md:mt-8 md:border-b md:border-border md:pb-4"
     >
       {SECCIONES.map(({ id, label, to }) => (
         <Link
           key={id}
           to={to}
           aria-current={id === activa ? 'page' : undefined}
-          className={id === activa ? 'font-semibold text-text' : 'text-text-muted'}
+          className={`shrink-0 whitespace-nowrap ${id === activa ? 'font-semibold text-text' : 'text-text-muted'}`}
         >
           {label}
           {id === 'reportes' && (

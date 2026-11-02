@@ -61,3 +61,84 @@ export async function loadClientReviewSummary(userId) {
     average,
   };
 }
+
+export async function loadPublicProfile(userId) {
+  const [profileResult, equipmentResult, reviewsResult] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, full_name, phone, municipality, created_at, role')
+      .eq('id', userId)
+      .eq('role', 'arrendador')
+      .single(),
+    supabase
+      .from('equipment')
+      .select('id, name, category, municipality, is_available, publication_status')
+      .eq('owner_id', userId)
+      .eq('publication_status', 'publicada')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('reviews')
+      .select('id, rating, comment, created_at, author:author_id(full_name)')
+      .eq('target_user_id', userId)
+      .eq('is_published', true)
+      .order('created_at', { ascending: false }),
+  ]);
+
+  if (profileResult.error) throw new Error(`No se pudo cargar el perfil público: ${profileResult.error.message}`);
+  if (equipmentResult.error) throw new Error(`No se pudieron cargar los equipos del arrendador: ${equipmentResult.error.message}`);
+  if (reviewsResult.error) throw new Error(`No se pudieron cargar las valoraciones: ${reviewsResult.error.message}`);
+
+  return {
+    profile: profileResult.data,
+    equipment: equipmentResult.data ?? [],
+    reviews: reviewsResult.data ?? [],
+  };
+}
+
+export async function loadReviewContext(targetUserId, equipmentId) {
+  const [targetResult, equipmentResult] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, full_name, municipality, role')
+      .eq('id', targetUserId)
+      .single(),
+    supabase
+      .from('equipment')
+      .select('id, name, municipality, owner_id')
+      .eq('id', equipmentId)
+      .eq('owner_id', targetUserId)
+      .single(),
+  ]);
+
+  if (targetResult.error) throw new Error(`No se pudo cargar la persona a valorar: ${targetResult.error.message}`);
+  if (equipmentResult.error) throw new Error(`No se pudo cargar el equipo relacionado: ${equipmentResult.error.message}`);
+
+  return {
+    target: targetResult.data,
+    equipment: equipmentResult.data,
+  };
+}
+
+export async function createReview({ authorId, targetUserId, equipmentId, rating, comment }) {
+  const { data, error } = await supabase
+    .from('reviews')
+    .insert({
+      author_id: authorId,
+      target_user_id: targetUserId,
+      equipment_id: equipmentId,
+      rating,
+      comment: comment.trim(),
+      is_published: true,
+    })
+    .select('id, rating, comment, created_at')
+    .single();
+
+  if (error) {
+    if (error.code === '23505') {
+      throw new Error('Ya tienes una valoración para esta persona y este equipo.');
+    }
+    throw new Error(`No se pudo publicar la valoración: ${error.message}`);
+  }
+
+  return data;
+}

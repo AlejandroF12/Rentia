@@ -59,12 +59,18 @@ function FilaEquipo({ equipo, onAvailabilityChange }) {
       <Button as={Link} to={`/arrendador/equipos/editar${equipmentQuery}`} variant="secondary" size="lg" icon={Pencil} fullWidth className="md:hidden">
         {publicada ? 'Editar equipo' : 'Continuar publicación'}
       </Button>
+      <Button as={Link} to={`/arrendador/equipos/gestionar${equipmentQuery}`} variant="secondary" size="lg" fullWidth className="md:hidden">
+        Gestionar publicación
+      </Button>
       <div className="hidden md:block">
         <Link to={`/arrendador/equipos/editar${equipmentQuery}`} className="inline-flex items-center gap-1 text-label font-semibold text-text">
           Editar equipo <ArrowUpRight size={12} aria-hidden="true" />
         </Link>
-        <Link to={publicada ? `/arrendador/equipos/gestionar${equipmentQuery}` : `/arrendador/equipos/editar${equipmentQuery}`} className="mt-2 block text-small text-text-muted">
+        <Link to={publicada ? `/detalle-equipo${equipmentQuery}` : `/arrendador/equipos/editar${equipmentQuery}`} className="mt-2 block text-small text-text-muted">
           {publicada ? 'Ver publicación' : 'Continuar'}
+        </Link>
+        <Link to={`/arrendador/equipos/gestionar${equipmentQuery}`} className="mt-2 block text-small text-text-muted">
+          Gestionar publicación
         </Link>
       </div>
     </li>
@@ -97,6 +103,7 @@ export default function PanelArrendadorPage() {
   ));
   const items = filteredEquipment.map((item) => ({
     ...item,
+    nombre: item.name,
     lugar: item.municipality,
     actualizado: formatDate(item.updated_at),
     publicada: item.publication_status === 'publicada',
@@ -122,7 +129,7 @@ export default function PanelArrendadorPage() {
   };
 
   return (
-    <DashboardLayout rol="arrendador" activo="equipos" movil="pestanas">
+    <DashboardLayout rol="arrendador" activo="equipos">
       <PageHeader
         eyebrow="Mi negocio / Arrendador"
         titulo="Tu equipo mueve el Llano."
@@ -178,9 +185,6 @@ export default function PanelArrendadorPage() {
       <Card className="mt-6 md:mt-8">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-heading-md font-semibold text-text md:text-heading-lg">Las buenas relaciones cuentan.</h2>
-          <Link to="/arrendador/valoraciones" className="hidden whitespace-nowrap text-label font-semibold text-text md:inline">
-            Ver valoraciones →
-          </Link>
         </div>
         <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           {latestReview ? (
@@ -188,7 +192,9 @@ export default function PanelArrendadorPage() {
               <Avatar className="size-11" />
               <div>
                 <p className="text-label font-semibold text-text">{latestReview.author?.full_name || 'Cliente de Rentia'}</p>
-                <p className="mt-0.5 text-small text-text-muted">{latestReview.equipment?.name || 'Equipo relacionado'}</p>
+                <p className="mt-0.5 text-small text-text-muted">
+                  {latestReview.equipment?.name || 'Equipo relacionado'} · {new Date(latestReview.created_at).toLocaleDateString('es-CO')}
+                </p>
               </div>
             </div>
           ) : (

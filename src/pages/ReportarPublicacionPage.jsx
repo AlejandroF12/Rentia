@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Flag } from 'lucide-react';
 import { PaginaCuenta } from '../layouts/DashboardLayout';
 import PageHeader from '../components/PageHeader';
@@ -17,10 +17,13 @@ const MOTIVOS = [
 ];
 
 export default function ReportarPublicacionPage() {
+  const [searchParams] = useSearchParams();
+  const equipmentId = searchParams.get('id');
+  const equipmentQuery = equipmentId ? `?id=${encodeURIComponent(equipmentId)}` : '';
   return (
     <PaginaCuenta rol="cliente" ancho="estrecho">
       <PageHeader
-        volver={{ to: '/detalle-equipo', texto: 'Volver a la publicación' }}
+        volver={{ to: `/detalle-equipo${equipmentQuery}`, texto: 'Volver a la publicación' }}
         eyebrow="Reporte de publicación"
         titulo="Ayúdanos a cuidar la comunidad."
         subtitulo="Cuéntanos qué ocurre con esta publicación."
@@ -62,8 +65,8 @@ export default function ReportarPublicacionPage() {
             </InfoBox>
 
             <div className="mt-5 flex flex-col gap-3">
-              <Button as={Link} to="/reporte-enviado" size="lg" fullWidth icon={Flag}>Enviar reporte</Button>
-              <Button as={Link} to="/detalle-equipo" variant="secondary" size="lg" fullWidth>Cancelar</Button>
+              <Button as={Link} to={`/reporte-enviado${equipmentQuery}`} size="lg" fullWidth icon={Flag}>Enviar reporte</Button>
+              <Button as={Link} to={`/detalle-equipo${equipmentQuery}`} variant="secondary" size="lg" fullWidth>Cancelar</Button>
             </div>
           </form>
 

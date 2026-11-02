@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import Button from './Button';
 import Card from './Card';
 import Checkbox from './Checkbox';
@@ -11,7 +12,11 @@ import InfoBox from './InfoBox';
  * y, cuando se active, dentro de "Gestionar publicación").
  * resultado: muestra el aviso de éxito y el botón "Volver a mis equipos".
  */
-export default function ConfirmarEliminacion({ nombre = 'CAT 420F', resultado = false, onConfirm, className = '' }) {
+export default function ConfirmarEliminacion({ nombre = 'Equipo', equipoId, resultado = false, onConfirm, className = '' }) {
+  const [confirmationText, setConfirmationText] = useState('');
+  const [understood, setUnderstood] = useState(false);
+  const canConfirm = confirmationText.trim() === 'ELIMINAR' && understood;
+
   return (
     <Card tone="danger" className={className}>
       <h2 className="text-heading-lg font-semibold text-text">¿Eliminar {nombre} definitivamente?</h2>
@@ -19,16 +24,16 @@ export default function ConfirmarEliminacion({ nombre = 'CAT 420F', resultado = 
         Se retirarán la publicación y sus fotos. No podrás recuperarlas ni volver a publicar esta misma ficha. Tu cuenta y tus otras publicaciones no se eliminan.
       </p>
 
-      <Field id="confirmar-eliminar" label="Escribe ELIMINAR para continuar" defaultValue="ELIMINAR" className="mt-6 [&_label]:text-small [&_input]:h-11" />
-      <Checkbox id="entiende-eliminar" defaultChecked className="mt-4 text-small">
+      <Field id="confirmar-eliminar" label="Escribe ELIMINAR para continuar" value={confirmationText} onChange={(event) => setConfirmationText(event.target.value)} className="mt-6 [&_label]:text-small [&_input]:h-11" />
+      <Checkbox id="entiende-eliminar" checked={understood} onChange={(event) => setUnderstood(event.target.checked)} className="mt-4 text-small">
         Entiendo que esta acción es permanente y no se puede deshacer.
       </Checkbox>
 
       <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center md:gap-5">
-        <Button as={Link} to="/arrendador/equipos/gestionar" variant="secondary" size="lg" className="w-full md:w-auto">
+        <Button as={Link} to={equipoId ? `/arrendador/equipos/gestionar?id=${encodeURIComponent(equipoId)}` : '/arrendador/equipos'} variant="secondary" size="lg" className="w-full md:w-auto">
           Cancelar y conservar equipo
         </Button>
-        <button type="button" onClick={onConfirm} disabled={!onConfirm} className="inline-flex items-center justify-center gap-2 py-2 text-label font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" onClick={onConfirm} disabled={!onConfirm || !canConfirm} className="inline-flex items-center justify-center gap-2 py-2 text-label font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-50">
           <Trash2 size={14} aria-hidden="true" /> Sí, eliminar definitivamente
         </button>
       </div>

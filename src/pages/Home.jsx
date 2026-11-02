@@ -116,7 +116,7 @@ export const Home = () => {
                                         Movimiento de tierra
                                     </p>
                                     <p className='text-label text-text-muted'>
-                                        24 equipos
+                                        Explorar categoría
                                     </p>
                                 </div>
                             </div>
@@ -129,7 +129,7 @@ export const Home = () => {
                                         Transporte de carga
                                     </p>
                                     <p className='text-label text-text-muted'>
-                                        18 equipos
+                                        Explorar categoría
                                     </p>
                                 </div>
                             </div>
@@ -142,7 +142,7 @@ export const Home = () => {
                                         Agrícola
                                     </p>
                                     <p className='text-label text-text-muted'>
-                                        12 equipos
+                                        Explorar categoría
                                     </p>
                                 </div>
                             </div>
@@ -155,7 +155,7 @@ export const Home = () => {
                                         Elevación y apoyo
                                     </p>
                                     <p className='text-label text-text-muted'>
-                                        8 equipos
+                                        Explorar categoría
                                     </p>
                                 </div>
                             </div>

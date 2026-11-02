@@ -9,19 +9,71 @@ import ImagenNoEncontrada from './ImagenNoEncontrada';
 import InfoBox from './InfoBox';
 import StarRating from './StarRating';
 import Textarea from './Textarea';
-import { contactoCompartido } from '../data/panel';
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { createReview } from '../services/clientService';
 
 /**
  * Formulario de valoración (cliente → arrendador y arrendador → cliente).
- * `datos` viene de data/panel.jsx (valoracionCliente / valoracionArrendador).
- * Por ahora siempre muestra 5 estrellas y los textos de ejemplo.
+ * `datos` contiene el contexto de la persona que se está valorando.
  */
 export default function FormularioValoracion({ datos, volverA = '/perfil-publico' }) {
-  const { calificado, pregunta, chips, comentario, contador, declaracion, publicadoComo } = datos;
+  const { calificado, pregunta, chips, comentario = '', declaracion, publicadoComo, equipo } = datos;
+  const { session } = useAuth();
+  const [rating, setRating] = useState(0);
+  const [selectedChips, setSelectedChips] = useState([]);
+  const [accepted, setAccepted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const canSubmit = Boolean(datos.targetUserId && datos.equipmentId && rating && accepted && !submitting);
+
+  const toggleChip = (chip) => {
+    setSelectedChips((current) => current.includes(chip)
+      ? current.filter((item) => item !== chip)
+      : [...current, chip]);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setSubmitError('');
+    if (!datos.targetUserId || !datos.equipmentId) {
+      setSubmitError('Abre este formulario desde un contacto y un equipo válidos.');
+      return;
+    }
+    if (!rating) {
+      setSubmitError('Selecciona una puntuación de 1 a 5 estrellas.');
+      return;
+    }
+    if (!accepted) {
+      setSubmitError('Confirma que tuviste contacto directo antes de publicar.');
+      return;
+    }
+
+    setSubmitting(true);
+    const formData = new FormData(event.currentTarget);
+    const text = String(formData.get('comentario') || '').trim();
+    const chipText = selectedChips.length ? `Aspectos destacados: ${selectedChips.join(', ')}.` : '';
+    try {
+      await createReview({
+        authorId: session.user.id,
+        targetUserId: datos.targetUserId,
+        equipmentId: datos.equipmentId,
+        rating,
+        comment: [chipText, text].filter(Boolean).join(' ') || 'Sin comentario.',
+      });
+      setSuccess(true);
+    } catch (error) {
+      setSubmitError(error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[1fr_288px] lg:items-start lg:gap-8">
       <div className="min-w-0 space-y-6">
+        <form onSubmit={handleSubmit}>
         <Card className="md:p-8">
           <div className="flex items-center gap-4">
             <Avatar className="size-14" />
@@ -34,22 +86,26 @@ export default function FormularioValoracion({ datos, volverA = '/perfil-publico
 
           <div className="mt-6 border-t border-border pt-6">
             <h2 className="text-heading-lg font-semibold text-text md:text-heading-md">{pregunta}</h2>
-            <StarRating size={36} className="mt-5 gap-1.5" />
-            <p className="mt-4 text-label font-semibold text-accent">5 de 5 · Excelente experiencia</p>
+            <StarRating size={36} value={rating} onChange={setRating} className="mt-5 gap-1.5" disabled={success} />
+            <p className="mt-4 text-label font-semibold text-accent">{rating ? `${rating} de 5` : 'Selecciona una puntuación'}</p>
 
             <p className="mt-6 text-label font-semibold text-text">¿Qué destacarías?</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {chips.map((chip) => <Chip key={chip}>{chip}</Chip>)}
+              {chips.map((chip) => (
+                <button key={chip} type="button" onClick={() => toggleChip(chip)} disabled={success} className={`rounded-lg px-3 py-1.5 text-small font-medium ${selectedChips.includes(chip) ? 'bg-success text-text-inverse' : 'bg-success-subtle text-success'}`}>
+                  <Chip>{chip}</Chip>
+                </button>
+              ))}
             </div>
 
             <label htmlFor="comentario" className="mt-6 block text-label font-semibold text-text">Cuéntanos un poco más (opcional)</label>
             <Textarea id="comentario" rows={4} defaultValue={comentario} maxLength={500} className="mt-2" />
             <p className="mt-2 text-small text-text-muted">
-              <span className="hidden md:inline">{contador} / 500 caracteres</span>
+              <span className="hidden md:inline">Máximo 500 caracteres</span>
               <span className="md:hidden">Máximo 500 caracteres. No incluyas datos personales.</span>
             </p>
 
-            <Checkbox id="declaracion-contacto" defaultChecked className="mt-5 text-small md:hidden">
+            <Checkbox id="declaracion-contacto" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} disabled={success} className="mt-5 text-small">
               {declaracion}
             </Checkbox>
 
@@ -58,19 +114,22 @@ export default function FormularioValoracion({ datos, volverA = '/perfil-publico
               {publicadoComo}
             </p>
 
+            {submitError && <p role="alert" className="mt-5 text-small text-danger">{submitError}</p>}
+            {success && <InfoBox tone="success" title="Valoración publicada" className="mt-5">Gracias por compartir una experiencia real.</InfoBox>}
             <div className="mt-5 space-y-3">
-              <Button type="button" size="lg" icon={ArrowRight} fullWidth className="md:h-14">Publicar valoración</Button>
+              <Button type="submit" size="lg" icon={ArrowRight} fullWidth className="md:h-14" disabled={!canSubmit}>{submitting ? 'Publicando...' : success ? 'Valoración publicada' : 'Publicar valoración'}</Button>
               <Button as={Link} to={volverA} variant="secondary" size="lg" fullWidth className="md:hidden">Cancelar</Button>
             </div>
           </div>
         </Card>
+        </form>
 
         {/* Móvil: equipo relacionado y aviso al final */}
         <Card className="lg:hidden">
           <h2 className="text-heading-lg font-semibold text-text">Equipo relacionado</h2>
           <ImagenNoEncontrada className="mt-4 aspect-[16/9] w-full rounded-xl" />
-          <p className="mt-5 text-heading-sm font-semibold text-text-muted">{contactoCompartido.nombre}</p>
-          <p className="mt-3 text-small text-text-muted">Yopal · Referencia de tu experiencia</p>
+          <p className="mt-5 text-heading-sm font-semibold text-text-muted">{equipo?.nombre || 'Equipo relacionado'}</p>
+          <p className="mt-3 text-small text-text-muted">{equipo?.detalle || 'Referencia de tu experiencia'}</p>
         </Card>
         <InfoBox title="Honesta, útil y respetuosa" className="lg:hidden">
           Una valoración por persona. No acredita un alquiler ni un servicio realizado. Abrir WhatsApp no demuestra que hubo contacto.
@@ -84,9 +143,8 @@ export default function FormularioValoracion({ datos, volverA = '/perfil-publico
         <Card className="p-5">
           <h2 className="text-label font-semibold text-text">El contacto que compartieron</h2>
           <ImagenNoEncontrada className="mt-4 aspect-[4/3] w-full rounded-xl" />
-          <p className="mt-4 text-heading-sm font-semibold text-text">{contactoCompartido.nombre}</p>
-          <p className="mt-3 text-small text-text-muted">{contactoCompartido.detalle}</p>
-          <a href="#whatsapp" className="mt-4 inline-block text-small font-medium text-text">Consulta directa por WhatsApp ↗</a>
+          <p className="mt-4 text-heading-sm font-semibold text-text">{equipo?.nombre || 'Equipo relacionado'}</p>
+          <p className="mt-3 text-small text-text-muted">{equipo?.detalle || 'Referencia de tu experiencia'}</p>
         </Card>
         <Card tone="muted" className="p-5">
           <ShieldCheck size={18} aria-hidden="true" className="text-text" />

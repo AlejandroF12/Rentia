@@ -7,14 +7,13 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import InfoBox from '../components/InfoBox';
 import EquipoCard from '../components/EquipoCard';
-import { clienteMuestra } from '../data/panel';
 import { useAuth } from '../context/AuthContext';
 import { loadClientFavorites } from '../services/clientService';
 import { useEffect, useState } from 'react';
 
 /** Favoritos sin elementos (estado vacío). */
 export default function SinFavoritosPage() {
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const [favorites, setFavorites] = useState([]);
   const [error, setError] = useState('');
 
@@ -78,8 +77,10 @@ export default function SinFavoritosPage() {
           <Card className="flex items-center gap-4 p-5">
             <Avatar className="size-12" />
             <div>
-              <p className="text-heading-sm font-semibold text-text">{clienteMuestra.nombre}</p>
-              <p className="mt-1 text-small text-text-muted">{clienteMuestra.detalle}</p>
+              <p className="text-heading-sm font-semibold text-text">{profile?.full_name || 'Tu perfil'}</p>
+              <p className="mt-1 text-small text-text-muted">
+                Cliente{profile?.municipality ? ` · ${profile.municipality}` : ''}
+              </p>
             </div>
           </Card>
           <InfoBox title="Solo para ti">

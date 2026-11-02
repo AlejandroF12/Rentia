@@ -205,7 +205,7 @@ function PanelDisponibilidad({ equipo, revision }) {
         )}
       </p>
       <Checkbox id="autoriza-celular" defaultChecked className={`mt-4 text-small ${revision ? '' : 'lg:hidden'}`}>
-        Autorizo mostrar mi celular {equipo.celular} para WhatsApp y llamadas.
+        Autorizo mostrar mi celular {equipo.celular || 'registrado en mi perfil'} para WhatsApp y llamadas.
       </Checkbox>
     </Card>
   );
@@ -230,11 +230,11 @@ function PanelAyuda({ modo }) {
   );
 }
 
-function PanelResumen({ equipo, modo }) {
+function PanelResumen({ equipo, modo, ownerName }) {
   if (modo === 'revision') {
     return (
       <Card className="p-5">
-        <p className="text-label font-semibold text-text">Carlos Rojas</p>
+        <p className="text-label font-semibold text-text">{ownerName || 'Tu perfil'}</p>
         <p className="mt-5 text-heading-md font-semibold text-text">{equipo.nombre}</p>
         <p className="mt-5 text-small text-text-muted">Tu borrador no es visible hasta que lo publiques.</p>
       </Card>
@@ -247,12 +247,12 @@ function PanelResumen({ equipo, modo }) {
       <EstadoBadge disponible={equipo.disponible} className="mt-3" />
       <p className="mt-3 text-heading-md font-semibold text-text">{equipo.nombre}</p>
       <p className="mt-3 text-small text-text-muted">{equipo.municipio}</p>
-      <p className="mt-4 text-caption text-text-muted">Publicado por Carlos Rojas</p>
+      <p className="mt-4 text-caption text-text-muted">Publicado por {ownerName || 'tu perfil'}</p>
     </Card>
   );
 }
 
-function AccionesEscritorio({ modo, submitting }) {
+function AccionesEscritorio({ modo, submitting, equipo, publicationStatus }) {
   return (
     <div className="mt-6 hidden lg:block">
       <div className="flex items-center justify-between gap-3">
@@ -264,12 +264,24 @@ function AccionesEscritorio({ modo, submitting }) {
         <div className="flex items-center gap-3">
           {modo === 'editar' ? (
             <>
-              <Button as={Link} to="/arrendador/equipos/gestionar" variant="secondary" size="lg">Ver publicación</Button>
-              <Button type="submit" size="lg" icon={Check} disabled={submitting}>Guardar cambios</Button>
+              {publicationStatus === 'publicada' && (
+                <Button as={Link} to={`/detalle-equipo?id=${encodeURIComponent(equipo.id || '')}`} variant="secondary" size="lg">Ver publicación</Button>
+              )}
+              {publicationStatus === 'borrador' ? (
+                <>
+                  <Button type="submit" name="action" value="borrador" formNoValidate variant="secondary" size="lg" disabled={submitting}>Guardar borrador</Button>
+                  <Button type="submit" name="action" value="publicar" size="lg" icon={Check} disabled={submitting}>Publicar equipo</Button>
+                </>
+              ) : (
+                <>
+                  <Button type="submit" name="action" value="borrador" formNoValidate variant="secondary" size="lg" disabled={submitting}>Guardar como borrador</Button>
+                  <Button type="submit" name="action" value="guardar" size="lg" icon={Check} disabled={submitting}>Guardar cambios</Button>
+                </>
+              )}
             </>
           ) : (
             <>
-              <Button type="button" variant="secondary" size="lg">Guardar borrador</Button>
+              <Button type="submit" formNoValidate name="action" value="borrador" variant="secondary" size="lg" disabled={submitting}>Guardar borrador</Button>
               <Button type="submit" size="lg" icon={Check} disabled={submitting}>{submitting ? 'Publicando...' : 'Publicar equipo'}</Button>
             </>
           )}
@@ -282,15 +294,22 @@ function AccionesEscritorio({ modo, submitting }) {
   );
 }
 
-function AccionesMovil({ modo, resultado, equipo, submitting }) {
+function AccionesMovil({ modo, resultado, equipo, submitting, publicationStatus }) {
   const editar = modo === 'editar';
   return (
     <div className="mt-6 flex flex-col gap-3 lg:hidden">
-      <Button type="submit" size="lg" icon={Check} fullWidth disabled={submitting}>{submitting ? 'Publicando...' : editar ? 'Guardar cambios' : 'Publicar equipo'}</Button>
+      <Button type="submit" name="action" value={editar ? (publicationStatus === 'borrador' ? 'publicar' : 'guardar') : 'publicar'} size="lg" icon={Check} fullWidth disabled={submitting}>{submitting ? 'Guardando...' : editar ? (publicationStatus === 'borrador' ? 'Publicar equipo' : 'Guardar cambios') : 'Publicar equipo'}</Button>
       {editar ? (
-        <Button as={Link} to="/arrendador/equipos/gestionar" variant="secondary" size="lg" fullWidth>Ver publicación</Button>
+        publicationStatus === 'borrador' ? (
+          <Button type="submit" name="action" value="borrador" formNoValidate variant="secondary" size="lg" fullWidth disabled={submitting}>Guardar borrador</Button>
+        ) : (
+          <>
+            <Button as={Link} to={`/detalle-equipo?id=${encodeURIComponent(equipo.id || '')}`} variant="secondary" size="lg" fullWidth>Ver publicación</Button>
+            <Button type="submit" name="action" value="borrador" formNoValidate variant="secondary" size="lg" fullWidth disabled={submitting}>Guardar como borrador</Button>
+          </>
+        )
       ) : (
-        <Button type="button" variant="secondary" size="lg" fullWidth>Guardar borrador</Button>
+        <Button type="submit" formNoValidate name="action" value="borrador" variant="secondary" size="lg" fullWidth disabled={submitting}>Guardar borrador</Button>
       )}
       {modo === 'revision' && (
         <p className="text-small text-text-muted">Tu borrador puede guardarse sin publicar. Corrige los campos indicados y vuelve a intentarlo.</p>
@@ -306,16 +325,17 @@ function AccionesMovil({ modo, resultado, equipo, submitting }) {
 }
 
 export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {}, resultado = false }) {
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const navigate = useNavigate();
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const revision = modo === 'revision';
   const cuenta = Object.values(errores).filter(Boolean).length;
+  const publicationStatus = equipo?.publication_status || (revision ? 'borrador' : 'borrador');
   const insignia = revision
     ? <Badge tone="warning">Borrador sin publicar</Badge>
     : modo === 'editar'
-      ? <Badge tone="success">Publicada</Badge>
+      ? <Badge tone={publicationStatus === 'publicada' ? 'success' : 'warning'}>{publicationStatus === 'publicada' ? 'Publicada' : 'Borrador sin publicar'}</Badge>
       : <Badge tone="warning">Borrador sin publicar</Badge>;
 
   const handleSubmit = async (event) => {
@@ -336,10 +356,12 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
         sector: formData.get('sector'),
         isAvailable: true,
       };
+      const isDraft = event.nativeEvent.submitter?.value === 'borrador';
+      const publicationAction = event.nativeEvent.submitter?.value;
       if (modo === 'editar') {
-        await updateEquipment(equipo.id, session.user.id, values);
+        await updateEquipment(equipo.id, session.user.id, values, publicationAction === 'publicar' ? 'publicada' : publicationAction === 'borrador' ? 'borrador' : undefined);
       } else {
-        await createEquipment(session.user.id, values);
+        await createEquipment(session.user.id, values, isDraft ? 'borrador' : 'publicada');
       }
       navigate('/arrendador/equipos');
     } catch (error) {
@@ -367,18 +389,18 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
             <SeccionDatos equipo={equipo} revision={revision} errores={errores} />
             <SeccionUbicacion equipo={equipo} revision={revision} errores={errores} />
           </div>
-          <AccionesEscritorio modo={modo} submitting={submitting} />
+          <AccionesEscritorio modo={modo} submitting={submitting} equipo={equipo} publicationStatus={publicationStatus} />
         </div>
 
         <aside className="space-y-4">
           {revision && <div className="hidden lg:block">{insignia}</div>}
-          <div className="hidden lg:block"><PanelResumen equipo={equipo} modo={modo} /></div>
+          <div className="hidden lg:block"><PanelResumen equipo={equipo} modo={modo} ownerName={profile?.full_name} /></div>
           <PanelDisponibilidad equipo={equipo} revision={revision} />
           <PanelAyuda modo={modo} />
         </aside>
       </div>
 
-      <AccionesMovil modo={modo} resultado={resultado} equipo={equipo} submitting={submitting} />
+      <AccionesMovil modo={modo} resultado={resultado} equipo={equipo} submitting={submitting} publicationStatus={publicationStatus} />
     </form>
   );
 }

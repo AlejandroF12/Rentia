@@ -9,8 +9,11 @@ import MapaEstatico from '../components/MapaEstatico';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { loadEquipmentById } from '../services/equipmentService';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-function TarjetaPropietario({ owner }) {
+function TarjetaPropietario({ owner, equipmentId }) {
+  const { profile } = useAuth();
   const phone = owner?.phone || '';
   const phoneDigits = phone.replace(/\D/g, '');
   const ownerName = owner?.full_name || 'Propietario de Rentia';
@@ -43,7 +46,15 @@ function TarjetaPropietario({ owner }) {
         El contacto y la negociación son directos con el propietario, fuera de Rentia.
       </InfoBox>
 
-      <a href="/perfil-publico" className="mt-4 inline-block text-small font-semibold text-text">Ver perfil y valoraciones →</a>
+          <a href={owner?.id ? `/perfil-publico?ownerId=${owner.id}` : '#'} className="mt-4 inline-block text-small font-semibold text-text">Ver perfil y valoraciones →</a>
+          {profile?.role === 'cliente' && owner?.id && (
+            <Link
+              to={`/valoraciones/politica?targetUserId=${encodeURIComponent(owner.id)}&equipmentId=${encodeURIComponent(equipmentId)}`}
+              className="mt-3 inline-block text-small font-semibold text-text"
+            >
+              Valorar este contacto →
+            </Link>
+          )}
 
       <p className="mt-4 hidden items-center gap-1.5 text-caption text-text-muted lg:flex">
         <Flag size={10} aria-hidden="true" /> Reportar esta publicación
@@ -133,7 +144,7 @@ export default function DetalleEquipoPage() {
         {/* Contenido + propietario */}
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_340px] lg:gap-12">
           <aside className="lg:col-start-2 lg:row-start-1">
-            <TarjetaPropietario owner={owner} />
+            <TarjetaPropietario owner={owner} equipmentId={equipment.id} />
           </aside>
 
           <div className="min-w-0 lg:col-start-1 lg:row-start-1">

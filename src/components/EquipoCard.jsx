@@ -39,12 +39,12 @@ export default function EquipoCard({ equipo, favorito = true, estadoEnCuerpo = f
         {estadoEnCuerpo && <EstadoBadge disponible={disponible} className="mb-3 md:hidden" />}
         <p className="text-caption font-medium uppercase tracking-wide text-text-muted">{categoria}</p>
         <h3 className="mt-2 text-heading-sm font-semibold text-text">{nombre}</h3>
-        <div className="mt-2 flex items-center justify-between text-small text-text-muted">
-          <span className="inline-flex items-center gap-1.5">
+        <div className="mt-2 flex min-w-0 items-center justify-between gap-3 text-small text-text-muted">
+          <span className="inline-flex min-w-0 items-center gap-1.5">
             <MapPin size={14} aria-hidden="true" />
-            {lugar} · {distancia}
+            <span className="truncate">{lugar}{distancia ? ` · ${distancia}` : ''}</span>
           </span>
-          <Puntaje valor={puntaje} />
+          <Puntaje valor={puntaje} className="shrink-0" />
         </div>
         <Link to={`/detalle-equipo?id=${equipo.id}`} className="mt-3 flex items-center justify-between border-t border-border pt-3 text-label font-semibold text-text">
           Ver equipo

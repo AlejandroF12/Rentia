@@ -1,9 +1,35 @@
 import DashboardLayout from '../layouts/DashboardLayout';
 import PageHeader from '../components/PageHeader';
 import FormularioValoracion from '../components/FormularioValoracion';
-import { valoracionCliente as datos } from '../data/panel';
+import { useAuth } from '../context/AuthContext';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { loadReviewContext } from '../services/clientService';
 
 export default function ClienteCalificaArrendadorPage() {
+  const { profile } = useAuth();
+  const [searchParams] = useSearchParams();
+  const targetUserId = searchParams.get('targetUserId');
+  const equipmentId = searchParams.get('equipmentId');
+  const [context, setContext] = useState(null);
+  const [contextError, setContextError] = useState('');
+  useEffect(() => {
+    if (!targetUserId || !equipmentId) return;
+    loadReviewContext(targetUserId, equipmentId).then(setContext).catch((error) => setContextError(error.message));
+  }, [targetUserId, equipmentId]);
+  const datos = {
+    eyebrow: 'Cliente → Arrendador',
+    titulo: 'Tu experiencia orienta a otros.',
+    volver: 'Volver a mis valoraciones',
+    calificado: { nombre: context?.target.full_name || 'Arrendador no seleccionado', detalle: context?.target.municipality ? `Arrendador · ${context.target.municipality}` : 'Selecciona un contacto real.' },
+    pregunta: '¿Cómo fue la atención del arrendador?',
+    chips: ['Buena atención', 'Información clara', 'Estado del equipo'],
+    declaracion: 'Declaro que tuve contacto directo previo. Mi valoración describe esa experiencia.',
+    publicadoComo: `Se publicará como ${profile?.full_name || 'mi perfil'} · Cliente.`,
+    targetUserId,
+    equipmentId,
+    equipo: context ? { nombre: context.equipment.name, detalle: context.equipment.municipality } : null,
+  };
   return (
     <DashboardLayout rol="cliente" activo="valoraciones">
       <PageHeader
@@ -12,6 +38,8 @@ export default function ClienteCalificaArrendadorPage() {
         titulo={datos.titulo}
         subtitulo="Valora el contacto que tuviste y ayuda a construir confianza en la región."
       />
+      {contextError && <p role="alert" className="mt-6 text-small text-danger">{contextError}</p>}
+      {!targetUserId || !equipmentId ? <p role="alert" className="mt-6 text-small text-danger">Esta valoración necesita un arrendador y un equipo seleccionados.</p> : null}
       <FormularioValoracion datos={datos} volverA="/cliente/valoraciones" />
     </DashboardLayout>
   );

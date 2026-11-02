@@ -34,6 +34,7 @@ export default function EditarVehiculoPage() {
         sector: item.sector || '',
         fotos: 0,
         disponible: item.is_available,
+        publication_status: item.publication_status,
       }))
       .catch((loadError) => setError(loadError.message));
   }, [equipmentId, session?.user?.id]);
@@ -45,7 +46,9 @@ export default function EditarVehiculoPage() {
         eyebrow="Actualiza tu publicación"
         titulo="Editar vehículo"
         subtitulo="Mantén la información y disponibilidad al día."
-        accion={<Badge tone="success" className="self-start">Publicada</Badge>}
+        accion={<Badge tone={equipment?.publication_status === 'publicada' ? 'success' : 'warning'} className="self-start">
+          {equipment?.publication_status === 'publicada' ? 'Publicada' : 'Borrador sin publicar'}
+        </Badge>}
       />
       {(error || missingIdError) && <p role="alert" className="mt-6 text-small text-danger">{error || missingIdError}</p>}
       {equipment && <FormularioEquipo modo="editar" equipo={equipment} />}

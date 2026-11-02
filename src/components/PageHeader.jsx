@@ -21,7 +21,7 @@ export default function PageHeader({ breadcrumb, volver, eyebrow, titulo, subtit
           <h1 className="mt-3 text-title-mobile font-semibold leading-tight text-text md:text-title-desktop">{titulo}</h1>
           {subtitulo && <p className="mt-2 text-body-lg text-text-muted">{subtitulo}</p>}
         </div>
-        {accion}
+        {accion && <div className="w-full shrink-0 md:w-auto">{accion}</div>}
       </div>
     </header>
   );

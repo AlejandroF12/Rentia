@@ -7,18 +7,7 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import Checkbox from '../components/Checkbox';
 import InfoBox from '../components/InfoBox';
-
-function Perfil() {
-  return (
-    <div className="flex items-center gap-4">
-      <Avatar className="size-14" />
-      <div>
-        <p className="text-heading-sm font-semibold text-text">Carlos Rojas</p>
-        <p className="mt-1 text-small text-text-muted">Arrendador · Yopal, Casanare</p>
-      </div>
-    </div>
-  );
-}
+import { useSearchParams } from 'react-router-dom';
 
 function BloqueNormas({ titulo, children, boton }) {
   return (
@@ -32,6 +21,11 @@ function BloqueNormas({ titulo, children, boton }) {
 
 /** Política de valoraciones (paso previo a valorar). */
 export default function AntesDeValorarPage() {
+  const [searchParams] = useSearchParams();
+  const targetUserId = searchParams.get('targetUserId');
+  const equipmentId = searchParams.get('equipmentId');
+  const canContinue = Boolean(targetUserId && equipmentId);
+  const nextUrl = `/valoraciones/cliente-a-arrendador?targetUserId=${encodeURIComponent(targetUserId || '')}&equipmentId=${encodeURIComponent(equipmentId || '')}`;
   return (
     <DashboardLayout rol="cliente" activo="valoraciones">
       <PageHeader
@@ -44,10 +38,16 @@ export default function AntesDeValorarPage() {
       <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[1fr_288px] lg:items-start lg:gap-8">
         <div className="min-w-0 space-y-6">
           <Card>
-            <Perfil />
+            <div className="flex items-center gap-4">
+              <Avatar className="size-14" />
+              <div>
+                <p className="text-heading-sm font-semibold text-text">Contacto seleccionado</p>
+                <p className="mt-1 text-small text-text-muted">La persona y el equipo se cargarán al continuar.</p>
+              </div>
+            </div>
             <h2 className="mt-6 text-heading-lg font-semibold text-text md:text-heading-md">Valora el contacto, no un alquiler.</h2>
             <p className="mt-3 text-body-lg text-text-muted md:text-body">
-              Comparte cómo fue la comunicación y la atención de Carlos. Tu opinión no prueba que se haya realizado un alquiler o un servicio.
+              Comparte cómo fue la comunicación y la atención del arrendador. Tu opinión no prueba que se haya realizado un alquiler o un servicio.
             </p>
 
             <InfoBox title="WhatsApp no confirma contacto" className="mt-5">
@@ -56,7 +56,7 @@ export default function AntesDeValorarPage() {
 
             <div className="mt-5 space-y-4">
               <Checkbox id="declaro-contacto" defaultChecked className="text-small">
-                Declaro que tuve contacto directo previo con Carlos Rojas y que esta valoración refleja mi propia experiencia.
+                Declaro que tuve contacto directo previo y que esta valoración refleja mi propia experiencia.
               </Checkbox>
               <Checkbox id="entiendo-normas" defaultChecked className="text-small">
                 Entiendo que solo puedo tener una valoración por persona y que no debo incluir datos privados ni contenido abusivo.
@@ -64,7 +64,7 @@ export default function AntesDeValorarPage() {
             </div>
 
             <div className="mt-5 space-y-3">
-              <Button as={Link} to="/valoraciones/cliente-a-arrendador" size="lg" icon={ArrowRight} fullWidth>Continuar a valorar</Button>
+              <Button as={Link} to={nextUrl} size="lg" icon={ArrowRight} fullWidth disabled={!canContinue}>Continuar a valorar</Button>
               <Button as={Link} to="/cliente/valoraciones" variant="secondary" size="lg" fullWidth>No he tenido contacto · Volver</Button>
             </div>
           </Card>
@@ -74,7 +74,7 @@ export default function AntesDeValorarPage() {
               Describe hechos que viviste, sin suplantar identidades ni atribuir experiencias a terceros. No publiques teléfonos, correos ni direcciones privadas.
             </BloqueNormas>
             <BloqueNormas titulo="Una valoración por contraparte" boton="Editar mi valoración existente">
-              Si ya valoraste a Carlos, edita esa opinión en lugar de crear otra.
+              Si ya valoraste a esta persona, edita esa opinión en lugar de crear otra.
             </BloqueNormas>
             <BloqueNormas titulo="¿Una opinión incumple las normas?" boton="Reportar valoración abusiva">
               Reporta la valoración abusiva para revisión de administración. Reportar no elimina automáticamente la opinión.
