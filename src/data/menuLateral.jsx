@@ -5,10 +5,10 @@ export const menusLaterales = {
   arrendador: {
     titulo: 'Mi negocio',
     items: [
-      { id: 'resumen', texto: 'Resumen', icono: LayoutGrid, href: '#' },
+      { id: 'resumen', texto: 'Resumen', icono: LayoutGrid, href: '/arrendador/resumen' },
       { id: 'equipos', texto: 'Mis equipos', icono: Truck, href: '/arrendador/equipos' },
-      { id: 'valoraciones', texto: 'Valoraciones', icono: Star, href: '/valoraciones/arrendador-a-cliente' },
-      { id: 'perfil', texto: 'Mi perfil', icono: User, href: '/perfil-publico' },
+      { id: 'valoraciones', texto: 'Valoraciones', icono: Star, href: '/arrendador/valoraciones' },
+      { id: 'perfil', texto: 'Mi perfil', icono: User, href: '/arrendador/perfil' },
     ],
   },
   admin: {

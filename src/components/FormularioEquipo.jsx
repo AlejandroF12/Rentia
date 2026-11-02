@@ -13,7 +13,7 @@ import Textarea from './Textarea';
 import Toggle from './Toggle';
 import { categoriasEquipo, municipios } from '../data/panel';
 import { useAuth } from '../context/AuthContext';
-import { createEquipment } from '../services/equipmentService';
+import { createEquipment, updateEquipment } from '../services/equipmentService';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -324,7 +324,7 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
     setSubmitting(true);
     const formData = new FormData(event.currentTarget);
     try {
-      await createEquipment(session.user.id, {
+      const values = {
         name: formData.get('nombre'),
         category: formData.get('categoria'),
         brand: formData.get('marca'),
@@ -335,7 +335,12 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
         municipality: formData.get('municipio'),
         sector: formData.get('sector'),
         isAvailable: true,
-      });
+      };
+      if (modo === 'editar') {
+        await updateEquipment(equipo.id, session.user.id, values);
+      } else {
+        await createEquipment(session.user.id, values);
+      }
       navigate('/arrendador/equipos');
     } catch (error) {
       setSubmitError(error.message);

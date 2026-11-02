@@ -36,7 +36,17 @@ function BarraPestanas({ rol, activo, className = '' }) {
 }
 
 function MenuLateral({ rol, activo }) {
+  const { signOut } = useAuth();
   const menu = menusLaterales[rol];
+  const handleSignOut = async (event) => {
+    event.preventDefault();
+    const { error } = await signOut();
+    if (error) {
+      console.error(`No se pudo cerrar la sesión: ${error.message}`);
+      return;
+    }
+    window.location.assign('/');
+  };
   return (
     <aside className="hidden w-[216px] shrink-0 border-r border-border bg-surface px-5 py-7 lg:block">
       <p className="text-caption font-semibold uppercase tracking-wider text-text-muted">{menu.titulo}</p>
@@ -65,7 +75,7 @@ function MenuLateral({ rol, activo }) {
         </a>
       </div>
 
-      <Link to="/" className="mt-4 inline-flex items-center gap-2 px-1 text-small text-text-muted">
+      <Link to="/" onClick={handleSignOut} className="mt-4 inline-flex items-center gap-2 px-1 text-small text-text-muted">
         <LogOut size={14} aria-hidden="true" /> Cerrar sesión
       </Link>
     </aside>

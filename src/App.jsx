@@ -40,6 +40,9 @@ import PrivacidadPage from './pages/PrivacidadPage'
 import NormasPage from './pages/NormasPage'
 import ClientePerfilPage from './pages/ClientePerfilPage'
 import ClienteValoracionesPage from './pages/ClienteValoracionesPage'
+import ArrendadorValoracionesPage from './pages/ArrendadorValoracionesPage'
+import ArrendadorPerfilPage from './pages/ArrendadorPerfilPage'
+import ResumenArrendadorPage from './pages/ResumenArrendadorPage'
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
@@ -96,11 +99,14 @@ function App() {
 
         {/* Arrendador */}
         <Route path='/arrendador/equipos' element={<RequireRole roles={['arrendador']}><MainLayout navVariant='arrendador'><PanelArrendadorPage /></MainLayout></RequireRole>} />
+        <Route path='/arrendador/resumen' element={<RequireRole roles={['arrendador']}><MainLayout navVariant='arrendador'><ResumenArrendadorPage /></MainLayout></RequireRole>} />
         <Route path='/arrendador/equipos/nuevo' element={<RequireRole roles={['arrendador']}><MainLayout navVariant='arrendador'><AgregarVehiculoPage /></MainLayout></RequireRole>} />
         <Route path='/arrendador/equipos/nuevo/revision' element={<RequireRole roles={['arrendador']}><MainLayout navVariant='arrendador'><ValidacionPublicarPage /></MainLayout></RequireRole>} />
         <Route path='/arrendador/equipos/editar' element={<RequireRole roles={['arrendador']}><MainLayout navVariant='arrendador'><EditarVehiculoPage /></MainLayout></RequireRole>} />
         <Route path='/arrendador/equipos/gestionar' element={<RequireRole roles={['arrendador']}><MainLayout navVariant='arrendador'><GestionarPublicacionPage /></MainLayout></RequireRole>} />
         <Route path='/arrendador/equipos/eliminar' element={<RequireRole roles={['arrendador']}><MainLayout navVariant='arrendador'><ConfirmarEliminacionPage /></MainLayout></RequireRole>} />
+        <Route path='/arrendador/valoraciones' element={<RequireRole roles={['arrendador']}><MainLayout navVariant='arrendador'><ArrendadorValoracionesPage /></MainLayout></RequireRole>} />
+        <Route path='/arrendador/perfil' element={<RequireRole roles={['arrendador']}><MainLayout navVariant='arrendador'><ArrendadorPerfilPage /></MainLayout></RequireRole>} />
 
         {/* Cliente */}
         <Route path='/cliente' element={<RequireRole roles={['cliente']}><MainLayout navVariant='cliente'><MiEspacioClientePage /></MainLayout></RequireRole>} />

@@ -1,4 +1,4 @@
-import { MapPin, Plus, Menu, X, ChevronDown, ArrowUpRight } from 'lucide-react';
+import { MapPin, Plus, Menu, X, ChevronDown, ArrowUpRight, UserRound } from 'lucide-react';
 import Logo from './Logo';
 import Button from './Button';
 import Badge from './Badge';
@@ -39,7 +39,7 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
   };
 
   return (
-    <header className="relative z-30 border-b border-border bg-surface">
+    <header className="sticky top-0 z-30 border-b border-border bg-surface">
       <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-5 md:grid md:h-[72px] md:grid-cols-[1fr_auto_1fr] md:px-8 lg:px-16">
         <Logo />
 
@@ -75,11 +75,18 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
           ) : rol ? (
             <>
               <Badge tone="neutral">{rol.label}</Badge>
-              <span className="flex size-8 items-center justify-center rounded-full bg-surface-muted text-small font-semibold text-text">
-                {rol.initials}
-              </span>
-              <button type="button" aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'} className="text-text" onClick={() => setIsOpen((open) => !open)}>
-                {isMenuOpen ? <X size={18} /> : <ChevronDown size={18} />}
+              <button
+                type="button"
+                aria-label={isMenuOpen ? 'Cerrar menú de usuario' : 'Abrir menú de usuario'}
+                className="flex items-center gap-1 rounded-full border border-border p-1 text-text hover:bg-surface-muted"
+                onClick={() => setIsOpen((open) => !open)}
+              >
+                <span className="flex size-8 items-center justify-center rounded-full bg-surface-muted text-text-muted">
+                  <UserRound size={16} strokeWidth={1.8} aria-hidden="true" />
+                </span>
+                <span className="flex size-6 items-center justify-center rounded-full text-text-muted">
+                  {isMenuOpen ? <X size={16} /> : <ChevronDown size={16} />}
+                </span>
               </button>
             </>
           ) : variant === 'simple' || textoPublico ? (
@@ -109,7 +116,7 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
       {isMenuOpen && variant !== 'simple' && (
         <>
           <button type="button" aria-label="Cerrar menú" className="fixed inset-0 top-16 z-10 bg-overlay/40 md:top-[72px]" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 top-full z-20 w-full md:right-8 md:top-[80px] md:w-auto lg:right-16">
+          <div className="fixed right-0 top-16 z-20 w-full md:right-8 md:top-[80px] md:w-auto lg:right-16">
             <MenuPanel variant={variantMenu} onClose={() => setIsOpen(false)} />
           </div>
         </>

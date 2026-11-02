@@ -2,8 +2,19 @@ import { ArrowUpRight, Disc, Search, MapPin, ListFilter, ArrowRight, TractorIcon
 import heroImage from '../media/heroImage.webp'
 import EquipoCard from '../components/EquipoCard'
 import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { loadFeaturedEquipment } from '../services/equipmentService'
 
 export const Home = () => {
+    const [featuredEquipment, setFeaturedEquipment] = useState([])
+    const [featuredError, setFeaturedError] = useState('')
+
+    useEffect(() => {
+        loadFeaturedEquipment()
+            .then((items) => setFeaturedEquipment(items.filter((item) => item.rating > 0)))
+            .catch((error) => setFeaturedError(error.message))
+    }, [])
+
     return (
         <div id='inicio' className='w-full'>
             {/* Hero section */}
@@ -165,11 +176,28 @@ export const Home = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'>
-                            <EquipoCard equipo={{ categoria: 'Movimiento de tierra', nombre: 'Retroexcavadora CAT 420F', lugar: 'Yopal', distancia: '5 km', puntaje: '4,9', disponible: true }} />
-                            <EquipoCard equipo={{ categoria: 'Transporte de carga', nombre: 'Volqueta International 7600', lugar: 'Yopal', distancia: '12 km', puntaje: '4,7', disponible: true }} />
-                            <EquipoCard equipo={{ categoria: 'Movimiento de tierra', nombre: 'Excavadora Komatsu PC200', lugar: 'Aguazul', distancia: '28 km', puntaje: '4,8', disponible: true }} />
-                        </div>
+                        {featuredError && <p role='alert' className='text-small text-danger'>{featuredError}</p>}
+                        {!featuredError && featuredEquipment.length === 0 && (
+                            <p className='text-body text-text-muted'>Aún no hay equipos disponibles con valoraciones publicadas.</p>
+                        )}
+                        {featuredEquipment.length > 0 && (
+                            <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'>
+                                {featuredEquipment.map((item) => (
+                                    <EquipoCard
+                                        key={item.id}
+                                        equipo={{
+                                            id: item.id,
+                                            categoria: item.category,
+                                            nombre: item.name,
+                                            lugar: item.municipality,
+                                            distancia: 'ubicación aproximada',
+                                            puntaje: item.rating.toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+                                            disponible: item.is_available,
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             </section>

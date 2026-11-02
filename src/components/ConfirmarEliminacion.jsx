@@ -11,7 +11,7 @@ import InfoBox from './InfoBox';
  * y, cuando se active, dentro de "Gestionar publicación").
  * resultado: muestra el aviso de éxito y el botón "Volver a mis equipos".
  */
-export default function ConfirmarEliminacion({ nombre = 'CAT 420F', resultado = false, className = '' }) {
+export default function ConfirmarEliminacion({ nombre = 'CAT 420F', resultado = false, onConfirm, className = '' }) {
   return (
     <Card tone="danger" className={className}>
       <h2 className="text-heading-lg font-semibold text-text">¿Eliminar {nombre} definitivamente?</h2>
@@ -28,7 +28,7 @@ export default function ConfirmarEliminacion({ nombre = 'CAT 420F', resultado = 
         <Button as={Link} to="/arrendador/equipos/gestionar" variant="secondary" size="lg" className="w-full md:w-auto">
           Cancelar y conservar equipo
         </Button>
-        <button type="button" className="inline-flex items-center justify-center gap-2 py-2 text-label font-semibold text-danger">
+        <button type="button" onClick={onConfirm} disabled={!onConfirm} className="inline-flex items-center justify-center gap-2 py-2 text-label font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-50">
           <Trash2 size={14} aria-hidden="true" /> Sí, eliminar definitivamente
         </button>
       </div>

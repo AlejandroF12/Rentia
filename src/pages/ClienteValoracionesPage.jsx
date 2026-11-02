@@ -39,7 +39,7 @@ export default function ClienteValoracionesPage() {
                 <h2 className="text-heading-sm font-semibold text-text">{review.target?.full_name || 'Usuario de Rentia'}</h2>
                 <p className="mt-1 text-small text-text-muted">{review.equipment?.name || 'Equipo relacionado'}</p>
               </div>
-              <StarRating size={16} />
+              <StarRating size={16} value={review.rating} />
             </div>
             <p className="mt-4 text-body text-text-muted">{review.comment}</p>
           </Card>

@@ -4,7 +4,6 @@ import Button from '../components/Button';
 import Avatar from '../components/Avatar';
 import ImagenNoEncontrada from '../components/ImagenNoEncontrada';
 import { EstadoBadge } from '../components/Badge';
-import StarRating from '../components/StarRating';
 import InfoBox from '../components/InfoBox';
 import MapaEstatico from '../components/MapaEstatico';
 import { useEffect, useState } from 'react';
@@ -56,15 +55,24 @@ function TarjetaPropietario({ owner }) {
 export default function DetalleEquipoPage() {
   const [searchParams] = useSearchParams();
   const equipmentId = searchParams.get('id');
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const hasInvalidEquipmentId = Boolean(equipmentId && !uuidPattern.test(equipmentId));
   const [equipment, setEquipment] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(() => (
+    !equipmentId
+      ? 'No se indicó el equipo que deseas consultar.'
+      : hasInvalidEquipmentId
+        ? 'El enlace del equipo no es válido. Regresa al catálogo y selecciona una publicación.'
+        : ''
+  ));
 
   useEffect(() => {
-    if (!equipmentId) {
+    if (!equipmentId || hasInvalidEquipmentId) {
       return;
     }
+
     loadEquipmentById(equipmentId).then(setEquipment).catch((loadError) => setError(loadError.message));
-  }, [equipmentId]);
+  }, [equipmentId, hasInvalidEquipmentId]);
 
   if (!equipmentId) {
     return <main className="mx-auto max-w-[1440px] px-5 py-16 text-danger">No se indicó el equipo que deseas consultar.</main>;
@@ -151,24 +159,11 @@ export default function DetalleEquipoPage() {
             <hr className="my-8 border-border" />
 
             <div className="flex items-center justify-between">
-              <h2 className="text-heading-md font-semibold text-text">Gente que recomienda</h2>
-              <a href="/perfil-publico" className="hidden text-small text-text-muted lg:block">Ver las 24 opiniones →</a>
+              <h2 className="text-heading-md font-semibold text-text">Valoraciones</h2>
             </div>
-
-            <div className="mt-5 flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <Avatar className="size-10" />
-                <div>
-                  <p className="text-label font-semibold text-text">María López · Cliente</p>
-                  <p className="text-caption text-text-muted">Calificó a Carlos Rojas · 12 oct. 2026</p>
-                </div>
-              </div>
-              <StarRating size={12} />
-            </div>
-            <p className="mt-4 text-label text-text-muted">
-              “Carlos respondió con claridad y el equipo estaba en muy buenas condiciones. Excelente atención para nuestro proyecto en Yopal.”
-            </p>
-            <a href="/perfil-publico" className="mt-4 inline-block text-label font-semibold text-text">¿Ya contactaste a Carlos? Calificar arrendador →</a>
+            <InfoBox className="mt-5">
+              Este equipo todavía no tiene valoraciones publicadas.
+            </InfoBox>
 
             <p className="mt-6 flex items-center gap-1.5 text-caption text-text-muted lg:hidden">
               <Flag size={10} aria-hidden="true" /> Reportar esta publicación
