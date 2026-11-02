@@ -14,6 +14,41 @@ export async function loadClientFavorites(userId) {
   return data ?? [];
 }
 
+export async function loadFavoriteEquipmentIds(userId) {
+  const { data, error } = await supabase
+    .from('favorites')
+    .select('equipment_id')
+    .eq('user_id', userId);
+
+  if (error) throw new Error(`No se pudieron cargar los favoritos: ${error.message}`);
+  return (data ?? []).map((item) => item.equipment_id);
+}
+
+export async function setFavorite(userId, equipmentId, favorite) {
+  const query = supabase.from('favorites');
+  const result = favorite
+    ? await query.upsert({ user_id: userId, equipment_id: equipmentId })
+    : await query.delete().eq('user_id', userId).eq('equipment_id', equipmentId);
+
+  if (result.error) throw new Error(`No se pudo actualizar el favorito: ${result.error.message}`);
+}
+
+export async function createReport({ reporterId, equipmentId, reason, description }) {
+  const { data, error } = await supabase
+    .from('reports')
+    .insert({
+      reporter_id: reporterId,
+      equipment_id: equipmentId,
+      reason,
+      description: description?.trim() || null,
+    })
+    .select('id, created_at, status')
+    .single();
+
+  if (error) throw new Error(`No se pudo enviar el reporte: ${error.message}`);
+  return data;
+}
+
 export async function loadClientReviews(userId) {
   const { data, error } = await supabase
     .from('reviews')

@@ -7,6 +7,8 @@ import Pagination from '../components/Pagination';
 import EquipoCard from '../components/EquipoCard';
 import { tiposEquipo } from '../data/muestra';
 import { loadPublishedEquipment } from '../services/equipmentService';
+import { loadFavoriteEquipmentIds } from '../services/clientService';
+import { useAuth } from '../context/AuthContext';
 
 function Filtros() {
   return (
@@ -68,13 +70,18 @@ function ChipSelect({ children }) {
 }
 
 export default function CatalogoPage() {
+  const { session, profile } = useAuth();
   const [equipment, setEquipment] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState([]);
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
     loadPublishedEquipment().then(setEquipment).catch((loadError) => setError(loadError.message));
-  }, []);
+    if (session?.user?.id && profile?.role === 'cliente') {
+      loadFavoriteEquipmentIds(session.user.id).then(setFavoriteIds).catch((loadError) => setError(loadError.message));
+    }
+  }, [session?.user?.id, profile?.role]);
 
   const visibleEquipment = useMemo(() => equipment
     .filter((item) => `${item.name} ${item.category} ${item.municipality}`.toLowerCase().includes(search.toLowerCase()))
@@ -152,7 +159,13 @@ export default function CatalogoPage() {
               {error && <p role="alert" className="text-small text-danger">{error}</p>}
               {!error && visibleEquipment.length === 0 && <p className="text-body text-text-muted">No hay equipos publicados que coincidan con tu búsqueda.</p>}
               {visibleEquipment.map((equipo) => (
-                <EquipoCard key={equipo.id} equipo={equipo} />
+                <EquipoCard
+                  key={equipo.id}
+                  equipo={equipo}
+                  favorito={profile?.role === 'cliente'}
+                  isFavorite={favoriteIds.includes(equipo.id)}
+                  onFavoriteChange={(id, value) => setFavoriteIds((current) => value ? [...new Set([...current, id])] : current.filter((item) => item !== id))}
+                />
               ))}
             </div>
 

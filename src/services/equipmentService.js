@@ -1,5 +1,43 @@
 import { supabase } from '../lib/supabaseClient';
 
+const imageUrl = (path) => supabase.storage.from('equipment-images').getPublicUrl(path).data.publicUrl;
+
+export async function loadEquipmentImages(equipmentId) {
+  const { data, error } = await supabase
+    .from('equipment_images')
+    .select('id, storage_path, display_order, is_cover')
+    .eq('equipment_id', equipmentId)
+    .order('display_order', { ascending: true });
+
+  if (error) throw new Error(`No se pudieron cargar las imágenes: ${error.message}`);
+  return (data ?? []).map((image) => ({ ...image, url: imageUrl(image.storage_path) }));
+}
+
+export async function uploadEquipmentImages(equipmentId, files) {
+  const uploaded = [];
+  const existing = await loadEquipmentImages(equipmentId);
+  for (const [index, file] of files.entries()) {
+    const path = `${equipmentId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const { error: uploadError } = await supabase.storage.from('equipment-images').upload(path, file, { upsert: false });
+    if (uploadError) throw new Error(`No se pudo subir la imagen: ${uploadError.message}`);
+    const { data, error } = await supabase
+      .from('equipment_images')
+      .insert({ equipment_id: equipmentId, storage_path: path, display_order: existing.length + index, is_cover: existing.length === 0 && index === 0 })
+      .select('id, storage_path, display_order, is_cover')
+      .single();
+    if (error) throw new Error(`No se pudo registrar la imagen: ${error.message}`);
+    uploaded.push({ ...data, url: imageUrl(path) });
+  }
+  return uploaded;
+}
+
+export async function deleteEquipmentImage(image) {
+  const { error: storageError } = await supabase.storage.from('equipment-images').remove([image.storage_path]);
+  if (storageError) throw new Error(`No se pudo eliminar la imagen: ${storageError.message}`);
+  const { error } = await supabase.from('equipment_images').delete().eq('id', image.id);
+  if (error) throw new Error(`No se pudo eliminar el registro de imagen: ${error.message}`);
+}
+
 export async function createEquipment(ownerId, values, publicationStatus = 'publicada') {
   const { data, error } = await supabase
     .from('equipment')

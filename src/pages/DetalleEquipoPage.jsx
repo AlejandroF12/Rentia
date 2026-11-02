@@ -8,9 +8,10 @@ import InfoBox from '../components/InfoBox';
 import MapaEstatico from '../components/MapaEstatico';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { loadEquipmentById } from '../services/equipmentService';
+import { loadEquipmentById, loadEquipmentImages } from '../services/equipmentService';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { loadFavoriteEquipmentIds, setFavorite } from '../services/clientService';
 
 function TarjetaPropietario({ owner, equipmentId }) {
   const { profile } = useAuth();
@@ -56,8 +57,10 @@ function TarjetaPropietario({ owner, equipmentId }) {
             </Link>
           )}
 
-      <p className="mt-4 hidden items-center gap-1.5 text-caption text-text-muted lg:flex">
-        <Flag size={10} aria-hidden="true" /> Reportar esta publicación
+      <p className="mt-4 flex items-center gap-1.5 text-caption text-text-muted">
+        <Link to={`/reportar-publicacion?id=${encodeURIComponent(equipmentId)}`} className="inline-flex items-center gap-1.5">
+          <Flag size={10} aria-hidden="true" /> Reportar esta publicación
+        </Link>
       </p>
     </div>
   );
@@ -69,6 +72,11 @@ export default function DetalleEquipoPage() {
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   const hasInvalidEquipmentId = Boolean(equipmentId && !uuidPattern.test(equipmentId));
   const [equipment, setEquipment] = useState(null);
+  const [images, setImages] = useState([]);
+  const [favorite, setFavoriteState] = useState(false);
+  const [favoriteError, setFavoriteError] = useState('');
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const { session, profile } = useAuth();
   const [error, setError] = useState(() => (
     !equipmentId
       ? 'No se indicó el equipo que deseas consultar.'
@@ -82,8 +90,18 @@ export default function DetalleEquipoPage() {
       return;
     }
 
-    loadEquipmentById(equipmentId).then(setEquipment).catch((loadError) => setError(loadError.message));
-  }, [equipmentId, hasInvalidEquipmentId]);
+    Promise.all([loadEquipmentById(equipmentId), loadEquipmentImages(equipmentId)])
+      .then(([item, equipmentImages]) => {
+        setEquipment(item);
+        setImages(equipmentImages);
+      })
+      .catch((loadError) => setError(loadError.message));
+    if (session?.user?.id && profile?.role === 'cliente') {
+      loadFavoriteEquipmentIds(session.user.id)
+        .then((ids) => setFavoriteState(ids.includes(equipmentId)))
+        .catch((loadError) => setFavoriteError(loadError.message));
+    }
+  }, [equipmentId, hasInvalidEquipmentId, session?.user?.id, profile?.role]);
 
   if (!equipmentId) {
     return <main className="mx-auto max-w-[1440px] px-5 py-16 text-danger">No se indicó el equipo que deseas consultar.</main>;
@@ -112,8 +130,36 @@ export default function DetalleEquipoPage() {
             <span className="hidden lg:inline">Inicio / Explorar equipos / Retroexcavadora CAT 420F</span>
           </Breadcrumb>
           <div className="flex items-center gap-4 text-text">
-            <button type="button" aria-label="Guardar en favoritos"><Heart size={18} /></button>
-            <button type="button" aria-label="Compartir"><Share2 size={18} /></button>
+            {profile?.role === 'cliente' && <button
+              type="button"
+              aria-label={favorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+              disabled={!session?.user?.id}
+              onClick={async () => {
+                try {
+                  setFavoriteError('');
+                  await setFavorite(session.user.id, equipmentId, !favorite);
+                  setFavoriteState((current) => !current);
+                } catch (favoriteLoadError) {
+                  setFavoriteError(favoriteLoadError.message);
+                }
+              }}
+            >
+              <Heart size={18} fill={favorite ? 'currentColor' : 'none'} />
+            </button>}
+            <button
+              type="button"
+              aria-label="Compartir"
+              onClick={async () => {
+                const url = window.location.href;
+                if (navigator.share) {
+                  await navigator.share({ title: equipment.name, url });
+                } else {
+                  await navigator.clipboard.writeText(url);
+                }
+              }}
+            >
+              <Share2 size={18} />
+            </button>
           </div>
         </div>
 
@@ -129,14 +175,14 @@ export default function DetalleEquipoPage() {
 
         {/* Galería */}
         <div className="mt-6 grid grid-cols-2 gap-3 lg:h-[360px] lg:grid-cols-3 lg:grid-rows-2 lg:gap-4">
-          <ImagenNoEncontrada className="col-span-2 aspect-[4/3] w-full rounded-2xl lg:col-span-2 lg:row-span-2 lg:aspect-auto lg:h-full" />
-          <ImagenNoEncontrada className="h-28 w-full rounded-2xl lg:h-full" />
+          {images[0] ? <img src={images[0].url} alt={equipment.name} className="col-span-2 aspect-[4/3] w-full rounded-2xl object-cover lg:col-span-2 lg:row-span-2 lg:aspect-auto lg:h-full" /> : <ImagenNoEncontrada className="col-span-2 aspect-[4/3] w-full rounded-2xl lg:col-span-2 lg:row-span-2 lg:aspect-auto lg:h-full" />}
+          {images[1] ? <img src={images[1].url} alt="" className="h-28 w-full rounded-2xl object-cover lg:h-full" /> : <ImagenNoEncontrada className="h-28 w-full rounded-2xl lg:h-full" />}
           <div className="relative h-28 lg:h-full">
-            <ImagenNoEncontrada className="size-full rounded-2xl" />
-            <button type="button" className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-lg bg-surface px-3 py-1.5 text-small font-semibold text-text">
+            {images[2] ? <img src={images[2].url} alt="" className="size-full rounded-2xl object-cover" /> : <ImagenNoEncontrada className="size-full rounded-2xl" />}
+            <button type="button" onClick={() => setGalleryOpen(true)} className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-lg bg-surface px-3 py-1.5 text-small font-semibold text-text">
               <Images size={14} aria-hidden="true" />
-              <span className="lg:hidden">Ver 6 fotos</span>
-              <span className="hidden lg:inline">Ver las 6 fotos</span>
+              <span className="lg:hidden">Ver {images.length} fotos</span>
+              <span className="hidden lg:inline">Ver las {images.length} fotos</span>
             </button>
           </div>
         </div>
@@ -149,6 +195,7 @@ export default function DetalleEquipoPage() {
 
           <div className="min-w-0 lg:col-start-1 lg:row-start-1">
             <h2 className="text-heading-md font-semibold text-text md:text-heading-lg">{equipment.name}</h2>
+                {favoriteError && <p role="alert" className="mt-3 text-small text-danger">{favoriteError}</p>}
                 <p className="mt-3 text-body-lg text-text-muted">{equipment.description}</p>
 
             <dl className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
@@ -182,6 +229,21 @@ export default function DetalleEquipoPage() {
           </div>
         </div>
       </main>
+      {galleryOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/80 p-5" role="dialog" aria-modal="true" aria-label="Galería de imágenes">
+          <div className="max-h-[90vh] w-full max-w-4xl overflow-auto rounded-2xl bg-surface p-4">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-heading-md font-semibold text-text">Fotos de {equipment.name}</h2>
+              <button type="button" onClick={() => setGalleryOpen(false)} className="text-label font-semibold text-text">Cerrar</button>
+            </div>
+            {images.length ? (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {images.map((image, index) => <img key={image.id} src={image.url} alt={`${equipment.name}, foto ${index + 1}`} className="w-full rounded-xl object-cover" />)}
+              </div>
+            ) : <p className="mt-4 text-small text-text-muted">Este equipo aún no tiene imágenes.</p>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

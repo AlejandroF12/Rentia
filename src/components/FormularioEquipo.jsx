@@ -13,7 +13,7 @@ import Textarea from './Textarea';
 import Toggle from './Toggle';
 import { categoriasEquipo, municipios } from '../data/panel';
 import { useAuth } from '../context/AuthContext';
-import { createEquipment, updateEquipment } from '../services/equipmentService';
+import { createEquipment, updateEquipment, uploadEquipmentImages, deleteEquipmentImage } from '../services/equipmentService';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -43,15 +43,16 @@ function TituloSeccion({ numero, chip, children }) {
   );
 }
 
-function Foto({ indice }) {
+function Foto({ image, indice, onRemove }) {
   const portada = indice === 0;
   return (
     <div>
       <div className="relative">
-        <ImagenNoEncontrada className="aspect-[16/9] w-full rounded-xl md:aspect-[3/2]" />
+        <img src={image.url} alt={`Foto ${indice + 1}`} className="aspect-[16/9] w-full rounded-xl object-cover md:aspect-[3/2]" />
         <button
           type="button"
           aria-label={`Quitar foto ${indice + 1}`}
+          onClick={() => onRemove(image)}
           className="absolute right-2 top-2 hidden size-6 items-center justify-center rounded-full bg-surface text-text md:flex"
         >
           <X size={12} aria-hidden="true" />
@@ -62,7 +63,7 @@ function Foto({ indice }) {
       </div>
       <div className="mt-2 flex items-center justify-between text-small text-text-muted md:hidden">
         <span>{portada ? 'Portada · Foto 1' : `Foto ${indice + 1}`}</span>
-        <button type="button" className="inline-flex items-center gap-1 font-medium text-text">
+        <button type="button" onClick={() => onRemove(image)} className="inline-flex items-center gap-1 font-medium text-text">
           Quitar <X size={12} aria-hidden="true" />
         </button>
       </div>
@@ -70,7 +71,7 @@ function Foto({ indice }) {
   );
 }
 
-function SeccionFotos({ equipo, revision, error }) {
+function SeccionFotos({ equipo, revision, error, images, onAdd, onRemove }) {
   return (
     <Card>
       <TituloSeccion numero="01" chip={!revision}>Muestra tu equipo</TituloSeccion>
@@ -90,27 +91,27 @@ function SeccionFotos({ equipo, revision, error }) {
           <div className="mt-5 flex flex-col items-center gap-4 rounded-xl border border-dashed border-danger px-4 py-8 md:py-10">
             <ImagePlus size={20} aria-hidden="true" className="hidden text-text-muted md:block" />
             <p className="text-label font-semibold text-text-muted">Sin fotos todavía</p>
-            <Button type="button" variant="secondary" size="lg" icon={ImagePlus} className="w-full md:w-auto">
+            <Button as="label" variant="secondary" size="lg" icon={ImagePlus} className="w-full cursor-pointer md:w-auto">
               <span className="md:hidden">Agregar fotos</span>
               <span className="hidden md:inline">Agregar fotos del equipo</span>
+              <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={onAdd} className="sr-only" />
             </Button>
           </div>
           <p className="mt-3 text-small text-danger">{error}</p>
         </>
       ) : (
         <div className="mt-5 flex flex-col gap-3 md:grid md:grid-cols-3">
-          {Array.from({ length: equipo.fotos }).map((_, i) => (
-            <Foto key={i} indice={i} />
+          {images.map((image, i) => (
+            <Foto key={image.id || image.url} image={image} indice={i} onRemove={onRemove} />
           ))}
-          <button
-            type="button"
-            className="hidden aspect-[3/2] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-primary-alpha-40 text-small text-text md:flex"
-          >
+          <label className="hidden aspect-[3/2] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-primary-alpha-40 text-small text-text md:flex">
             <ImagePlus size={18} aria-hidden="true" />
             Agregar fotos
-          </button>
-          <Button type="button" variant="secondary" size="lg" icon={ImagePlus} fullWidth className="md:hidden">
+            <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={onAdd} className="sr-only" />
+          </label>
+          <Button as="label" variant="secondary" size="lg" icon={ImagePlus} fullWidth className="cursor-pointer md:hidden">
             Agregar fotos
+            <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={onAdd} className="sr-only" />
           </Button>
         </div>
       )}
@@ -329,6 +330,8 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
   const navigate = useNavigate();
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [images, setImages] = useState(equipo.imagenes || []);
+  const [pendingFiles, setPendingFiles] = useState([]);
   const revision = modo === 'revision';
   const cuenta = Object.values(errores).filter(Boolean).length;
   const publicationStatus = equipo?.publication_status || (revision ? 'borrador' : 'borrador');
@@ -360,14 +363,42 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
       const publicationAction = event.nativeEvent.submitter?.value;
       if (modo === 'editar') {
         await updateEquipment(equipo.id, session.user.id, values, publicationAction === 'publicar' ? 'publicada' : publicationAction === 'borrador' ? 'borrador' : undefined);
+        if (pendingFiles.length) {
+          const uploaded = await uploadEquipmentImages(equipo.id, pendingFiles);
+          setImages((current) => [...current, ...uploaded]);
+          setPendingFiles([]);
+        }
       } else {
-        await createEquipment(session.user.id, values, isDraft ? 'borrador' : 'publicada');
+        const created = await createEquipment(session.user.id, values, isDraft ? 'borrador' : 'publicada');
+        if (pendingFiles.length) await uploadEquipmentImages(created.id, pendingFiles);
       }
       navigate('/arrendador/equipos');
     } catch (error) {
       setSubmitError(error.message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleAddImages = (event) => {
+    const files = Array.from(event.target.files || []);
+    const validFiles = files.filter((file) => file.size <= 10 * 1024 * 1024);
+    setPendingFiles((current) => [...current, ...validFiles].slice(0, 8 - images.length));
+    setImages((current) => [...current, ...validFiles.map((file) => ({ id: `pending-${file.name}-${file.lastModified}`, url: URL.createObjectURL(file), pending: true }))].slice(0, 8));
+    event.target.value = '';
+  };
+
+  const handleRemoveImage = async (image) => {
+    if (image.pending) {
+      setPendingFiles((current) => current.filter((file) => `pending-${file.name}-${file.lastModified}` !== image.id));
+      setImages((current) => current.filter((item) => item.id !== image.id));
+      return;
+    }
+    try {
+      await deleteEquipmentImage(image);
+      setImages((current) => current.filter((item) => item.id !== image.id));
+    } catch (imageError) {
+      setSubmitError(imageError.message);
     }
   };
 
@@ -385,7 +416,7 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
       <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[1fr_288px] lg:items-start lg:gap-8">
         <div className="min-w-0">
           <div className="space-y-6">
-            <SeccionFotos equipo={equipo} revision={revision} error={errores.fotos} />
+            <SeccionFotos equipo={equipo} revision={revision} error={errores.fotos} images={images} onAdd={handleAddImages} onRemove={handleRemoveImage} />
             <SeccionDatos equipo={equipo} revision={revision} errores={errores} />
             <SeccionUbicacion equipo={equipo} revision={revision} errores={errores} />
           </div>

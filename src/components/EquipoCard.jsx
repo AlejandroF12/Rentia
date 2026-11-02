@@ -3,13 +3,20 @@ import ImagenNoEncontrada from './ImagenNoEncontrada';
 import { EstadoBadge } from './Badge';
 import { Puntaje } from './StarRating';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { setFavorite } from '../services/clientService';
 
 /**
  * Tarjeta de equipo.
  * - favorito: muestra el corazón (catálogo). En el perfil público va en false.
  * - estadoEnCuerpo: en móvil el estado va debajo de la imagen (perfil público).
  */
-export default function EquipoCard({ equipo, favorito = true, estadoEnCuerpo = false }) {
+export default function EquipoCard({ equipo, favorito = true, estadoEnCuerpo = false, isFavorite = false, onFavoriteChange }) {
+  const { session, profile } = useAuth();
+  const [savingFavorite, setSavingFavorite] = useState(false);
+  const [favoriteError, setFavoriteError] = useState('');
+  const favorite = isFavorite;
   const { categoria, nombre, lugar, distancia, puntaje, disponible, imagen } = equipo;
 
   return (
@@ -24,18 +31,34 @@ export default function EquipoCard({ equipo, favorito = true, estadoEnCuerpo = f
           disponible={disponible}
           className={`absolute left-3 top-3 ${estadoEnCuerpo ? 'hidden md:inline-flex' : ''}`}
         />
-        {favorito && (
+        {favorito && profile?.role === 'cliente' && (
           <button
             type="button"
-            aria-label="Guardar en favoritos"
+            aria-label={favorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+            disabled={savingFavorite}
+            onClick={async () => {
+              if (!session?.user?.id) return;
+              const nextValue = !favorite;
+              setSavingFavorite(true);
+              setFavoriteError('');
+              try {
+                await setFavorite(session.user.id, equipo.id, nextValue);
+                onFavoriteChange?.(equipo.id, nextValue);
+              } catch (error) {
+                setFavoriteError(error.message);
+              } finally {
+                setSavingFavorite(false);
+              }
+            }}
             className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-surface text-text"
           >
-            <Heart size={16} aria-hidden="true" />
+            <Heart size={16} fill={favorite ? 'currentColor' : 'none'} aria-hidden="true" />
           </button>
         )}
       </div>
 
       <div className="p-4 md:px-4 md:py-4">
+        {favoriteError && <p role="alert" className="mb-2 text-caption text-danger">{favoriteError}</p>}
         {estadoEnCuerpo && <EstadoBadge disponible={disponible} className="mb-3 md:hidden" />}
         <p className="text-caption font-medium uppercase tracking-wide text-text-muted">{categoria}</p>
         <h3 className="mt-2 text-heading-sm font-semibold text-text">{nombre}</h3>

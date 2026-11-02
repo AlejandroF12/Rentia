@@ -2,7 +2,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import PageHeader from '../components/PageHeader';
 import Badge from '../components/Badge';
 import FormularioEquipo from '../components/FormularioEquipo';
-import { loadOwnerEquipmentById } from '../services/equipmentService';
+import { loadOwnerEquipmentById, loadEquipmentImages } from '../services/equipmentService';
 import { useAuth } from '../context/AuthContext';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -20,8 +20,8 @@ export default function EditarVehiculoPage() {
       return;
     }
     if (!session?.user?.id) return;
-    loadOwnerEquipmentById(equipmentId, session.user.id)
-      .then((item) => setEquipment({
+    Promise.all([loadOwnerEquipmentById(equipmentId, session.user.id), loadEquipmentImages(equipmentId)])
+      .then(([item, images]) => setEquipment({
         ...item,
         nombre: item.name,
         categoria: item.category,
@@ -32,7 +32,8 @@ export default function EditarVehiculoPage() {
         municipio: item.municipality,
         municipioCorto: item.municipality.split(',')[0],
         sector: item.sector || '',
-        fotos: 0,
+        fotos: images.length,
+        imagenes: images,
         disponible: item.is_available,
         publication_status: item.publication_status,
       }))
