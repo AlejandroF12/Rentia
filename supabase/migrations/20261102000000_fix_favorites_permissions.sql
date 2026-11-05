@@ -1,4 +1,4 @@
-grant select, insert, delete on table public.favorites to authenticated;
+grant select, insert, update, delete on table public.favorites to authenticated;
 
 drop policy if exists "Users manage their favorites" on public.favorites;
 

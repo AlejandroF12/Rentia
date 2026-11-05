@@ -8,6 +8,7 @@ import InfoBox from '../components/InfoBox';
 import EquipoCard from '../components/EquipoCard';
 import StarRating from '../components/StarRating';
 import { loadPublicProfile } from '../services/clientService';
+import ReviewHighlights from '../components/ReviewHighlights';
 
 export default function PerfilPublicoPage() {
   const [searchParams] = useSearchParams();
@@ -23,7 +24,8 @@ export default function PerfilPublicoPage() {
   if (error) return <main className="mx-auto max-w-[1440px] px-5 py-16 text-danger">{error}</main>;
   if (!data) return <main className="mx-auto max-w-[1440px] px-5 py-16 text-text-muted">Cargando perfil...</main>;
 
-  const { profile, equipment, reviews } = data;
+  const { profile, equipment, reviews: allReviews } = data;
+  const reviews = allReviews.filter((review) => !review.review_type || review.review_type === 'arrendador');
   const average = reviews.length
     ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length
     : null;
@@ -95,6 +97,7 @@ export default function PerfilPublicoPage() {
             {reviews.length ? reviews.map((review) => (
               <article key={review.id} className="mt-4 rounded-2xl border border-border bg-surface p-5">
                 <div className="flex items-center justify-between gap-3"><span className="text-label font-semibold text-text">{review.author?.full_name || 'Usuario de Rentia'}</span><StarRating size={14} value={review.rating} /></div>
+                <ReviewHighlights items={review.highlighted_aspects} />
                 <p className="mt-3 text-small text-text-muted">{review.comment || 'Sin comentario.'}</p>
               </article>
             )) : <InfoBox className="mt-4">Aún no hay opiniones publicadas para este perfil.</InfoBox>}

@@ -4,20 +4,23 @@ import Button from '../components/Button';
 import Avatar from '../components/Avatar';
 import ImagenNoEncontrada from '../components/ImagenNoEncontrada';
 import { EstadoBadge } from '../components/Badge';
+import StarRating from '../components/StarRating';
 import InfoBox from '../components/InfoBox';
 import MapaEstatico from '../components/MapaEstatico';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { loadEquipmentById, loadEquipmentImages } from '../services/equipmentService';
+import { loadEquipmentById, loadEquipmentImages, loadEquipmentOwner } from '../services/equipmentService';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { loadFavoriteEquipmentIds, setFavorite } from '../services/clientService';
+import ReviewHighlights from '../components/ReviewHighlights';
 
 function TarjetaPropietario({ owner, equipmentId }) {
-  const { profile } = useAuth();
+  const { profile, session } = useAuth();
   const phone = owner?.phone || '';
   const phoneDigits = phone.replace(/\D/g, '');
   const ownerName = owner?.full_name || 'Propietario de Rentia';
+  const loginHref = '/ingresar';
   return (
     <div className="rounded-2xl border border-border bg-surface p-5">
       <p className="text-caption font-medium uppercase tracking-wide text-text-muted">Habla con el propietario</p>
@@ -33,11 +36,11 @@ function TarjetaPropietario({ owner, equipmentId }) {
       <p className="mt-4 text-small text-text-muted">En Rentia desde marzo de 2024</p>
 
       <div className="mt-4 space-y-3">
-        <Button as="a" href={phoneDigits ? `https://wa.me/${phoneDigits}` : '#'} target="_blank" rel="noreferrer" size="lg" fullWidth icon={MessageCircle} trailingIcon={ArrowUpRight} disabled={!phoneDigits}>
-          Contactar por WhatsApp
+        <Button as="a" href={session ? (phoneDigits ? `https://wa.me/${phoneDigits}` : '#') : loginHref} target={session ? '_blank' : undefined} rel={session ? 'noreferrer' : undefined} size="lg" fullWidth icon={MessageCircle} trailingIcon={ArrowUpRight} disabled={Boolean(session && !phoneDigits)}>
+          {session ? 'Contactar por WhatsApp' : 'Inicia sesión para contactar'}
         </Button>
-        <Button as="a" href={phone ? `tel:${phone}` : '#'} variant="secondary" size="lg" fullWidth icon={Phone} trailingIcon={ArrowUpRight} disabled={!phone}>
-          Llamar a {ownerName}
+        <Button as="a" href={session ? (phone ? `tel:${phone}` : '#') : loginHref} variant="secondary" size="lg" fullWidth icon={Phone} trailingIcon={ArrowUpRight} disabled={Boolean(session && !phone)}>
+          {session ? `Llamar a ${ownerName}` : 'Inicia sesión para llamar'}
         </Button>
       </div>
 
@@ -50,10 +53,18 @@ function TarjetaPropietario({ owner, equipmentId }) {
           <a href={owner?.id ? `/perfil-publico?ownerId=${owner.id}` : '#'} className="mt-4 inline-block text-small font-semibold text-text">Ver perfil y valoraciones →</a>
           {profile?.role === 'cliente' && owner?.id && (
             <Link
-              to={`/valoraciones/politica?targetUserId=${encodeURIComponent(owner.id)}&equipmentId=${encodeURIComponent(equipmentId)}`}
+              to={`/valoraciones/cliente-a-arrendador?targetUserId=${encodeURIComponent(owner.id)}&equipmentId=${encodeURIComponent(equipmentId)}&reviewType=equipo`}
+              className="mt-4 flex min-h-12 items-center justify-center rounded-lg bg-primary px-4 text-center text-label font-semibold text-primary-foreground"
+            >
+              Valorar este equipo
+            </Link>
+          )}
+          {profile?.role === 'cliente' && owner?.id && (
+            <Link
+              to={`/valoraciones/politica?targetUserId=${encodeURIComponent(owner.id)}&equipmentId=${encodeURIComponent(equipmentId)}&reviewType=arrendador`}
               className="mt-3 inline-block text-small font-semibold text-text"
             >
-              Valorar este contacto →
+              Valorar al arrendador →
             </Link>
           )}
 
@@ -91,8 +102,9 @@ export default function DetalleEquipoPage() {
     }
 
     Promise.all([loadEquipmentById(equipmentId), loadEquipmentImages(equipmentId)])
-      .then(([item, equipmentImages]) => {
-        setEquipment(item);
+      .then(async ([item, equipmentImages]) => {
+        const owner = session?.user?.id ? await loadEquipmentOwner(item.owner_id) : null;
+        setEquipment({ ...item, owner });
         setImages(equipmentImages);
       })
       .catch((loadError) => setError(loadError.message));
@@ -114,6 +126,10 @@ export default function DetalleEquipoPage() {
   }
 
   const owner = equipment.owner;
+  const reviews = (equipment.reviews ?? []).filter((review) => review.is_published && review.review_type === 'equipo');
+  const averageRating = reviews.length
+    ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length
+    : null;
   const fichaReal = [
     ['Marca', equipment.brand || 'No especificada'],
     ['Modelo', equipment.model || equipment.model_year || 'No especificado'],
@@ -125,10 +141,11 @@ export default function DetalleEquipoPage() {
       <main className="mx-auto max-w-[1440px] px-5 pb-16 pt-6 md:px-8 lg:px-16">
         {/* Migas + acciones */}
         <div className="flex items-center justify-between">
-          <Breadcrumb>
-            <span className="lg:hidden">← Volver al catálogo</span>
-            <span className="hidden lg:inline">Inicio / Explorar equipos / Retroexcavadora CAT 420F</span>
-          </Breadcrumb>
+          <Breadcrumb items={[
+            { label: 'Inicio', to: '/' },
+            { label: 'Explorar equipos', to: '/catalogo' },
+            { label: equipment.name },
+          ]} />
           <div className="flex items-center gap-4 text-text">
             {profile?.role === 'cliente' && <button
               type="button"
@@ -208,20 +225,42 @@ export default function DetalleEquipoPage() {
             </dl>
 
             <h2 className="mt-10 text-heading-md font-semibold text-text">Cerca de ti</h2>
-            <p className="mt-1 text-small text-text-muted">Sector El Morro · Yopal, Casanare</p>
-            <MapaEstatico className="mt-4 h-48" />
+            <p className="mt-1 text-small text-text-muted">
+              {equipment.sector ? `${equipment.sector} · ` : ''}{equipment.municipality || 'Ubicación no disponible'}
+            </p>
+            {equipment.municipality ? (
+              <MapaEstatico municipio={equipment.municipality} sector={equipment.sector || 'Ubicación aproximada'} className="mt-4 h-48" />
+            ) : (
+              <div className="mt-4 flex h-48 items-center justify-center rounded-2xl border border-dashed border-border bg-surface-muted text-small text-text-muted">
+                La ubicación aproximada aún no está disponible.
+              </div>
+            )}
             <p className="mt-3 text-caption text-text-muted">
               La ubicación es aproximada y solo sirve para encontrar equipos cercanos. Confirma el punto exacto con el propietario.
             </p>
 
             <hr className="my-8 border-border" />
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-heading-md font-semibold text-text">Valoraciones</h2>
+              {averageRating !== null && <div className="flex items-center gap-2"><StarRating size={18} value={averageRating} /><span className="text-small text-text-muted">{averageRating.toFixed(1)} · {reviews.length} valoración{reviews.length === 1 ? '' : 'es'}</span></div>}
             </div>
-            <InfoBox className="mt-5">
-              Este equipo todavía no tiene valoraciones publicadas.
-            </InfoBox>
+            {reviews.length ? (
+              <div className="mt-5 space-y-4">
+                {reviews.map((review) => (
+                  <article key={review.id} className="rounded-2xl border border-border bg-surface-muted p-5">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <StarRating size={16} value={review.rating} />
+                      <span className="text-small text-text-muted">Experiencia verificada por Rentia</span>
+                    </div>
+                    <ReviewHighlights items={review.highlighted_aspects} />
+                    <p className="mt-3 whitespace-pre-wrap text-body text-text-muted">{review.comment || 'Sin comentario.'}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <InfoBox className="mt-5">Este equipo todavía no tiene valoraciones publicadas.</InfoBox>
+            )}
 
             <p className="mt-6 flex items-center gap-1.5 text-caption text-text-muted lg:hidden">
               <Flag size={10} aria-hidden="true" /> Reportar esta publicación

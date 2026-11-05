@@ -48,7 +48,7 @@ export default function AuthLayout({ enlaceSuperior, children }) {
               <span className="lg:hidden">← Volver</span>
               <span className="hidden lg:inline">← Volver al inicio</span>
             </Link>
-            <Link to={enlaceSuperior === 'Ya tengo cuenta' ? '/ingresar' : '/crear-cuenta'} className="hidden text-label font-semibold text-text lg:block">{enlaceSuperior}</Link>
+            <Link to={enlaceSuperior === 'Ya tengo cuenta' ? '/ingresar' : '/crear-cuenta'} className="hidden rounded-lg border-2 border-primary px-4 py-2 text-label font-semibold text-primary lg:block">{enlaceSuperior}</Link>
           </div>
 
           <img src={regLogImage} alt="Equipo de trabajo en Casanare" className="mt-6 aspect-[2/1] w-full rounded-2xl object-cover lg:hidden" />

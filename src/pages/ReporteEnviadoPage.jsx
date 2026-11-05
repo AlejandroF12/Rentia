@@ -10,12 +10,15 @@ import TileEquipo from '../components/TileEquipo';
 export default function ReporteEnviadoPage() {
   const [searchParams] = useSearchParams();
   const equipmentId = searchParams.get('id');
+  const isReviewReport = searchParams.get('tipo') === 'valoracion';
+  const isLandlord = searchParams.get('rol') === 'arrendador';
+  const reviewsPath = isLandlord ? '/arrendador/valoraciones' : '/cliente/valoraciones';
   const equipmentQuery = equipmentId ? `?id=${encodeURIComponent(equipmentId)}` : '';
   return (
     <PaginaCuenta rol="cliente" ancho="estrecho">
       <PageHeader
-        volver={{ to: '/catalogo', texto: 'Volver a explorar' }}
-        eyebrow="Reporte de publicación"
+        volver={{ to: isReviewReport ? reviewsPath : '/catalogo', texto: isReviewReport ? 'Volver a mis valoraciones' : 'Volver a explorar' }}
+        eyebrow={isReviewReport ? 'Reporte de valoración' : 'Reporte de publicación'}
         titulo="Gracias por estar pendiente."
         subtitulo="Tu aporte ayuda a cuidar Rentia."
       />
@@ -30,9 +33,9 @@ export default function ReporteEnviadoPage() {
           <h2 className="mt-5 text-heading-md font-semibold text-text md:mt-6">Reporte enviado</h2>
           <Badge tone="success" className="mt-4">REP-108 · Recibido</Badge>
 
-          <TileEquipo nombre="Cargador frontal" detalle="Pablo Ortega · Aguazul" className="mt-5" />
+          {!isReviewReport && <TileEquipo nombre="Cargador frontal" detalle="Pablo Ortega · Aguazul" className="mt-5" />}
 
-          <p className="mt-6 text-body font-semibold text-text-muted">Fotos que no pertenecen al vehículo</p>
+          <p className="mt-6 text-body font-semibold text-text-muted">{isReviewReport ? 'Revisaremos la valoración reportada' : 'Fotos que no pertenecen al vehículo'}</p>
           <p className="mt-4 text-body text-text-muted">
             Conserva la referencia REP-108 si necesitas consultar el caso desde el Centro de ayuda.
           </p>
@@ -42,15 +45,15 @@ export default function ReporteEnviadoPage() {
           </InfoBox>
 
           <div className="mt-5 flex flex-col gap-3">
-            <Button as={Link} to="/catalogo" size="lg" fullWidth>Volver al catálogo</Button>
-            <Button as={Link} to={`/detalle-equipo${equipmentQuery}`} variant="secondary" size="lg" fullWidth>Volver a la publicación</Button>
+            <Button as={Link} to={isReviewReport ? reviewsPath : '/catalogo'} size="lg" fullWidth>{isReviewReport ? 'Volver a mis valoraciones' : 'Volver al catálogo'}</Button>
+            {!isReviewReport && <Button as={Link} to={`/detalle-equipo${equipmentQuery}`} variant="secondary" size="lg" fullWidth>Volver a la publicación</Button>}
           </div>
         </section>
 
         <aside className="hidden rounded-2xl bg-surface-muted p-6 lg:block">
           <h2 className="text-heading-md font-semibold text-text">¿Qué pasa ahora?</h2>
           <p className="mt-5 text-body text-text-muted">
-            Administración revisará el contenido y el motivo antes de tomar medidas. La publicación puede mantenerse visible durante la revisión.
+            Administración revisará el contenido y el motivo antes de tomar medidas. {isReviewReport ? 'La valoración puede mantenerse visible durante la revisión.' : 'La publicación puede mantenerse visible durante la revisión.'}
           </p>
           <p className="mt-5 text-body text-text-muted">
             No es una conversación con el propietario ni un canal de negociación.

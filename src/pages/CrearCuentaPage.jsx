@@ -114,7 +114,7 @@ export default function CrearCuentaPage() {
         {message && <p role="status" className="text-small text-success">{message}</p>}
       </form>
 
-      <Button as="a" href="/ingresar" variant="secondary" size="lg" fullWidth className="mt-4 lg:hidden">Ya tengo cuenta · Ingresar</Button>
+      <Button as="a" href="/ingresar" variant="secondary" size="lg" fullWidth className="mt-4 border-2 border-primary text-primary">Ya tengo cuenta · Ingresar</Button>
       <a href="/catalogo" className="mt-6 block text-center text-small text-text-muted">¿Solo quieres explorar? Ir al catálogo →</a>
       <p className="mt-6 hidden text-center text-small text-text-muted lg:block">¿Necesitas una mano? Centro de ayuda</p>
     </AuthLayout>

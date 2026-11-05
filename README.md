@@ -5,11 +5,13 @@ Desarrollo de una plataforma web para la gestión del alquiler de maquinaria, eq
 
 La aplicación usa Supabase como base para PostgreSQL, autenticación, almacenamiento de imágenes y Row Level Security.
 
-La migración inicial se encuentra en [`supabase/migrations/20261030000000_initial_schema.sql`](./supabase/migrations/20261030000000_initial_schema.sql). Puede ejecutarse desde el SQL Editor de Supabase o con la CLI:
+Las migraciones se encuentran en [`supabase/migrations`](./supabase/migrations). Deben ejecutarse en orden desde el SQL Editor de Supabase o con la CLI:
 
 ```bash
 npx supabase db push
 ```
+
+En particular, [`20261105000000_add_review_highlights.sql`](./supabase/migrations/20261105000000_add_review_highlights.sql) agrega `reviews.highlighted_aspects`, [`20261106000000_split_review_types.sql`](./supabase/migrations/20261106000000_split_review_types.sql) separa las valoraciones de arrendador y equipo y [`20261107000000_dedupe_reviews.sql`](./supabase/migrations/20261107000000_dedupe_reviews.sql) elimina duplicados históricos y refuerza la unicidad. Si la aplicación muestra que alguna columna no existe, las migraciones aún no se han aplicado al proyecto Supabase conectado; ejecuta `npx supabase db push` o los archivos pendientes en el SQL Editor. Después de aplicarlas, recarga el esquema de la API o espera unos segundos para que PostgREST actualice su caché.
 
 La migración crea:
 

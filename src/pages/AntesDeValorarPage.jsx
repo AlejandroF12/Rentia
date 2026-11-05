@@ -9,23 +9,14 @@ import Checkbox from '../components/Checkbox';
 import InfoBox from '../components/InfoBox';
 import { useSearchParams } from 'react-router-dom';
 
-function BloqueNormas({ titulo, children, boton }) {
-  return (
-    <div>
-      <h3 className="text-heading-md font-semibold text-text">{titulo}</h3>
-      <p className="mt-3 text-body-lg text-text-muted md:text-body">{children}</p>
-      {boton && <Button type="button" variant="secondary" size="lg" fullWidth className="mt-4">{boton}</Button>}
-    </div>
-  );
-}
-
 /** Política de valoraciones (paso previo a valorar). */
 export default function AntesDeValorarPage() {
   const [searchParams] = useSearchParams();
   const targetUserId = searchParams.get('targetUserId');
   const equipmentId = searchParams.get('equipmentId');
+  const reviewType = searchParams.get('reviewType') === 'equipo' ? 'equipo' : 'arrendador';
   const canContinue = Boolean(targetUserId && equipmentId);
-  const nextUrl = `/valoraciones/cliente-a-arrendador?targetUserId=${encodeURIComponent(targetUserId || '')}&equipmentId=${encodeURIComponent(equipmentId || '')}`;
+  const nextUrl = `/valoraciones/cliente-a-arrendador?targetUserId=${encodeURIComponent(targetUserId || '')}&equipmentId=${encodeURIComponent(equipmentId || '')}&reviewType=${reviewType}`;
   return (
     <DashboardLayout rol="cliente" activo="valoraciones">
       <PageHeader
@@ -69,17 +60,6 @@ export default function AntesDeValorarPage() {
             </div>
           </Card>
 
-          <Card className="space-y-6">
-            <BloqueNormas titulo="Una opinión útil y respetuosa">
-              Describe hechos que viviste, sin suplantar identidades ni atribuir experiencias a terceros. No publiques teléfonos, correos ni direcciones privadas.
-            </BloqueNormas>
-            <BloqueNormas titulo="Una valoración por contraparte" boton="Editar mi valoración existente">
-              Si ya valoraste a esta persona, edita esa opinión en lugar de crear otra.
-            </BloqueNormas>
-            <BloqueNormas titulo="¿Una opinión incumple las normas?" boton="Reportar valoración abusiva">
-              Reporta la valoración abusiva para revisión de administración. Reportar no elimina automáticamente la opinión.
-            </BloqueNormas>
-          </Card>
         </div>
 
         <aside className="hidden lg:block">
@@ -92,7 +72,6 @@ export default function AntesDeValorarPage() {
             <p className="mt-5 text-body text-text-muted">
               Si una opinión contiene insultos o datos personales, usa “Reportar valoración” para solicitar revisión privada.
             </p>
-            <Button type="button" variant="secondary" size="lg" fullWidth className="mt-4">Reportar valoración abusiva</Button>
           </Card>
         </aside>
       </div>

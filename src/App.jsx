@@ -35,6 +35,7 @@ import CatalogoErrorPage from './pages/CatalogoErrorPage'
 import CuentaSuspendidaPage from './pages/CuentaSuspendidaPage'
 import ReportarPublicacionPage from './pages/ReportarPublicacionPage'
 import ReporteEnviadoPage from './pages/ReporteEnviadoPage'
+import ReportarValoracionPage from './pages/ReportarValoracionPage'
 import TerminosPage from './pages/TerminosPage'
 import PrivacidadPage from './pages/PrivacidadPage'
 import NormasPage from './pages/NormasPage'
@@ -78,6 +79,20 @@ function RequireRole({ roles, children }) {
   return children
 }
 
+function RequireAuth({ children }) {
+  const { loading, profile } = useAuth()
+
+  if (loading) {
+    return <div className="min-h-screen bg-surface" aria-busy="true" />
+  }
+
+  if (!profile || profile.status !== 'activo') {
+    return <Navigate to="/ingresar" replace />
+  }
+
+  return children
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -86,7 +101,7 @@ function App() {
         <Route path='/' element={<MainLayout><Home /></MainLayout>} />
         <Route path='/catalogo' element={<MainLayout><CatalogoPage /></MainLayout>} />
         <Route path='/detalle-equipo' element={<MainLayout><DetalleEquipoPage /></MainLayout>} />
-        <Route path='/perfil-publico' element={<MainLayout><PerfilPublicoPage /></MainLayout>} />
+        <Route path='/perfil-publico' element={<RequireAuth><MainLayout><PerfilPublicoPage /></MainLayout></RequireAuth>} />
         <Route path='/crear-cuenta' element={<CrearCuentaPage />} />
         <Route path='/ingresar' element={<IngresarPage />} />
         <Route path='/recuperar-acceso' element={<RecuperarAccesoPage />} />
@@ -131,7 +146,8 @@ function App() {
 
         {/* Reportes de publicación y estado de cuenta */}
         <Route path='/reportar-publicacion' element={<RequireRole roles={['cliente']}><MainLayout navVariant='clienteTexto'><ReportarPublicacionPage /></MainLayout></RequireRole>} />
-        <Route path='/reporte-enviado' element={<RequireRole roles={['cliente']}><MainLayout navVariant='clienteTexto'><ReporteEnviadoPage /></MainLayout></RequireRole>} />
+        <Route path='/reportar-valoracion' element={<RequireRole roles={['cliente', 'arrendador']}><MainLayout navVariant='clienteTexto'><ReportarValoracionPage /></MainLayout></RequireRole>} />
+        <Route path='/reporte-enviado' element={<RequireRole roles={['cliente', 'arrendador']}><MainLayout navVariant='clienteTexto'><ReporteEnviadoPage /></MainLayout></RequireRole>} />
         <Route path='/cuenta-suspendida' element={<MainLayout navVariant='suspendido' footerProps={{ copyright: '© 2026 Rentia · Hecho en Casanare', className: 'hidden md:block' }}><CuentaSuspendidaPage /></MainLayout>} />
 
         {/* Información legal */}

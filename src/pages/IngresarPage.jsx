@@ -67,7 +67,7 @@ export default function IngresarPage() {
 
       {/* Móvil */}
       <div className="lg:hidden">
-        <Button as="a" href="/crear-cuenta" variant="secondary" size="lg" fullWidth className="mt-4">Crear una cuenta</Button>
+        <Button as="a" href="/crear-cuenta" variant="secondary" size="lg" fullWidth className="mt-4 border-2 border-primary text-primary">Crear una cuenta nueva</Button>
         <p className="mt-5 text-small text-text-muted">Tu espacio se adapta a tu rol: cliente, arrendador o administración.</p>
         <p className="mt-5 text-label font-semibold text-text-muted">El trabajo une. El Llano nos mueve.</p>
         <p className="mt-5 inline-flex items-center gap-1 text-small text-text-muted">

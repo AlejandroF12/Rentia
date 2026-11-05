@@ -4,19 +4,26 @@ import FormularioValoracion from '../components/FormularioValoracion';
 import { useAuth } from '../context/AuthContext';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { loadReviewContext } from '../services/clientService';
+import { loadReviewContext, loadReviewForEdit } from '../services/clientService';
 
 export default function ArrendadorCalificaClientePage() {
   const { profile } = useAuth();
   const [searchParams] = useSearchParams();
   const targetUserId = searchParams.get('targetUserId');
   const equipmentId = searchParams.get('equipmentId');
+  const reviewType = 'arrendador';
   const [context, setContext] = useState(null);
+  const [review, setReview] = useState(null);
   const [contextError, setContextError] = useState('');
   useEffect(() => {
     if (!targetUserId || !equipmentId) return;
-    loadReviewContext(targetUserId, equipmentId).then(setContext).catch((error) => setContextError(error.message));
-  }, [targetUserId, equipmentId]);
+    loadReviewContext(targetUserId, equipmentId)
+      .then(setContext)
+      .catch((error) => setContextError(error.message));
+    if (profile?.id) {
+      loadReviewForEdit(profile.id, targetUserId, equipmentId, reviewType).then(setReview).catch((error) => setContextError(error.message));
+    }
+  }, [targetUserId, equipmentId, profile?.id, searchParams]);
   const datos = {
     eyebrow: 'Arrendador → Cliente',
     titulo: 'Las buenas relaciones se reconocen.',
@@ -29,6 +36,9 @@ export default function ArrendadorCalificaClientePage() {
     targetUserId,
     equipmentId,
     equipo: context ? { nombre: context.equipment.name, detalle: context.equipment.municipality } : null,
+    review,
+    reviewType,
+    editing: searchParams.get('edit') === '1',
   };
   return (
     <PaginaCuenta rol="arrendador">
@@ -40,7 +50,7 @@ export default function ArrendadorCalificaClientePage() {
       />
       {contextError && <p role="alert" className="mt-6 text-small text-danger">{contextError}</p>}
       {!targetUserId || !equipmentId ? <p role="alert" className="mt-6 text-small text-danger">Esta valoración necesita un cliente y un equipo seleccionados.</p> : null}
-      <FormularioValoracion datos={datos} volverA="/arrendador/equipos" />
+      {context && <FormularioValoracion key={`${review?.id || 'new'}-${datos.editing}`} datos={datos} volverA="/arrendador/equipos" />}
     </PaginaCuenta>
   );
 }

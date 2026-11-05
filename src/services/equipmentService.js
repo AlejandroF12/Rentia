@@ -101,7 +101,7 @@ export async function loadOwnerEquipment(ownerId) {
 export async function loadPublishedEquipment() {
   const { data, error } = await supabase
     .from('equipment')
-    .select('id, name, category, brand, model, model_year, main_feature, description, municipality, sector, is_available, publication_status, owner:owner_id(id, full_name, phone, municipality)')
+    .select('id, name, category, brand, model, model_year, main_feature, description, municipality, sector, is_available, publication_status')
     .eq('publication_status', 'publicada')
     .order('created_at', { ascending: false });
 
@@ -112,7 +112,7 @@ export async function loadPublishedEquipment() {
 export async function loadFeaturedEquipment() {
   const { data, error } = await supabase
     .from('equipment')
-    .select('id, name, category, municipality, is_available, publication_status, reviews(rating, is_published)')
+    .select('id, name, category, municipality, is_available, publication_status, reviews(rating, review_type, is_published)')
     .eq('publication_status', 'publicada')
     .eq('is_available', true);
 
@@ -120,7 +120,7 @@ export async function loadFeaturedEquipment() {
 
   return (data ?? [])
     .map((item) => {
-      const reviews = (item.reviews ?? []).filter((review) => review.is_published);
+      const reviews = (item.reviews ?? []).filter((review) => review.is_published && review.review_type === 'equipo');
       const rating = reviews.length
         ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length
         : 0;
@@ -133,12 +133,23 @@ export async function loadFeaturedEquipment() {
 export async function loadEquipmentById(equipmentId) {
   const { data, error } = await supabase
     .from('equipment')
-    .select('id, name, category, brand, model, model_year, main_feature, description, municipality, sector, latitude, longitude, is_available, publication_status, owner:owner_id(id, full_name, phone, municipality)')
+    .select('id, name, category, brand, model, model_year, main_feature, description, municipality, sector, latitude, longitude, is_available, publication_status, owner_id, reviews(id, rating, comment, highlighted_aspects, review_type, is_published, created_at)')
     .eq('id', equipmentId)
     .eq('publication_status', 'publicada')
     .single();
 
   if (error) throw new Error(`No se pudo cargar el equipo: ${error.message}`);
+  return data;
+}
+
+export async function loadEquipmentOwner(ownerId) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, phone, municipality')
+    .eq('id', ownerId)
+    .single();
+
+  if (error) throw new Error(`No se pudo cargar el propietario: ${error.message}`);
   return data;
 }
 

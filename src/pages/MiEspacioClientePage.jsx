@@ -184,7 +184,7 @@ export default function MiEspacioClientePage() {
                 </div>
                 <StarRating size={16} value={v.rating} className="mt-3 lg:hidden" />
                 <p className="mt-3 text-small text-text-muted">{v.comment}</p>
-                <Link to="/valoraciones/cliente-a-arrendador" className="mt-3 hidden text-small font-semibold text-text lg:inline-block">
+                <Link to={`/valoraciones/cliente-a-arrendador?targetUserId=${v.target?.id}&equipmentId=${v.equipment?.id}&edit=1`} className="mt-3 hidden text-small font-semibold text-text lg:inline-block">
                   Editar mi valoración
                 </Link>
               </div>
@@ -193,7 +193,7 @@ export default function MiEspacioClientePage() {
               </InfoBox>}
 
             <div className="mt-5 flex flex-col gap-3 lg:hidden">
-              <Button as={Link} to="/valoraciones/cliente-a-arrendador" variant="secondary" size="lg" fullWidth>Editar mi valoración</Button>
+              <Button as={Link} to={v ? `/valoraciones/cliente-a-arrendador?targetUserId=${v.target?.id}&equipmentId=${v.equipment?.id}&edit=1` : '/valoraciones/politica'} variant="secondary" size="lg" fullWidth>{v ? 'Editar mi valoración' : 'Crear mi valoración'}</Button>
               <Button as={Link} to="/valoraciones/politica" variant="secondary" size="lg" fullWidth>Calificar otro contacto</Button>
             </div>
 

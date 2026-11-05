@@ -27,18 +27,19 @@ export async function loadFavoriteEquipmentIds(userId) {
 export async function setFavorite(userId, equipmentId, favorite) {
   const query = supabase.from('favorites');
   const result = favorite
-    ? await query.upsert({ user_id: userId, equipment_id: equipmentId })
+    ? await query.insert({ user_id: userId, equipment_id: equipmentId })
     : await query.delete().eq('user_id', userId).eq('equipment_id', equipmentId);
 
   if (result.error) throw new Error(`No se pudo actualizar el favorito: ${result.error.message}`);
 }
 
-export async function createReport({ reporterId, equipmentId, reason, description }) {
+export async function createReport({ reporterId, equipmentId = null, reviewId = null, reason, description }) {
   const { data, error } = await supabase
     .from('reports')
     .insert({
       reporter_id: reporterId,
       equipment_id: equipmentId,
+      review_id: reviewId,
       reason,
       description: description?.trim() || null,
     })
@@ -52,7 +53,7 @@ export async function createReport({ reporterId, equipmentId, reason, descriptio
 export async function loadClientReviews(userId) {
   const { data, error } = await supabase
     .from('reviews')
-    .select('id, rating, comment, created_at, target:target_user_id(full_name, role), equipment:equipment_id(name)')
+    .select('id, rating, comment, highlighted_aspects, review_type, created_at, target:target_user_id(id, full_name, role), equipment:equipment_id(id, name)')
     .eq('author_id', userId)
     .order('created_at', { ascending: false });
 
@@ -67,12 +68,12 @@ export async function loadClientReviewSummary(userId) {
   const [sentResult, receivedResult] = await Promise.all([
     supabase
       .from('reviews')
-      .select('id, rating, comment, created_at, target:target_user_id(full_name, role), equipment:equipment_id(name)')
+      .select('id, rating, comment, highlighted_aspects, review_type, created_at, target:target_user_id(id, full_name, role), equipment:equipment_id(id, name)')
       .eq('author_id', userId)
       .order('created_at', { ascending: false }),
     supabase
       .from('reviews')
-      .select('id, rating, comment, created_at, author:author_id(full_name, role), equipment:equipment_id(name)')
+      .select('id, rating, comment, highlighted_aspects, review_type, created_at, author:author_id(full_name, role), equipment:equipment_id(id, name)')
       .eq('target_user_id', userId)
       .eq('is_published', true)
       .order('created_at', { ascending: false }),
@@ -113,7 +114,7 @@ export async function loadPublicProfile(userId) {
       .order('created_at', { ascending: false }),
     supabase
       .from('reviews')
-      .select('id, rating, comment, created_at, author:author_id(full_name)')
+      .select('id, rating, comment, highlighted_aspects, review_type, created_at, author:author_id(full_name)')
       .eq('target_user_id', userId)
       .eq('is_published', true)
       .order('created_at', { ascending: false }),
@@ -141,7 +142,6 @@ export async function loadReviewContext(targetUserId, equipmentId) {
       .from('equipment')
       .select('id, name, municipality, owner_id')
       .eq('id', equipmentId)
-      .eq('owner_id', targetUserId)
       .single(),
   ]);
 
@@ -154,7 +154,7 @@ export async function loadReviewContext(targetUserId, equipmentId) {
   };
 }
 
-export async function createReview({ authorId, targetUserId, equipmentId, rating, comment }) {
+export async function createReview({ authorId, targetUserId, equipmentId, rating, comment, highlights, reviewType }) {
   const { data, error } = await supabase
     .from('reviews')
     .insert({
@@ -162,10 +162,12 @@ export async function createReview({ authorId, targetUserId, equipmentId, rating
       target_user_id: targetUserId,
       equipment_id: equipmentId,
       rating,
-      comment: comment.trim(),
+      comment: comment.trim() || 'Sin comentario.',
+      highlighted_aspects: highlights,
+      review_type: reviewType,
       is_published: true,
     })
-    .select('id, rating, comment, created_at')
+    .select('id, rating, comment, highlighted_aspects, review_type, created_at')
     .single();
 
   if (error) {
@@ -175,5 +177,33 @@ export async function createReview({ authorId, targetUserId, equipmentId, rating
     throw new Error(`No se pudo publicar la valoración: ${error.message}`);
   }
 
+  return data;
+}
+
+export async function loadReviewForEdit(authorId, targetUserId, equipmentId, reviewType) {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('id, rating, comment, highlighted_aspects, review_type, target:target_user_id(id, full_name, municipality, role), equipment:equipment_id(id, name, municipality)')
+    .eq('author_id', authorId)
+    .eq('target_user_id', targetUserId)
+    .eq('equipment_id', equipmentId)
+    .eq('review_type', reviewType)
+    .single();
+
+  if (error?.code === 'PGRST116') return null;
+  if (error) throw new Error(`No se pudo cargar la valoración: ${error.message}`);
+  return data;
+}
+
+export async function updateReview({ reviewId, authorId, rating, comment, highlights, reviewType }) {
+  const { data, error } = await supabase
+    .from('reviews')
+    .update({ rating, comment: comment.trim() || 'Sin comentario.', highlighted_aspects: highlights, review_type: reviewType })
+    .eq('id', reviewId)
+    .eq('author_id', authorId)
+    .select('id, rating, comment, highlighted_aspects, created_at')
+    .single();
+
+  if (error) throw new Error(`No se pudo actualizar la valoración: ${error.message}`);
   return data;
 }
