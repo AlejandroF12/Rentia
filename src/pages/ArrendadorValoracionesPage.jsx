@@ -9,7 +9,7 @@ import { loadClientReviewSummary } from '../services/clientService';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-function ReviewCard({ review, received = false }) {
+function ReviewCard({ review, received = false, showEquipmentLink = false }) {
   return (
     <Card>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -35,6 +35,14 @@ function ReviewCard({ review, received = false }) {
           className="mt-4 inline-flex min-h-11 items-center text-label font-semibold text-danger"
         >
           Reportar valoración
+        </Link>
+      )}
+      {showEquipmentLink && review.equipment?.id && (
+        <Link
+          to={`/detalle-equipo?id=${encodeURIComponent(review.equipment.id)}`}
+          className="mt-4 inline-flex min-h-11 items-center text-label font-semibold text-primary"
+        >
+          Ver equipo valorado →
         </Link>
       )}
     </Card>
@@ -108,7 +116,7 @@ export default function ArrendadorValoracionesPage() {
         <h2 id="equipos-arrendador" className="text-heading-md font-semibold text-text">Valoraciones por equipo</h2>
         <p className="mt-1 text-small text-text-muted">Todas las valoraciones vinculadas a tus equipos publicados.</p>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          {equipmentReviews.length ? equipmentReviews.map((review) => <ReviewCard key={review.id} review={review} received />) : (
+          {equipmentReviews.length ? equipmentReviews.map((review) => <ReviewCard key={review.id} review={review} received showEquipmentLink />) : (
             <InfoBox title="Aún no hay valoraciones de equipos">Aparecerán aquí cuando alguien valore una experiencia relacionada con un equipo.</InfoBox>
           )}
         </div>

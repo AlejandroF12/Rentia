@@ -7,6 +7,7 @@ import Button from '../components/Button';
 import { signUp } from '../services/authService';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getPasswordError } from '../utils/passwordValidation';
 
 function OpcionRol({ valor, icono: Icono, titulo, descripcion, marcado = false }) {
@@ -114,9 +115,9 @@ export default function CrearCuentaPage() {
         {message && <p role="status" className="text-small text-success">{message}</p>}
       </form>
 
-      <Button as="a" href="/ingresar" variant="secondary" size="lg" fullWidth className="mt-4 border-2 border-primary text-primary">Ya tengo cuenta · Ingresar</Button>
-      <a href="/catalogo" className="mt-6 block text-center text-small text-text-muted">¿Solo quieres explorar? Ir al catálogo →</a>
-      <p className="mt-6 hidden text-center text-small text-text-muted lg:block">¿Necesitas una mano? Centro de ayuda</p>
+      <Button as={Link} to="/ingresar" variant="secondary" size="lg" fullWidth className="mt-4 border-2 border-primary text-primary">Ya tengo cuenta · Ingresar</Button>
+      <Link to="/catalogo" className="mt-6 block text-center text-small text-text-muted">¿Solo quieres explorar? Ir al catálogo →</Link>
+      <Link to="/normas" className="mt-6 hidden text-center text-small text-text-muted lg:block">¿Necesitas una mano? Centro de ayuda</Link>
     </AuthLayout>
   );
 }

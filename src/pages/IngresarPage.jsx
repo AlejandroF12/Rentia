@@ -6,6 +6,7 @@ import Checkbox from '../components/Checkbox';
 import Button from '../components/Button';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { loadProfile, signIn } from '../services/authService';
 
 export default function IngresarPage() {
@@ -62,16 +63,16 @@ export default function IngresarPage() {
       </form>
 
       {/* Escritorio */}
-      <p className="mt-6 hidden text-center text-small text-text-muted lg:block">¿Primera vez aquí? Crea tu cuenta →</p>
-      <p className="mt-8 hidden text-center text-small text-text-muted lg:block">¿Necesitas una mano? Centro de ayuda</p>
+      <Link to="/crear-cuenta" className="mt-6 hidden text-center text-small font-semibold text-primary lg:block">¿Primera vez aquí? Crea tu cuenta →</Link>
+      <Link to="/normas" className="mt-8 hidden text-center text-small text-text-muted lg:block">¿Necesitas una mano? Centro de ayuda</Link>
 
       {/* Móvil */}
       <div className="lg:hidden">
-        <Button as="a" href="/crear-cuenta" variant="secondary" size="lg" fullWidth className="mt-4 border-2 border-primary text-primary">Crear una cuenta nueva</Button>
+        <Button as={Link} to="/crear-cuenta" variant="secondary" size="lg" fullWidth className="mt-4 border-2 border-primary text-primary">Crear una cuenta nueva</Button>
         <p className="mt-5 text-small text-text-muted">Tu espacio se adapta a tu rol: cliente, arrendador o administración.</p>
         <p className="mt-5 text-label font-semibold text-text-muted">El trabajo une. El Llano nos mueve.</p>
         <p className="mt-5 inline-flex items-center gap-1 text-small text-text-muted">
-          ¿Necesitas una mano? Centro de ayuda <ArrowUpRight size={12} aria-hidden="true" />
+          <Link to="/normas">¿Necesitas una mano? Centro de ayuda <ArrowUpRight size={12} aria-hidden="true" /></Link>
         </p>
       </div>
     </AuthLayout>
