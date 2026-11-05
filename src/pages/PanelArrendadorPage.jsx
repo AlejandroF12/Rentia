@@ -11,9 +11,10 @@ import InfoBox from '../components/InfoBox';
 import Avatar from '../components/Avatar';
 import ImagenNoEncontrada from '../components/ImagenNoEncontrada';
 import { useAuth } from '../context/AuthContext';
-import { loadOwnerEquipment, updateEquipmentAvailability } from '../services/equipmentService';
+import { loadOwnerEquipment, loadEquipmentImages, updateEquipmentAvailability } from '../services/equipmentService';
 import { loadClientReviewSummary } from '../services/clientService';
 import { useEffect, useState } from 'react';
+import Skeleton from '../components/Skeleton';
 
 const COLUMNAS = 'md:grid-cols-[1fr_130px_180px_160px]';
 
@@ -32,7 +33,7 @@ function FilaEquipo({ equipo, onAvailabilityChange }) {
   return (
     <li className={`flex flex-col gap-3 border-t border-border px-4 py-4 md:grid md:items-center md:gap-4 md:px-6 ${COLUMNAS}`}>
       <div className="flex items-start gap-4">
-        <ImagenNoEncontrada className="h-[72px] w-24 shrink-0 rounded-lg text-caption md:h-[72px] md:w-28" />
+        {equipo.image ? <img src={equipo.image} alt="" className="h-[72px] w-24 shrink-0 rounded-lg object-cover md:h-[72px] md:w-28" /> : <ImagenNoEncontrada className="h-[72px] w-24 shrink-0 rounded-lg text-caption md:h-[72px] md:w-28" />}
         <div className="min-w-0">
           <p className="text-body-lg font-semibold text-text md:text-heading-sm">{nombre}</p>
           <p className="mt-1 text-small text-text-muted">{lugar}</p>
@@ -84,10 +85,20 @@ export default function PanelArrendadorPage() {
   const [filter, setFilter] = useState('todas');
   const [updatingId, setUpdatingId] = useState('');
   const [latestReview, setLatestReview] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!session?.user?.id) return;
-    loadOwnerEquipment(session.user.id).then(setEquipment).catch((loadError) => setError(loadError.message));
+    loadOwnerEquipment(session.user.id)
+      .then(async (items) => {
+        const withImages = await Promise.all(items.map(async (item) => {
+          const images = await loadEquipmentImages(item.id);
+          return { ...item, image: images[0]?.url || null };
+        }));
+        setEquipment(withImages);
+      })
+      .catch((loadError) => setError(loadError.message))
+      .finally(() => setLoading(false));
     loadClientReviewSummary(session.user.id)
       .then((summary) => setLatestReview(summary.received[0] || null))
       .catch((loadError) => setError(loadError.message));
@@ -168,11 +179,12 @@ export default function PanelArrendadorPage() {
         </div>
 
         <ul>
+          {loading && Array.from({ length: 3 }, (_, index) => <li key={index} className="border-t border-border px-4 py-4"><Skeleton className="h-[72px] w-full" /></li>)}
           {error && <li className="p-5 text-small text-danger">{error}</li>}
-          {!error && items.length === 0 && <li className="p-5 text-small text-text-muted">
+          {!loading && !error && items.length === 0 && <li className="p-5 text-small text-text-muted">
             {filter === 'todas' ? 'Aún no tienes equipos publicados.' : 'No hay equipos en este estado.'}
           </li>}
-          {items.map((equipo) => (
+          {!loading && items.map((equipo) => (
           <FilaEquipo key={equipo.id} equipo={equipo} onAvailabilityChange={handleAvailabilityChange} />
           ))}
         </ul>

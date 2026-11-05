@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { loadFavoriteEquipmentIds, setFavorite } from '../services/clientService';
 import ReviewHighlights from '../components/ReviewHighlights';
+import Skeleton from '../components/Skeleton';
 
 function TarjetaPropietario({ owner, equipmentId }) {
   const { profile, session } = useAuth();
@@ -122,7 +123,25 @@ export default function DetalleEquipoPage() {
     return <main className="mx-auto max-w-[1440px] px-5 py-16 text-danger">{error}</main>;
   }
   if (!equipment) {
-    return <main className="mx-auto max-w-[1440px] px-5 py-16 text-text-muted">Cargando equipo...</main>;
+    return (
+      <main className="mx-auto max-w-[1440px] px-5 pb-16 pt-6 md:px-8 lg:px-16">
+        <Skeleton className="h-5 w-56" />
+        <Skeleton className="mt-8 h-10 w-2/3 max-w-xl" />
+        <Skeleton className="mt-3 h-5 w-48" />
+        <div className="mt-6 grid grid-cols-2 gap-3 lg:h-[360px] lg:grid-cols-3 lg:grid-rows-2 lg:gap-4">
+          <Skeleton className="col-span-2 aspect-[4/3] w-full lg:col-span-2 lg:row-span-2 lg:aspect-auto" />
+          <Skeleton className="h-28 w-full lg:h-full" />
+          <Skeleton className="h-28 w-full lg:h-full" />
+        </div>
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_340px]">
+          <div>
+            <Skeleton className="h-8 w-2/3" />
+            <Skeleton className="mt-4 h-20 w-full" />
+          </div>
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </main>
+    );
   }
 
   const owner = equipment.owner;

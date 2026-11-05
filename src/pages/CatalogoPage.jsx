@@ -9,6 +9,7 @@ import { tiposEquipo } from '../data/muestra';
 import { loadPublishedEquipment } from '../services/equipmentService';
 import { loadFavoriteEquipmentIds } from '../services/clientService';
 import { useAuth } from '../context/AuthContext';
+import Skeleton from '../components/Skeleton';
 
 function Filtros() {
   return (
@@ -75,9 +76,10 @@ export default function CatalogoPage() {
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadPublishedEquipment().then(setEquipment).catch((loadError) => setError(loadError.message));
+    loadPublishedEquipment().then(setEquipment).catch((loadError) => setError(loadError.message)).finally(() => setLoading(false));
     if (session?.user?.id && profile?.role === 'cliente') {
       loadFavoriteEquipmentIds(session.user.id).then(setFavoriteIds).catch((loadError) => setError(loadError.message));
     }
@@ -144,7 +146,7 @@ export default function CatalogoPage() {
 
           <section aria-labelledby="resultados">
             <div className="flex items-center justify-between">
-              <h2 id="resultados" className="text-label text-text md:text-body">{visibleEquipment.length} equipos publicados</h2>
+              <h2 id="resultados" className="text-label text-text md:text-body">{loading ? 'Cargando equipos...' : `${visibleEquipment.length} equipos publicados`}</h2>
               <button type="button" className="inline-flex items-center gap-2 text-small text-text-muted">
                 Más cercanos <ChevronDown size={14} aria-hidden="true" />
               </button>
@@ -156,9 +158,10 @@ export default function CatalogoPage() {
             </div>
 
             <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {loading && Array.from({ length: 6 }, (_, index) => <Skeleton key={index} className="aspect-[16/10] w-full md:aspect-[16/9]" />)}
               {error && <p role="alert" className="text-small text-danger">{error}</p>}
-              {!error && visibleEquipment.length === 0 && <p className="text-body text-text-muted">No hay equipos publicados que coincidan con tu búsqueda.</p>}
-              {visibleEquipment.map((equipo) => (
+              {!loading && !error && visibleEquipment.length === 0 && <p className="text-body text-text-muted">No hay equipos publicados que coincidan con tu búsqueda.</p>}
+              {!loading && visibleEquipment.map((equipo) => (
                 <EquipoCard
                   key={equipo.id}
                   equipo={equipo}
