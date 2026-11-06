@@ -8,6 +8,7 @@ import InfoBox from '../components/InfoBox';
 import { useAuth } from '../context/AuthContext';
 import { loadOwnerEquipment } from '../services/equipmentService';
 import { loadClientReviewSummary } from '../services/clientService';
+import { Plus } from 'lucide-react';
 
 export default function ResumenArrendadorPage() {
   const { session, profile } = useAuth();
@@ -40,7 +41,7 @@ export default function ResumenArrendadorPage() {
         eyebrow="Mi negocio / Resumen"
         titulo={`Hola, ${profile?.full_name?.split(' ')[0] || 'arrendador'}.`}
         subtitulo="Consulta el estado real de tus publicaciones y tu reputación en Rentia."
-        accion={<Button as={Link} to="/arrendador/equipos/nuevo" size="lg">Agregar vehículo</Button>}
+        accion={<Button as={Link} to="/arrendador/equipos/nuevo" size="lg" icon={Plus}>Agregar vehículo</Button>}
       />
       {error && <p role="alert" className="mt-6 text-small text-danger">{error}</p>}
 

@@ -2,6 +2,22 @@ import { supabase } from '../lib/supabaseClient';
 
 const imageUrl = (path) => supabase.storage.from('equipment-images').getPublicUrl(path).data.publicUrl;
 
+async function optimizeImage(file) {
+  if (!file.type.startsWith('image/') || typeof createImageBitmap !== 'function') return file;
+
+  const bitmap = await createImageBitmap(file);
+  const maxDimension = 1920;
+  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.82));
+  return blob ? new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.webp`, { type: 'image/webp' }) : file;
+}
+
 export async function loadEquipmentImages(equipmentId) {
   const { data, error } = await supabase
     .from('equipment_images')
@@ -17,8 +33,9 @@ export async function uploadEquipmentImages(equipmentId, files) {
   const uploaded = [];
   const existing = await loadEquipmentImages(equipmentId);
   for (const [index, file] of files.entries()) {
-    const path = `${equipmentId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    const { error: uploadError } = await supabase.storage.from('equipment-images').upload(path, file, { upsert: false });
+    const optimizedFile = await optimizeImage(file);
+    const path = `${equipmentId}/${crypto.randomUUID()}-${optimizedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const { error: uploadError } = await supabase.storage.from('equipment-images').upload(path, optimizedFile, { upsert: false, contentType: optimizedFile.type });
     if (uploadError) throw new Error(`No se pudo subir la imagen: ${uploadError.message}`);
     const { data, error } = await supabase
       .from('equipment_images')
@@ -52,6 +69,8 @@ export async function createEquipment(ownerId, values, publicationStatus = 'publ
       description: values.description,
       municipality: values.municipality,
       sector: values.sector || null,
+      latitude: values.latitude ? Number(values.latitude) : null,
+      longitude: values.longitude ? Number(values.longitude) : null,
       is_available: values.isAvailable,
       publication_status: publicationStatus,
     })
@@ -75,6 +94,8 @@ export async function updateEquipment(equipmentId, ownerId, values, publicationS
       description: values.description,
       municipality: values.municipality,
       sector: values.sector || null,
+      latitude: values.latitude ? Number(values.latitude) : null,
+      longitude: values.longitude ? Number(values.longitude) : null,
       is_available: values.isAvailable,
       ...(publicationStatus ? { publication_status: publicationStatus } : {}),
     })
@@ -98,13 +119,20 @@ export async function loadOwnerEquipment(ownerId) {
   return data ?? [];
 }
 
-export async function loadPublishedEquipment() {
-  const { data, error } = await supabase
+export async function loadPublishedEquipment({ search = '', categories = [], availableOnly = false } = {}) {
+  let query = supabase
     .from('equipment')
-    .select('id, name, category, brand, model, model_year, main_feature, description, municipality, sector, is_available, publication_status')
+    .select('id, name, category, brand, model, model_year, main_feature, description, municipality, sector, latitude, longitude, is_available, publication_status, created_at')
     .eq('publication_status', 'publicada')
-    .order('created_at', { ascending: false });
 
+  if (categories.length) query = query.in('category', categories);
+  if (availableOnly) query = query.eq('is_available', true);
+  if (search.trim()) {
+    const term = search.trim().replace(/[,%()]/g, ' ');
+    query = query.or(`name.ilike.%${term}%,category.ilike.%${term}%,brand.ilike.%${term}%,model.ilike.%${term}%,municipality.ilike.%${term}%`);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
   if (error) throw new Error(`No se pudo cargar el catálogo: ${error.message}`);
   return data ?? [];
 }
@@ -156,7 +184,7 @@ export async function loadEquipmentOwner(ownerId) {
 export async function loadOwnerEquipmentById(equipmentId, ownerId) {
   const { data, error } = await supabase
     .from('equipment')
-    .select('id, name, category, brand, model, model_year, main_feature, description, municipality, sector, is_available, publication_status')
+    .select('id, name, category, brand, model, model_year, main_feature, description, municipality, sector, latitude, longitude, is_available, publication_status')
     .eq('id', equipmentId)
     .eq('owner_id', ownerId)
     .single();

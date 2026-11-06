@@ -93,12 +93,8 @@ function DetalleReporte() {
 
       <h3 className="mt-6 text-heading-md font-semibold text-text lg:text-heading-sm">Acciones de moderación</h3>
       <div className="mt-4 flex flex-col gap-3 lg:flex-row">
-        <Button type="button" variant="secondary" size="lg" className="lg:px-6">
-          <Ban size={16} aria-hidden="true" className="hidden lg:block" /> Suspender publicación
-        </Button>
-        <Button as={Link} to="/admin/moderacion" variant="danger" size="lg" className="lg:px-6">
-          <Trash2 size={16} aria-hidden="true" className="hidden lg:block" /> Eliminar publicación
-        </Button>
+        <Button type="button" variant="secondary" size="lg" icon={Ban} className="lg:px-6">Suspender publicación</Button>
+        <Button as={Link} to="/admin/moderacion" variant="danger" size="lg" icon={Trash2} className="lg:px-6">Eliminar publicación</Button>
       </div>
       <Button type="button" size="lg" fullWidth className="mt-3" icon={Check}>Marcar como resuelto</Button>
       <p className="mt-4 text-small text-text-muted lg:text-caption">

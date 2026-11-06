@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Check, ImagePlus, Lightbulb, X } from 'lucide-react';
+import { Check, ImagePlus, Lightbulb, X } from 'lucide-react';
 import Badge, { EstadoBadge } from './Badge';
 import Button from './Button';
 import Card from './Card';
@@ -7,7 +7,8 @@ import Checkbox from './Checkbox';
 import Field from './Field';
 import ImagenNoEncontrada from './ImagenNoEncontrada';
 import InfoBox from './InfoBox';
-import MapaEstatico from './MapaEstatico';
+import MapaSeleccionUbicacion from './MapaSeleccionUbicacion';
+import { getMunicipalityCoordinates } from '../utils/location';
 import Select from './Select';
 import Textarea from './Textarea';
 import Toggle from './Toggle';
@@ -149,39 +150,39 @@ function SeccionDatos({ equipo, revision, errores }) {
   );
 }
 
-function SeccionUbicacion({ equipo, revision, errores }) {
+function SeccionUbicacion({ revision, errores, location, municipality, sector, onLocationChange }) {
+  const municipalityCoordinates = getMunicipalityCoordinates(municipality);
   return (
     <Card>
       <TituloSeccion numero="03" chip={!revision}>¿Dónde se encuentra?</TituloSeccion>
       <p className="mt-2 text-body-lg text-text-muted md:text-body">Solo mostraremos una ubicación aproximada en el catálogo.</p>
       <div className="mt-5 grid gap-5 md:grid-cols-2">
-        <Select id="municipio" name="municipio" label="Municipio *" defaultValue={errores.municipio ? '' : equipo.municipio} required error={errores.municipio}>
+        <Select id="municipio" name="municipio" label="Municipio *" value={errores.municipio ? '' : municipality} required error={errores.municipio} onChange={(event) => {
+          const nextCoordinates = getMunicipalityCoordinates(event.target.value);
+          onLocationChange({ latitude: nextCoordinates[0], longitude: nextCoordinates[1], municipality: event.target.value });
+        }}>
           <option value="" disabled>Selecciona un municipio</option>
           {municipios.map((m) => <option key={m} value={m}>{m}</option>)}
         </Select>
-        <Field id="sector" name="sector" label="Sector o vereda" defaultValue={equipo.sector} />
+        <Field id="sector" name="sector" label="Sector o vereda" value={sector} onChange={(event) => onLocationChange({ sector: event.target.value })} />
       </div>
 
-      <MapaEstatico municipio={equipo.municipioCorto} sector={revision ? '' : equipo.sector} className="mt-5 h-44 md:h-[190px]" />
+      <MapaSeleccionUbicacion
+        key={municipality}
+        municipality={municipality}
+        latitude={location.latitude ?? municipalityCoordinates[0]}
+        longitude={location.longitude ?? municipalityCoordinates[1]}
+        onChange={onLocationChange}
+      />
+      <input type="hidden" name="latitude" value={location.latitude ?? municipalityCoordinates[0]} />
+      <input type="hidden" name="longitude" value={location.longitude ?? municipalityCoordinates[1]} />
 
       <div className="mt-3 flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-between">
         <p className="text-small text-text-muted">
           {revision
-            ? 'Mapa estático. El punto lo defines tú; no hay seguimiento GPS ni ubicación en tiempo real.'
-            : 'El mapa es estático. No muestra tu ubicación en tiempo real.'}
+            ? 'Elige el punto en el mapa o usa el GPS. Solo mostraremos una ubicación aproximada.'
+            : 'Puedes fijar el punto manualmente o usar el GPS del dispositivo.'}
         </p>
-        {revision ? (
-          <Button type="button" variant="secondary" size="lg" className="w-full md:w-auto">Fijar punto manual</Button>
-        ) : (
-          <>
-            <Button type="button" variant="secondary" size="lg" fullWidth trailingIcon={ArrowUpRight} className="md:hidden">
-              Ajustar punto manual
-            </Button>
-            <button type="button" className="hidden items-center gap-1 text-small font-semibold text-text md:inline-flex">
-              Ajustar punto <ArrowUpRight size={12} aria-hidden="true" />
-            </button>
-          </>
-        )}
       </div>
     </Card>
   );
@@ -332,6 +333,20 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
   const [submitting, setSubmitting] = useState(false);
   const [images, setImages] = useState(equipo.imagenes || []);
   const [pendingFiles, setPendingFiles] = useState([]);
+  const [location, setLocation] = useState({
+    latitude: equipo.latitude ?? null,
+    longitude: equipo.longitude ?? null,
+  });
+  const [municipality, setMunicipality] = useState(equipo.municipio || '');
+  const [sector, setSector] = useState(equipo.sector || '');
+  const handleLocationChange = (changes) => {
+    setLocation((current) => ({
+      latitude: changes.latitude ?? current.latitude,
+      longitude: changes.longitude ?? current.longitude,
+    }));
+    if (changes.municipality !== undefined) setMunicipality(changes.municipality);
+    if (changes.sector !== undefined) setSector(changes.sector);
+  };
   const revision = modo === 'revision';
   const cuenta = Object.values(errores).filter(Boolean).length;
   const publicationStatus = equipo?.publication_status || (revision ? 'borrador' : 'borrador');
@@ -358,6 +373,8 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
         municipality: formData.get('municipio'),
         sector: formData.get('sector'),
         isAvailable: true,
+        latitude: formData.get('latitude'),
+        longitude: formData.get('longitude'),
       };
       const isDraft = event.nativeEvent.submitter?.value === 'borrador';
       const publicationAction = event.nativeEvent.submitter?.value;
@@ -418,7 +435,7 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
           <div className="space-y-6">
             <SeccionFotos equipo={equipo} revision={revision} error={errores.fotos} images={images} onAdd={handleAddImages} onRemove={handleRemoveImage} />
             <SeccionDatos equipo={equipo} revision={revision} errores={errores} />
-            <SeccionUbicacion equipo={equipo} revision={revision} errores={errores} />
+            <SeccionUbicacion revision={revision} errores={errores} location={location} municipality={municipality} sector={sector} onLocationChange={handleLocationChange} />
           </div>
           <AccionesEscritorio modo={modo} submitting={submitting} equipo={equipo} publicationStatus={publicationStatus} />
         </div>

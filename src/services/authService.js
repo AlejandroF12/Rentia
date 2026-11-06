@@ -1,5 +1,7 @@
 import { setRememberSession, supabase } from '../lib/supabaseClient';
 
+const APP_URL = 'https://rentia-ruddy.vercel.app';
+
 export async function loadProfile(userId) {
   const { data, error } = await supabase
     .from('profiles')
@@ -27,6 +29,7 @@ export async function signUp({ email, password, fullName, phone, role }) {
     password,
     options: {
       data: { full_name: fullName, phone, role },
+      emailRedirectTo: `${APP_URL}/`,
     },
   });
   if (error) throw new Error(error.message);
@@ -35,7 +38,7 @@ export async function signUp({ email, password, fullName, phone, role }) {
 
 export async function requestPasswordReset(email) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/nueva-contrasena`,
+    redirectTo: `${APP_URL}/nueva-contrasena`,
   });
   if (error) throw new Error(error.message);
 }

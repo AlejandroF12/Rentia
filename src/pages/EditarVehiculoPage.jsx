@@ -32,6 +32,8 @@ export default function EditarVehiculoPage() {
         municipio: item.municipality,
         municipioCorto: item.municipality.split(',')[0],
         sector: item.sector || '',
+        latitude: item.latitude,
+        longitude: item.longitude,
         fotos: images.length,
         imagenes: images,
         disponible: item.is_available,

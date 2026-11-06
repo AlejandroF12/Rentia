@@ -39,7 +39,7 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-surface">
+    <header className="sticky top-0 z-[2000] border-b border-border bg-surface">
       <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-5 md:grid md:h-[72px] md:grid-cols-[1fr_auto_1fr] md:px-8 lg:px-16">
         <Logo />
 
@@ -115,8 +115,8 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
       </div>
       {isMenuOpen && variant !== 'simple' && (
         <>
-          <button type="button" aria-label="Cerrar menú" className="fixed inset-0 top-16 z-10 bg-overlay/40 md:top-[72px]" onClick={() => setIsOpen(false)} />
-          <div className="fixed right-0 top-16 z-20 w-full md:right-8 md:top-[80px] md:w-auto lg:right-16">
+          <button type="button" aria-label="Cerrar menú" className="fixed inset-0 top-16 z-[1000] bg-overlay/40 backdrop-blur-sm md:top-[72px]" onClick={() => setIsOpen(false)} />
+          <div className="fixed right-0 top-16 z-[1001] w-full md:right-8 md:top-[80px] md:w-auto lg:right-16">
             <MenuPanel variant={variantMenu} accountOnly={Boolean(rol)} onClose={() => setIsOpen(false)} />
           </div>
         </>

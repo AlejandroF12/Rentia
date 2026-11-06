@@ -1,4 +1,4 @@
-import { MapPin, Heart, Share2, Images, MessageCircle, Phone, ArrowUpRight, Flag } from 'lucide-react';
+import { MapPin, Heart, Share2, Images, MessageCircle, Phone, ArrowUpRight, Flag, ExternalLink } from 'lucide-react';
 import Breadcrumb from '../components/Breadcrumb';
 import Button from '../components/Button';
 import Avatar from '../components/Avatar';
@@ -6,7 +6,7 @@ import ImagenNoEncontrada from '../components/ImagenNoEncontrada';
 import { EstadoBadge } from '../components/Badge';
 import StarRating from '../components/StarRating';
 import InfoBox from '../components/InfoBox';
-import MapaEstatico from '../components/MapaEstatico';
+import MapaSeleccionUbicacion from '../components/MapaSeleccionUbicacion';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { loadEquipmentById, loadEquipmentImages, loadEquipmentOwner } from '../services/equipmentService';
@@ -248,7 +248,19 @@ export default function DetalleEquipoPage() {
               {equipment.sector ? `${equipment.sector} · ` : ''}{equipment.municipality || 'Ubicación no disponible'}
             </p>
             {equipment.municipality ? (
-              <MapaEstatico municipio={equipment.municipality} sector={equipment.sector || 'Ubicación aproximada'} className="mt-4 h-48" />
+              <>
+                <MapaSeleccionUbicacion municipality={equipment.municipality} latitude={equipment.latitude} longitude={equipment.longitude} interactive={false} />
+                {equipment.latitude != null && equipment.longitude != null && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${equipment.latitude},${equipment.longitude}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 inline-flex items-center gap-2 text-small font-semibold text-text"
+                  >
+                    Abrir ubicación en Google Maps <ExternalLink size={14} aria-hidden="true" />
+                  </a>
+                )}
+              </>
             ) : (
               <div className="mt-4 flex h-48 items-center justify-center rounded-2xl border border-dashed border-border bg-surface-muted text-small text-text-muted">
                 La ubicación aproximada aún no está disponible.

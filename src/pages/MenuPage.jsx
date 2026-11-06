@@ -54,8 +54,8 @@ export default function MenuPage({ variant = 'public' }) {
       </main>
 
       {/* Velo + panel */}
-      <div className="fixed inset-0 top-16 z-20 bg-overlay/40 md:top-[72px]" aria-hidden="true" />
-      <div className="fixed right-0 top-16 z-30 w-full md:right-8 md:top-[88px] md:w-auto lg:right-16">
+      <div className="fixed inset-0 top-16 z-[1000] bg-overlay/40 backdrop-blur-sm md:top-[72px]" aria-hidden="true" />
+      <div className="fixed right-0 top-16 z-[1001] w-full md:right-8 md:top-[88px] md:w-auto lg:right-16">
         <MenuPanel variant={variant} />
       </div>
       <Footer />

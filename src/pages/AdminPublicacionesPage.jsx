@@ -109,7 +109,7 @@ export default function AdminPublicacionesPage() {
 
           <div className="mt-5 flex flex-col gap-3 lg:flex-row">
             <Button as={Link} to="/admin/reportes" variant="secondary" size="lg" className="lg:px-6">Ver reporte</Button>
-            <Button type="button" variant="secondary" size="lg" icon={Ban} className="lg:hidden">Suspender publicación</Button>
+            <Button type="button" variant="danger" size="lg" icon={Ban} className="lg:hidden">Suspender publicación</Button>
             <div className="hidden lg:block"><Button type="button" variant="danger" size="lg" icon={Ban} className="lg:px-6">Suspender publicación</Button></div>
             <Button type="button" variant="danger" size="lg" icon={Trash2} className="lg:hidden">Eliminar publicación</Button>
           </div>
