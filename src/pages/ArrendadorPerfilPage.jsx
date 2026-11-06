@@ -10,7 +10,6 @@ export default function ArrendadorPerfilPage() {
   const metadata = session?.user?.user_metadata || {};
   const fullName = profile?.full_name || metadata.full_name || 'Nombre no disponible';
   const email = profile?.email || session?.user?.email || 'Correo no disponible';
-  const phone = profile?.phone || metadata.phone || 'No registrado';
 
   return (
     <DashboardLayout rol="arrendador" activo="perfil">
@@ -31,7 +30,6 @@ export default function ArrendadorPerfilPage() {
         <Badge tone="success" className="mt-5">Cuenta activa</Badge>
         <dl className="mt-5 space-y-4 border-t border-border pt-5">
           <div><dt className="text-caption text-text-muted">Correo electrónico</dt><dd className="mt-1 text-label text-text">{email}</dd></div>
-          <div><dt className="text-caption text-text-muted">Celular</dt><dd className="mt-1 text-label text-text">{phone}</dd></div>
           <div><dt className="text-caption text-text-muted">Miembro desde</dt><dd className="mt-1 text-label text-text">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' }) : 'No disponible'}</dd></div>
         </dl>
       </Card>

@@ -12,7 +12,7 @@ import { getMunicipalityCoordinates } from '../utils/location';
 import Select from './Select';
 import Textarea from './Textarea';
 import Toggle from './Toggle';
-import { categoriasEquipo, municipios } from '../data/panel';
+import { categoriasEquipo } from '../data/panel';
 import { useAuth } from '../context/AuthContext';
 import { createEquipment, updateEquipment, uploadEquipmentImages, deleteEquipmentImage } from '../services/equipmentService';
 import { useState } from 'react';
@@ -72,7 +72,7 @@ function Foto({ image, indice, onRemove }) {
   );
 }
 
-function SeccionFotos({ equipo, revision, error, images, onAdd, onRemove }) {
+function SeccionFotos({ revision, error, images, onAdd, onRemove }) {
   return (
     <Card>
       <TituloSeccion numero="01" chip={!revision}>Muestra tu equipo</TituloSeccion>
@@ -123,7 +123,7 @@ function SeccionFotos({ equipo, revision, error, images, onAdd, onRemove }) {
         ) : (
           <>
             <span className="md:hidden">JPG o PNG · Máximo 10 MB por foto. Solo fotos de maquinaria; no documentos.</span>
-            <span className="hidden md:inline">JPG o PNG · Máximo 10 MB por foto · {equipo.fotos} de 8 fotos</span>
+            <span className="hidden md:inline">JPG o PNG · Máximo 10 MB por foto · {images.length} de 8 fotos</span>
           </>
         )}
       </p>
@@ -150,20 +150,27 @@ function SeccionDatos({ equipo, revision, errores }) {
   );
 }
 
-function SeccionUbicacion({ revision, errores, location, municipality, sector, onLocationChange }) {
+function SeccionUbicacion({ revision, errores, location, municipality, sector, onLocationChange, onMunicipalityStatusChange }) {
   const municipalityCoordinates = getMunicipalityCoordinates(municipality);
   return (
     <Card>
       <TituloSeccion numero="03" chip={!revision}>¿Dónde se encuentra?</TituloSeccion>
       <p className="mt-2 text-body-lg text-text-muted md:text-body">Solo mostraremos una ubicación aproximada en el catálogo.</p>
       <div className="mt-5 grid gap-5 md:grid-cols-2">
-        <Select id="municipio" name="municipio" label="Municipio *" value={errores.municipio ? '' : municipality} required error={errores.municipio} onChange={(event) => {
-          const nextCoordinates = getMunicipalityCoordinates(event.target.value);
-          onLocationChange({ latitude: nextCoordinates[0], longitude: nextCoordinates[1], municipality: event.target.value });
-        }}>
-          <option value="" disabled>Selecciona un municipio</option>
-          {municipios.map((m) => <option key={m} value={m}>{m}</option>)}
-        </Select>
+        <Field
+          id="municipio"
+          name="municipio"
+          label="Municipio *"
+          value={municipality}
+          required
+          error={errores.municipio}
+          hintClassName="rounded-md border border-primary bg-primary-alpha-14 px-3 py-2 font-semibold text-text"
+          onChange={(event) => {
+            onMunicipalityStatusChange('manual');
+            onLocationChange({ municipality: event.target.value });
+          }}
+          hint="Puedes corregir este campo si la ubicación no coincide."
+        />
         <Field id="sector" name="sector" label="Sector o vereda" value={sector} onChange={(event) => onLocationChange({ sector: event.target.value })} />
       </div>
 
@@ -173,6 +180,7 @@ function SeccionUbicacion({ revision, errores, location, municipality, sector, o
         latitude={location.latitude ?? municipalityCoordinates[0]}
         longitude={location.longitude ?? municipalityCoordinates[1]}
         onChange={onLocationChange}
+        onDetectionStatus={onMunicipalityStatusChange}
       />
       <input type="hidden" name="latitude" value={location.latitude ?? municipalityCoordinates[0]} />
       <input type="hidden" name="longitude" value={location.longitude ?? municipalityCoordinates[1]} />
@@ -339,6 +347,7 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
   });
   const [municipality, setMunicipality] = useState(equipo.municipio || '');
   const [sector, setSector] = useState(equipo.sector || '');
+  const [municipalityStatus, setMunicipalityStatus] = useState(equipo.municipio ? 'initial' : 'not-found');
   const handleLocationChange = (changes) => {
     setLocation((current) => ({
       latitude: changes.latitude ?? current.latitude,
@@ -433,9 +442,18 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
       <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[1fr_288px] lg:items-start lg:gap-8">
         <div className="min-w-0">
           <div className="space-y-6">
-            <SeccionFotos equipo={equipo} revision={revision} error={errores.fotos} images={images} onAdd={handleAddImages} onRemove={handleRemoveImage} />
+            <SeccionFotos revision={revision} error={errores.fotos} images={images} onAdd={handleAddImages} onRemove={handleRemoveImage} />
             <SeccionDatos equipo={equipo} revision={revision} errores={errores} />
-            <SeccionUbicacion revision={revision} errores={errores} location={location} municipality={municipality} sector={sector} onLocationChange={handleLocationChange} />
+            <SeccionUbicacion
+              revision={revision}
+              errores={errores}
+              location={location}
+              municipality={municipality}
+              sector={sector}
+              municipalityStatus={municipalityStatus}
+              onLocationChange={handleLocationChange}
+              onMunicipalityStatusChange={setMunicipalityStatus}
+            />
           </div>
           <AccionesEscritorio modo={modo} submitting={submitting} equipo={equipo} publicationStatus={publicationStatus} />
         </div>

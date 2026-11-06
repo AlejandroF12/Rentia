@@ -14,6 +14,7 @@ export default function Field({
   error,
   trailingIcon: TrailingIcon,
   trailingAction,
+  hintClassName = '',
   className = '',
   ...props
 }) {
@@ -48,7 +49,7 @@ export default function Field({
           {error}
         </p>
       )}
-      {hint && !error && <p className="mt-2 text-small text-text-muted">{hint}</p>}
+      {hint && !error && <p className={`mt-2 text-small text-text-muted ${hintClassName}`}>{hint}</p>}
     </div>
   );
 }

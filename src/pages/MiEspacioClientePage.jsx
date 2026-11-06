@@ -20,7 +20,6 @@ function TarjetaPerfil({ className = '' }) {
     nombre: profile?.full_name || 'Tu perfil',
     detalle: profile?.municipality ? `Cliente · ${profile.municipality}` : 'Cliente',
     correo: profile?.email || 'Correo no disponible',
-    celular: profile?.phone || 'No registrado',
     desde: profile?.created_at
       ? new Date(profile.created_at).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
       : 'Fecha no disponible',
@@ -43,7 +42,6 @@ function TarjetaPerfil({ className = '' }) {
       <Badge tone="success" className="mt-4">Perfil activo</Badge>
       <div className="mt-4 space-y-4 border-t border-border pt-4">
         {dato('Correo', c.correo)}
-        {dato('Celular', c.celular)}
         {dato('En la comunidad desde', c.desde)}
       </div>
       <Button as={Link} to="/cliente/perfil" variant="secondary" size="lg" icon={Pencil} fullWidth className="mt-5">

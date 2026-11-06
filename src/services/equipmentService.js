@@ -23,6 +23,7 @@ export async function loadEquipmentImages(equipmentId) {
     .from('equipment_images')
     .select('id, storage_path, display_order, is_cover')
     .eq('equipment_id', equipmentId)
+    .order('is_cover', { ascending: false })
     .order('display_order', { ascending: true });
 
   if (error) throw new Error(`No se pudieron cargar las imágenes: ${error.message}`);
@@ -32,6 +33,7 @@ export async function loadEquipmentImages(equipmentId) {
 export async function uploadEquipmentImages(equipmentId, files) {
   const uploaded = [];
   const existing = await loadEquipmentImages(equipmentId);
+  const hasCover = existing.some((image) => image.is_cover);
   for (const [index, file] of files.entries()) {
     const optimizedFile = await optimizeImage(file);
     const path = `${equipmentId}/${crypto.randomUUID()}-${optimizedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
@@ -39,7 +41,7 @@ export async function uploadEquipmentImages(equipmentId, files) {
     if (uploadError) throw new Error(`No se pudo subir la imagen: ${uploadError.message}`);
     const { data, error } = await supabase
       .from('equipment_images')
-      .insert({ equipment_id: equipmentId, storage_path: path, display_order: existing.length + index, is_cover: existing.length === 0 && index === 0 })
+      .insert({ equipment_id: equipmentId, storage_path: path, display_order: existing.length + index, is_cover: !hasCover && index === 0 })
       .select('id, storage_path, display_order, is_cover')
       .single();
     if (error) throw new Error(`No se pudo registrar la imagen: ${error.message}`);
@@ -122,7 +124,7 @@ export async function loadOwnerEquipment(ownerId) {
 export async function loadPublishedEquipment({ search = '', categories = [], availableOnly = false } = {}) {
   let query = supabase
     .from('equipment')
-    .select('id, name, category, brand, model, model_year, main_feature, description, municipality, sector, latitude, longitude, is_available, publication_status, created_at')
+    .select('id, name, category, brand, model, model_year, main_feature, description, municipality, sector, latitude, longitude, is_available, publication_status, created_at, equipment_images(id, storage_path, display_order, is_cover), reviews(rating, review_type, is_published)')
     .eq('publication_status', 'publicada')
 
   if (categories.length) query = query.in('category', categories);
@@ -134,7 +136,17 @@ export async function loadPublishedEquipment({ search = '', categories = [], ava
 
   const { data, error } = await query.order('created_at', { ascending: false });
   if (error) throw new Error(`No se pudo cargar el catálogo: ${error.message}`);
-  return data ?? [];
+  return (data ?? []).map((item) => {
+    const images = [...(item.equipment_images ?? [])].sort((first, second) => (
+      Number(second.is_cover) - Number(first.is_cover) || first.display_order - second.display_order
+    ));
+    const reviews = (item.reviews ?? []).filter((review) => review.is_published && review.review_type === 'equipo');
+    return {
+      ...item,
+      image: images[0] ? imageUrl(images[0].storage_path) : null,
+      rating: reviews.length ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length : null,
+    };
+  });
 }
 
 export async function loadFeaturedEquipment() {

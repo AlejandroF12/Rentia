@@ -13,3 +13,19 @@ export function getMunicipalityCoordinates(municipality) {
 export function normalizeLocationText(value = '') {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 }
+
+export async function geocodeColombianMunicipality(value) {
+  const query = value.trim();
+  if (!query) return null;
+  const response = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=co&limit=1&q=${encodeURIComponent(`${query}, Colombia`)}`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) throw new Error('No se pudo consultar el municipio.');
+  const results = await response.json();
+  if (!results.length) return null;
+  return {
+    latitude: Number(results[0].lat),
+    longitude: Number(results[0].lon),
+    label: results[0].display_name,
+  };
+}

@@ -31,6 +31,12 @@ export default function PerfilPublicoPage() {
     : null;
   const phone = profile.phone || '';
   const phoneDigits = phone.replace(/\D/g, '');
+  const handleWhatsApp = () => {
+    if (phoneDigits) window.open(`https://wa.me/${phoneDigits}`, '_blank', 'noopener,noreferrer');
+  };
+  const handleCall = () => {
+    if (phone) window.location.href = `tel:${phone}`;
+  };
 
   return (
     <div className="min-h-screen bg-background font-sans text-text">
@@ -67,10 +73,10 @@ export default function PerfilPublicoPage() {
             )}
 
             <div className="mt-5 space-y-3">
-              <Button as="a" href={phoneDigits ? `https://wa.me/${phoneDigits}` : '#'} target="_blank" rel="noreferrer" size="lg" fullWidth icon={MessageCircle} trailingIcon={ArrowUpRight} disabled={!phoneDigits}>
+              <Button type="button" onClick={handleWhatsApp} size="lg" fullWidth icon={MessageCircle} trailingIcon={ArrowUpRight} disabled={!phoneDigits}>
                 Contactar por WhatsApp
               </Button>
-              <Button as="a" href={phone ? `tel:${phone}` : '#'} variant="secondary" size="lg" fullWidth icon={Phone} trailingIcon={ArrowUpRight} disabled={!phone}>
+              <Button type="button" onClick={handleCall} variant="secondary" size="lg" fullWidth icon={Phone} trailingIcon={ArrowUpRight} disabled={!phone}>
                 Llamar a {profile.full_name}
               </Button>
             </div>

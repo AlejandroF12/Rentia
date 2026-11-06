@@ -3,7 +3,7 @@ import Logo from './Logo';
 import Button from './Button';
 import Badge from './Badge';
 import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import MenuPanel from './MenuPanel';
 import { getUser } from '../data/users';
 
@@ -29,6 +29,14 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
   const [isOpen, setIsOpen] = useState(menuOpen);
   const isMenuOpen = menuOpen || isOpen;
   const MenuIcon = isMenuOpen ? X : Menu;
+  useEffect(() => {
+    if (!isMenuOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMenuOpen]);
   const handleComoFuncionaClick = (event) => {
     if (pathname !== '/' || hash !== '#como-funciona') {
       return;
@@ -40,11 +48,11 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
 
   return (
     <header className="sticky top-0 z-[2000] border-b border-border bg-surface">
-      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-5 md:grid md:h-[72px] md:grid-cols-[1fr_auto_1fr] md:px-8 lg:px-16">
+      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-5 xl:grid xl:h-[72px] xl:grid-cols-[1fr_auto_1fr] xl:px-16">
         <Logo />
 
         {/* Navegación central (escritorio) */}
-        <nav aria-label="Principal" className="hidden items-center gap-8 text-label md:flex">
+        <nav aria-label="Principal" className="hidden items-center gap-8 text-label xl:flex">
           {esAdmin ? (
             <>
               <Link to="/admin/usuarios" className="font-semibold text-text">Centro de moderación</Link>
@@ -65,7 +73,7 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
         </nav>
 
         {/* Acciones (escritorio) */}
-        <div className="hidden items-center justify-end gap-5 md:flex">
+        <div className="hidden items-center justify-end gap-5 xl:flex">
           {rol && textoCliente ? (
             <p className="flex items-center gap-3 text-label font-semibold text-text">
               <span>{rol.label}</span>
@@ -109,14 +117,14 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
         </div>
 
         {/* Hamburguesa (móvil) */}
-        <button type="button" aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'} className="text-text-muted md:hidden" onClick={() => setIsOpen((open) => !open)}>
+        <button type="button" aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'} className="text-text-muted xl:hidden" onClick={() => setIsOpen((open) => !open)}>
           <MenuIcon size={24} />
         </button>
       </div>
       {isMenuOpen && variant !== 'simple' && (
         <>
-          <button type="button" aria-label="Cerrar menú" className="fixed inset-0 top-16 z-[1000] bg-overlay/40 backdrop-blur-sm md:top-[72px]" onClick={() => setIsOpen(false)} />
-          <div className="fixed right-0 top-16 z-[1001] w-full md:right-8 md:top-[80px] md:w-auto lg:right-16">
+          <button type="button" aria-label="Cerrar menú" className="fixed inset-0 top-16 z-[1000] bg-overlay/40 backdrop-blur-sm xl:top-[72px]" onClick={() => setIsOpen(false)} />
+          <div className="fixed right-0 top-16 z-[1001] w-full sm:right-5 sm:w-auto xl:right-16 xl:top-[80px]">
             <MenuPanel variant={variantMenu} accountOnly={Boolean(rol)} onClose={() => setIsOpen(false)} />
           </div>
         </>

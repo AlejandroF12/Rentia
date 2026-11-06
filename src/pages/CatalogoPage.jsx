@@ -1,5 +1,6 @@
 import { Search, MapPin, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Breadcrumb from '../components/Breadcrumb';
 import Button from '../components/Button';
 import Checkbox from '../components/Checkbox';
@@ -10,6 +11,7 @@ import { loadPublishedEquipment } from '../services/equipmentService';
 import { loadFavoriteEquipmentIds } from '../services/clientService';
 import { useAuth } from '../context/AuthContext';
 import Skeleton from '../components/Skeleton';
+import { geocodeColombianMunicipality } from '../utils/location';
 
 const MUNICIPALITIES = {
   Yopal: { label: 'Yopal, Casanare', latitude: 5.33775, longitude: -72.39586 },
@@ -21,11 +23,14 @@ const MUNICIPALITIES = {
 const DEFAULT_FILTERS = {
   categories: [],
   municipality: 'Yopal',
+  municipalityCoordinates: MUNICIPALITIES.Yopal,
   radius: 150,
+  gpsActive: false,
   availableOnly: false,
 };
 
-function Filtros({ filters, onChange, onApply, onReset }) {
+function Filtros({ filters, onChange, onApply, onReset, filterError, onUseLocation, locationRequesting }) {
+  const gpsActive = Boolean(filters.gpsActive);
   return (
     <form onSubmit={onApply} onReset={onReset} className="hidden h-fit rounded-2xl border border-border bg-surface p-5 lg:block">
       <div className="flex items-center justify-between">
@@ -56,22 +61,25 @@ function Filtros({ filters, onChange, onApply, onReset }) {
       <div>
         <label htmlFor="cerca-de" className="mb-3 block text-label font-semibold text-text">Cerca de</label>
         <div className="relative">
-          <select
+          <input
             id="cerca-de"
             value={filters.municipality}
-            onChange={(event) => onChange({ municipality: event.target.value })}
-            className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-body text-text"
-          >
-            {Object.entries(MUNICIPALITIES).map(([value, location]) => <option key={value} value={value}>{location.label}</option>)}
-          </select>
+            onChange={(event) => onChange({ municipality: event.target.value, municipalityCoordinates: null })}
+            placeholder="Ej. municipio o ciudad"
+            className="h-11 w-full rounded-lg border border-border bg-surface px-3 pr-10 text-body text-text placeholder:text-text-muted"
+          />
           <MapPin size={16} aria-hidden="true" className="absolute right-3 top-1/2 -translate-y-1/2 text-accent" />
         </div>
+        {filterError && <p role="alert" className="mt-2 text-small text-danger">{filterError}</p>}
         <div className="mt-4 flex items-center justify-between text-small">
           <label htmlFor="radio" className="text-text-muted">Radio de búsqueda</label>
-          <span className="font-semibold text-text">{filters.radius} km</span>
+          <span className={`font-semibold ${gpsActive ? 'text-text' : 'text-text-muted'}`}>{gpsActive ? `${filters.radius} km` : 'Activa el GPS'}</span>
         </div>
-        <input id="radio" type="range" min="10" max="300" value={filters.radius} onChange={(event) => onChange({ radius: Number(event.target.value) })} className="mt-2 w-full accent-primary" />
-        <p className="mt-3 text-caption text-text-muted">Usamos ubicaciones aproximadas para mostrar equipos cercanos.</p>
+        <input id="radio" type="range" min="10" max="300" value={filters.radius} disabled={!gpsActive} onChange={(event) => onChange({ radius: Number(event.target.value) })} className="mt-2 w-full accent-primary disabled:cursor-not-allowed disabled:opacity-40" />
+        <p className="mt-3 text-caption text-text-muted">{gpsActive ? 'Mostramos equipos según tu ubicación GPS.' : 'Solicita acceso a tu ubicación para activar el radio.'}</p>
+        <Button type="button" variant="secondary" size="sm" fullWidth className="mt-3" onClick={onUseLocation} disabled={locationRequesting}>
+          {locationRequesting ? 'Solicitando acceso...' : gpsActive ? 'GPS activado' : 'Activar mi ubicación GPS'}
+        </Button>
       </div>
 
       <hr className="my-5 border-border" />
@@ -88,16 +96,23 @@ function Filtros({ filters, onChange, onApply, onReset }) {
 }
 
 export default function CatalogoPage() {
+  const [searchParams] = useSearchParams();
   const { session, profile } = useAuth();
   const [equipment, setEquipment] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
-  const [search, setSearch] = useState('');
-  const [appliedSearch, setAppliedSearch] = useState('');
-  const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const [appliedFilters, setAppliedFilters] = useState(DEFAULT_FILTERS);
+  const initialSearch = searchParams.get('search') || '';
+  const initialMunicipality = searchParams.get('municipality') || '';
+  const initialAvailable = searchParams.get('available') === 'true';
+  const initialFilters = { ...DEFAULT_FILTERS, municipality: initialMunicipality, municipalityCoordinates: initialMunicipality ? null : DEFAULT_FILTERS.municipalityCoordinates, availableOnly: initialAvailable };
+  const [search, setSearch] = useState(initialSearch);
+  const [appliedSearch, setAppliedSearch] = useState(initialSearch);
+  const [filters, setFilters] = useState(initialFilters);
+  const [appliedFilters, setAppliedFilters] = useState(initialFilters);
   const [sort, setSort] = useState('distance');
   const [userLocation, setUserLocation] = useState(null);
+  const [locationRequesting, setLocationRequesting] = useState(false);
   const [locationError, setLocationError] = useState('');
+  const [filterError, setFilterError] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -111,7 +126,7 @@ export default function CatalogoPage() {
   const visibleEquipment = useMemo(() => {
     const location = userLocation
       ? { latitude: userLocation.latitude, longitude: userLocation.longitude }
-      : MUNICIPALITIES[appliedFilters.municipality];
+      : null;
     const distanceBetween = (item) => {
       if (!location || item.latitude == null || item.longitude == null) return null;
       const radians = (value) => value * Math.PI / 180;
@@ -124,10 +139,13 @@ export default function CatalogoPage() {
 
     return equipment
     .map((item) => ({ ...item, distance: distanceBetween(item) }))
-    .filter((item) => (
-      (item.distance != null && item.distance <= appliedFilters.radius)
-      || (item.distance == null && item.municipality.toLowerCase().startsWith(appliedFilters.municipality.toLowerCase()))
-    ))
+    .filter((item) => {
+      if (location) return item.distance != null && item.distance <= appliedFilters.radius;
+      if (appliedFilters.municipality.trim()) {
+        return item.municipality?.toLowerCase().startsWith(appliedFilters.municipality.toLowerCase());
+      }
+      return true;
+    })
     .sort((first, second) => {
       if (sort === 'name') return first.name.localeCompare(second.name);
       if (sort === 'recent') return new Date(second.created_at) - new Date(first.created_at);
@@ -139,7 +157,8 @@ export default function CatalogoPage() {
       categoria: item.category,
       lugar: item.municipality,
       distancia: item.distance == null ? 'ubicación aproximada' : `${Math.round(item.distance)} km`,
-      puntaje: '—',
+      puntaje: item.rating == null ? '—' : item.rating.toFixed(1),
+      imagen: item.image,
       disponible: item.is_available,
     }));
   }, [equipment, appliedFilters, sort, userLocation]);
@@ -147,13 +166,36 @@ export default function CatalogoPage() {
   const updateFilters = (changes) => setFilters((current) => ({ ...current, ...changes }));
   const applyFilters = (event) => {
     event.preventDefault();
+    setFilterError('');
     setLoading(true);
-    setAppliedFilters(filters);
+    const apply = async () => {
+      let nextFilters = filters;
+      if (!userLocation && filters.municipality.trim() && !filters.municipalityCoordinates) {
+        try {
+          const coordinates = await geocodeColombianMunicipality(filters.municipality);
+          if (!coordinates) {
+            setFilterError('No encontramos ese municipio en Colombia. Verifica el nombre e inténtalo de nuevo.');
+            setLoading(false);
+            return;
+          }
+          nextFilters = { ...filters, municipalityCoordinates: coordinates };
+        } catch (geocodeError) {
+          setFilterError(geocodeError.message);
+          setLoading(false);
+          return;
+        }
+      }
+      setFilters({ ...nextFilters, gpsActive: Boolean(userLocation) });
+      setAppliedFilters({ ...nextFilters, gpsActive: Boolean(userLocation) });
+    };
+    apply();
   };
   const resetFilters = () => {
     setLoading(true);
-    setFilters(DEFAULT_FILTERS);
-    setAppliedFilters(DEFAULT_FILTERS);
+    setUserLocation(null);
+    setFilters({ ...DEFAULT_FILTERS, gpsActive: false });
+    setAppliedFilters({ ...DEFAULT_FILTERS, gpsActive: false });
+    setFilterError('');
   };
   const applySearch = (event) => {
     event.preventDefault();
@@ -166,13 +208,18 @@ export default function CatalogoPage() {
       return;
     }
     setLocationError('');
+    setLocationRequesting(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setUserLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude });
-        setFilters((current) => ({ ...current, radius: current.radius || 150 }));
-        setAppliedFilters((current) => ({ ...current }));
+        setFilters((current) => ({ ...current, gpsActive: true, radius: current.radius || 150 }));
+        setAppliedFilters((current) => ({ ...current, gpsActive: true }));
+        setLocationRequesting(false);
       },
-      () => setLocationError('No se pudo obtener tu ubicación. Puedes buscar por municipio.'),
+      () => {
+        setLocationRequesting(false);
+        setLocationError('No se pudo obtener tu ubicación. Autoriza el GPS en el navegador para usar el radio.');
+      },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
     );
   };
@@ -200,7 +247,6 @@ export default function CatalogoPage() {
             onChange={(event) => setSearch(event.target.value)}
             className="h-10 min-w-0 flex-1 bg-transparent px-2 text-body text-text placeholder:text-text-muted focus:outline-none"
           />
-          <span className="hidden text-label text-text lg:block">{MUNICIPALITIES[filters.municipality].label}</span>
           <Button type="submit" size="lg">
             <span className="lg:hidden">Buscar</span>
             <span className="hidden lg:inline">Buscar equipos</span>
@@ -220,22 +266,32 @@ export default function CatalogoPage() {
             </select>
             <label className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-small text-text">
               <span>Hasta</span>
-              <input aria-label="Radio de búsqueda" type="number" min="10" max="300" value={filters.radius} onChange={(event) => updateFilters({ radius: Number(event.target.value) || 10 })} className="w-12 bg-transparent text-center" />
+              <input aria-label="Radio de búsqueda" type="number" min="10" max="300" value={filters.radius} disabled={!filters.gpsActive} onChange={(event) => updateFilters({ radius: Number(event.target.value) || 10 })} className="w-12 bg-transparent text-center disabled:cursor-not-allowed disabled:opacity-40" />
               <span>km</span>
             </label>
+            <input
+              aria-label="Municipio"
+              value={filters.municipality}
+              onChange={(event) => updateFilters({ municipality: event.target.value, municipalityCoordinates: null })}
+              placeholder="Municipio"
+              className="h-9 min-w-32 rounded-lg border border-border bg-surface px-3 text-small text-text"
+            />
             <label className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-small text-text">
               <input type="checkbox" checked={filters.availableOnly} onChange={(event) => updateFilters({ availableOnly: event.target.checked })} className="accent-primary" />
               Solo disponibles
             </label>
           </div>
           <Button type="button" size="sm" className="mt-3" onClick={applyFilters}>Aplicar filtros</Button>
-          <p className="mt-3 text-small text-text-muted">Cerca de {MUNICIPALITIES[filters.municipality].label.split(',')[0]} · Distancia aproximada</p>
-          <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={useUserLocation}>Usar mi ubicación GPS</Button>
+          <p className="mt-3 text-small text-text-muted">Cerca de {filters.municipality || 'tu ubicación'} · Distancia aproximada</p>
+          {filterError && <p role="alert" className="mt-2 text-small text-danger">{filterError}</p>}
+          <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={useUserLocation} disabled={locationRequesting}>
+            {locationRequesting ? 'Solicitando acceso...' : filters.gpsActive ? 'GPS activado' : 'Activar mi ubicación GPS'}
+          </Button>
           {locationError && <p role="alert" className="mt-2 text-small text-danger">{locationError}</p>}
         </div>
 
         <div className="mt-6 grid gap-8 lg:grid-cols-[240px_1fr]">
-          <Filtros filters={filters} onChange={updateFilters} onApply={applyFilters} onReset={resetFilters} />
+          <Filtros filters={filters} onChange={updateFilters} onApply={applyFilters} onReset={resetFilters} filterError={filterError} onUseLocation={useUserLocation} locationRequesting={locationRequesting} />
 
           <section aria-labelledby="resultados">
             <div className="flex items-center justify-between">
@@ -251,7 +307,9 @@ export default function CatalogoPage() {
             </div>
 
             <div className="mt-3 hidden gap-2 lg:flex">
-              <span className="rounded-full bg-surface-muted px-3 py-1 text-small text-text-muted">• Hasta {appliedFilters.radius} km</span>
+              <span className="rounded-full bg-surface-muted px-3 py-1 text-small text-text-muted">
+                • {appliedFilters.gpsActive ? `Hasta ${appliedFilters.radius} km` : 'GPS no activado'}
+              </span>
               <span className="rounded-full bg-surface-muted px-3 py-1 text-small text-text-muted">• {appliedFilters.availableOnly ? 'Solo disponibles' : 'Todos los estados'}</span>
             </div>
 

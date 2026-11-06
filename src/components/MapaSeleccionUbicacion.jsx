@@ -19,7 +19,7 @@ function RecenterMap({ coordinates }) {
   return null;
 }
 
-export default function MapaSeleccionUbicacion({ municipality, latitude, longitude, onChange = () => {}, interactive = true }) {
+export default function MapaSeleccionUbicacion({ municipality, latitude, longitude, onChange = () => {}, onDetectionStatus = () => {}, interactive = true }) {
   const initialCoordinates = latitude != null && longitude != null
     ? [Number(latitude), Number(longitude)]
     : getMunicipalityCoordinates(municipality);
@@ -27,6 +27,7 @@ export default function MapaSeleccionUbicacion({ municipality, latitude, longitu
   const [locationError, setLocationError] = useState('');
 
   const reverseGeocode = async (nextCoordinates) => {
+    onDetectionStatus('loading');
     try {
       const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${nextCoordinates[0]}&lon=${nextCoordinates[1]}&zoom=12&addressdetails=1`, {
         headers: { Accept: 'application/json' },
@@ -35,7 +36,11 @@ export default function MapaSeleccionUbicacion({ municipality, latitude, longitu
       const address = (await response.json()).address || {};
       const place = address.city || address.town || address.municipality || address.city_district || address.county || address.village;
       const normalizedPlace = normalizeLocationText(place);
-      const matchedMunicipality = municipios.find((item) => normalizeLocationText(item.split(',')[0]) === normalizedPlace);
+      const normalizedAddressValues = Object.values(address).map((value) => normalizeLocationText(value));
+      const matchedMunicipality = municipios.find((item) => {
+        const name = normalizeLocationText(item.split(',')[0]);
+        return name === normalizedPlace || normalizedAddressValues.includes(name);
+      });
       const sector = address.suburb || address.neighbourhood || address.quarter || address.village;
       onChange({
         latitude: nextCoordinates[0],
@@ -43,8 +48,10 @@ export default function MapaSeleccionUbicacion({ municipality, latitude, longitu
         ...(matchedMunicipality ? { municipality: matchedMunicipality } : {}),
         ...(sector ? { sector } : {}),
       });
+      onDetectionStatus(matchedMunicipality ? 'detected' : 'not-found');
     } catch {
       onChange({ latitude: nextCoordinates[0], longitude: nextCoordinates[1] });
+      onDetectionStatus('not-found');
       setLocationError('Punto guardado. No se pudo identificar automáticamente el municipio o sector.');
     }
   };

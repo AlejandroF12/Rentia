@@ -10,7 +10,6 @@ export default function ClientePerfilPage() {
   const metadata = session?.user?.user_metadata || {};
   const fullName = profile?.full_name || metadata.full_name || 'Nombre no disponible';
   const email = profile?.email || session?.user?.email || 'Correo no disponible';
-  const phone = profile?.phone || metadata.phone || 'No registrado';
 
   return (
     <DashboardLayout rol="cliente" activo="perfil">
@@ -33,10 +32,6 @@ export default function ClientePerfilPage() {
           <div>
             <dt className="text-caption text-text-muted">Correo electrónico</dt>
             <dd className="mt-1 text-label text-text">{email}</dd>
-          </div>
-          <div>
-            <dt className="text-caption text-text-muted">Celular</dt>
-            <dd className="mt-1 text-label text-text">{phone}</dd>
           </div>
         </dl>
       </Card>

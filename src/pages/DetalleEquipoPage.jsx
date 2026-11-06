@@ -1,8 +1,7 @@
-import { MapPin, Heart, Share2, Images, MessageCircle, Phone, ArrowUpRight, Flag, ExternalLink } from 'lucide-react';
+import { MapPin, Heart, Share2, Images, MessageCircle, Phone, ArrowUpRight, Flag, ExternalLink, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import Breadcrumb from '../components/Breadcrumb';
 import Button from '../components/Button';
 import Avatar from '../components/Avatar';
-import ImagenNoEncontrada from '../components/ImagenNoEncontrada';
 import { EstadoBadge } from '../components/Badge';
 import StarRating from '../components/StarRating';
 import InfoBox from '../components/InfoBox';
@@ -22,6 +21,14 @@ function TarjetaPropietario({ owner, equipmentId }) {
   const phoneDigits = phone.replace(/\D/g, '');
   const ownerName = owner?.full_name || 'Propietario de Rentia';
   const loginHref = '/ingresar';
+  const handleWhatsApp = () => {
+    if (session && phoneDigits) window.open(`https://wa.me/${phoneDigits}`, '_blank', 'noopener,noreferrer');
+    else if (!session) window.location.href = loginHref;
+  };
+  const handleCall = () => {
+    if (session && phone) window.location.href = `tel:${phone}`;
+    else if (!session) window.location.href = loginHref;
+  };
   return (
     <div className="rounded-2xl border border-border bg-surface p-5">
       <p className="text-caption font-medium uppercase tracking-wide text-text-muted">Habla con el propietario</p>
@@ -37,15 +44,13 @@ function TarjetaPropietario({ owner, equipmentId }) {
       <p className="mt-4 text-small text-text-muted">En Rentia desde marzo de 2024</p>
 
       <div className="mt-4 space-y-3">
-        <Button as="a" href={session ? (phoneDigits ? `https://wa.me/${phoneDigits}` : '#') : loginHref} target={session ? '_blank' : undefined} rel={session ? 'noreferrer' : undefined} size="lg" fullWidth icon={MessageCircle} trailingIcon={ArrowUpRight} disabled={Boolean(session && !phoneDigits)}>
+        <Button type="button" onClick={handleWhatsApp} size="lg" fullWidth icon={MessageCircle} trailingIcon={ArrowUpRight} disabled={Boolean(session && !phoneDigits)}>
           {session ? 'Contactar por WhatsApp' : 'Inicia sesión para contactar'}
         </Button>
-        <Button as="a" href={session ? (phone ? `tel:${phone}` : '#') : loginHref} variant="secondary" size="lg" fullWidth icon={Phone} trailingIcon={ArrowUpRight} disabled={Boolean(session && !phone)}>
+        <Button type="button" onClick={handleCall} variant="secondary" size="lg" fullWidth icon={Phone} trailingIcon={ArrowUpRight} disabled={Boolean(session && !phone)}>
           {session ? `Llamar a ${ownerName}` : 'Inicia sesión para llamar'}
         </Button>
       </div>
-
-      <p className="mt-4 text-center text-small text-text-muted">{phone || 'Teléfono no autorizado'}</p>
 
       <InfoBox icon={ArrowUpRight} className="mt-4">
         El contacto y la negociación son directos con el propietario, fuera de Rentia.
@@ -88,6 +93,8 @@ export default function DetalleEquipoPage() {
   const [favorite, setFavoriteState] = useState(false);
   const [favoriteError, setFavoriteError] = useState('');
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [imageZoom, setImageZoom] = useState(1);
   const { session, profile } = useAuth();
   const [error, setError] = useState(() => (
     !equipmentId
@@ -96,6 +103,15 @@ export default function DetalleEquipoPage() {
         ? 'El enlace del equipo no es válido. Regresa al catálogo y selecciona una publicación.'
         : ''
   ));
+
+  useEffect(() => {
+    if (!galleryOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [galleryOpen]);
 
   useEffect(() => {
     if (!equipmentId || hasInvalidEquipmentId) {
@@ -210,17 +226,26 @@ export default function DetalleEquipoPage() {
         </div>
 
         {/* Galería */}
-        <div className="mt-6 grid grid-cols-2 gap-3 lg:h-[360px] lg:grid-cols-3 lg:grid-rows-2 lg:gap-4">
-          {images[0] ? <img src={images[0].url} alt={equipment.name} className="col-span-2 aspect-[4/3] w-full rounded-2xl object-cover lg:col-span-2 lg:row-span-2 lg:aspect-auto lg:h-full" /> : <ImagenNoEncontrada className="col-span-2 aspect-[4/3] w-full rounded-2xl lg:col-span-2 lg:row-span-2 lg:aspect-auto lg:h-full" />}
-          {images[1] ? <img src={images[1].url} alt="" className="h-28 w-full rounded-2xl object-cover lg:h-full" /> : <ImagenNoEncontrada className="h-28 w-full rounded-2xl lg:h-full" />}
-          <div className="relative h-28 lg:h-full">
-            {images[2] ? <img src={images[2].url} alt="" className="size-full rounded-2xl object-cover" /> : <ImagenNoEncontrada className="size-full rounded-2xl" />}
-            <button type="button" onClick={() => setGalleryOpen(true)} className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-lg bg-surface px-3 py-1.5 text-small font-semibold text-text">
-              <Images size={14} aria-hidden="true" />
-              <span className="lg:hidden">Ver {images.length} fotos</span>
-              <span className="hidden lg:inline">Ver las {images.length} fotos</span>
-            </button>
-          </div>
+        <div className="mt-6">
+          {images.length ? (
+            <div className={images.length === 1 ? 'mx-auto max-w-[560px]' : 'grid gap-3 lg:h-[360px] lg:grid-cols-3 lg:grid-rows-2 lg:gap-4'}>
+              <button type="button" onClick={() => { setSelectedImage(0); setGalleryOpen(true); setImageZoom(1); }} className={`${images.length === 1 ? 'aspect-square' : 'col-span-2 lg:col-span-2 lg:row-span-2 aspect-[4/3] lg:aspect-auto lg:h-full'} group relative w-full overflow-hidden rounded-2xl bg-surface-muted`}>
+                <img src={images[0].url} alt={equipment.name} className="size-full object-cover transition-transform group-hover:scale-[1.02]" />
+                <span className="absolute bottom-3 left-3 inline-flex items-center gap-2 rounded-lg bg-surface/95 px-3 py-2 text-small font-semibold text-text shadow-sm">
+                  <Images size={14} aria-hidden="true" /> Ver imágenes
+                </span>
+              </button>
+              {images.slice(1, 3).map((image) => (
+                <div key={image.id} className="relative h-28 lg:h-full">
+                  <img src={image.url} alt="" className="size-full rounded-2xl object-cover" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex min-h-48 items-center justify-center rounded-2xl border border-dashed border-border bg-surface-muted text-small text-text-muted">
+              Este equipo aún no tiene imágenes.
+            </div>
+          )}
         </div>
 
         {/* Contenido + propietario */}
@@ -300,17 +325,41 @@ export default function DetalleEquipoPage() {
         </div>
       </main>
       {galleryOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/80 p-5" role="dialog" aria-modal="true" aria-label="Galería de imágenes">
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-auto rounded-2xl bg-surface p-4">
-            <div className="flex items-center justify-between gap-4">
+        <div className="fixed inset-0 z-[2100] flex items-center justify-center bg-overlay/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Galería de imágenes">
+          <div className="max-h-[92vh] w-full max-w-5xl overflow-auto rounded-2xl bg-surface p-4 shadow-2xl md:p-6">
+            <div className="flex items-center justify-between gap-4 border-b border-border pb-4">
               <h2 className="text-heading-md font-semibold text-text">Fotos de {equipment.name}</h2>
-              <button type="button" onClick={() => setGalleryOpen(false)} className="text-label font-semibold text-text">Cerrar</button>
+              <button type="button" aria-label="Cerrar galería" onClick={() => setGalleryOpen(false)} className="flex size-9 items-center justify-center rounded-full bg-surface-muted text-text"><X size={18} /></button>
             </div>
-            {images.length ? (
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {images.map((image, index) => <img key={image.id} src={image.url} alt={`${equipment.name}, foto ${index + 1}`} className="w-full rounded-xl object-cover" />)}
+            <div className="mt-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_180px]">
+              <div className="relative flex min-h-[280px] items-center justify-center overflow-hidden rounded-xl bg-background">
+                <img
+                  src={images[selectedImage].url}
+                  alt={`${equipment.name}, foto ${selectedImage + 1}`}
+                  className="max-h-[62vh] w-full object-contain transition-transform duration-200"
+                  style={{ transform: `scale(${imageZoom})` }}
+                />
+                <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-xl bg-surface/95 p-1 shadow">
+                  <button type="button" aria-label="Alejar imagen" onClick={() => setImageZoom((current) => Math.max(1, current - 0.25))} className="flex size-9 items-center justify-center rounded-lg text-text hover:bg-surface-muted"><ZoomOut size={17} /></button>
+                  <span className="min-w-12 text-center text-small font-semibold text-text">{Math.round(imageZoom * 100)}%</span>
+                  <button type="button" aria-label="Acercar imagen" onClick={() => setImageZoom((current) => Math.min(3, current + 0.25))} className="flex size-9 items-center justify-center rounded-lg text-text hover:bg-surface-muted"><ZoomIn size={17} /></button>
+                  <button type="button" aria-label="Restablecer zoom" onClick={() => setImageZoom(1)} className="flex size-9 items-center justify-center rounded-lg text-text hover:bg-surface-muted"><RotateCcw size={15} /></button>
+                </div>
+                {images.length > 1 && (
+                  <>
+                    <button type="button" aria-label="Imagen anterior" onClick={() => setSelectedImage((current) => (current - 1 + images.length) % images.length)} className="absolute left-3 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-surface/95 text-text shadow"><ChevronLeft size={18} /></button>
+                    <button type="button" aria-label="Imagen siguiente" onClick={() => setSelectedImage((current) => (current + 1) % images.length)} className="absolute right-3 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-surface/95 text-text shadow"><ChevronRight size={18} /></button>
+                  </>
+                )}
               </div>
-            ) : <p className="mt-4 text-small text-text-muted">Este equipo aún no tiene imágenes.</p>}
+              <div className="grid grid-cols-4 gap-2 md:grid-cols-2 md:content-start">
+                {images.map((image, index) => (
+                  <button type="button" key={image.id} onClick={() => setSelectedImage(index)} className={`aspect-square overflow-hidden rounded-lg border-2 ${selectedImage === index ? 'border-primary' : 'border-transparent'}`}>
+                    <img src={image.url} alt={`Miniatura ${index + 1}`} className="size-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}

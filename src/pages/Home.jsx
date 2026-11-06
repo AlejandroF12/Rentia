@@ -3,11 +3,25 @@ import heroImage from '../media/heroImage.webp'
 import EquipoCard from '../components/EquipoCard'
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { loadFeaturedEquipment } from '../services/equipmentService'
 
 export const Home = () => {
     const [featuredEquipment, setFeaturedEquipment] = useState([])
     const [featuredError, setFeaturedError] = useState('')
+    const [searchTerm, setSearchTerm] = useState('')
+    const [locationTerm, setLocationTerm] = useState('')
+    const [availableOnly, setAvailableOnly] = useState(false)
+    const navigate = useNavigate()
+
+    const handleSearch = (event) => {
+        event.preventDefault()
+        const params = new URLSearchParams()
+        if (searchTerm.trim()) params.set('search', searchTerm.trim())
+        if (locationTerm.trim()) params.set('municipality', locationTerm.trim())
+        if (availableOnly) params.set('available', 'true')
+        navigate(`/catalogo${params.toString() ? `?${params.toString()}` : ''}`)
+    }
 
     useEffect(() => {
         loadFeaturedEquipment()
@@ -50,7 +64,7 @@ export const Home = () => {
                     </div>
                 </div>
                 { /* Sección 2: Buscador */}
-                <div className='w-full max-w-[90rem] grid grid-cols-1 gap-4 rounded-lg border border-border p-4 shadow-[0px_0.75rem_2.5rem_0px_rgba(21,63,76,0.07)] sm:grid-cols-2 sm:p-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-center'>
+                <form onSubmit={handleSearch} className='w-full max-w-[90rem] grid grid-cols-1 gap-4 rounded-lg border border-border p-4 shadow-[0px_0.75rem_2.5rem_0px_rgba(21,63,76,0.07)] sm:grid-cols-2 sm:p-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-center'>
                     <div className='flex min-w-0 flex-row items-center gap-3 lg:px-4'>
                         <Search className='w-[1.25rem] text-primary shrink-0 font-semibold' />
                         <div className='flex min-w-0 flex-col gap-1'>
@@ -61,6 +75,8 @@ export const Home = () => {
                                 type='text'
                                 id='search_equipo'
                                 placeholder='Maquinaria o vehículo'
+                                value={searchTerm}
+                                onChange={(event) => setSearchTerm(event.target.value)}
                                 className='w-full min-w-0 text-label text-text-muted focus:outline-none' />
                         </div>
                     </div>
@@ -73,7 +89,9 @@ export const Home = () => {
                             <input
                                 type='text'
                                 id='search_ubicacion'
-                                placeholder='Yopal, Casanare'
+                                placeholder='Municipio o ciudad'
+                                value={locationTerm}
+                                onChange={(event) => setLocationTerm(event.target.value)}
                                 className='w-full min-w-0 text-label text-text-muted focus:outline-none' />
                         </div>
                     </div>
@@ -83,20 +101,21 @@ export const Home = () => {
                             <label htmlFor='search_filtro' className='text-caption text-primary'>
                                 Disponibilidad
                             </label>
-                            <span className='text-label text-text-muted cursor-pointer'>
-                                Todos los equipos
-                            </span>
+                            <select value={availableOnly ? 'available' : 'all'} onChange={(event) => setAvailableOnly(event.target.value === 'available')} className='bg-transparent text-label text-text-muted focus:outline-none'>
+                                <option value='all'>Todos los equipos</option>
+                                <option value='available'>Solo disponibles</option>
+                            </select>
                         </div>
                     </div>
                     <div className='sm:col-span-2 lg:col-span-1'>
-                        <Link to='/catalogo' className='flex h-[2.875rem] w-full items-center justify-center gap-[0.625rem] rounded-[0.5rem] bg-primary px-[1.125rem] py-[0.8125rem] cursor-pointer lg:w-[10.625rem]'>
+                        <button type='submit' className='flex h-[2.875rem] w-full items-center justify-center gap-[0.625rem] rounded-[0.5rem] bg-primary px-[1.125rem] py-[0.8125rem] cursor-pointer lg:w-[10.625rem]'>
                             <ArrowRight className='w-[1.125rem] shrink-0 text-text-inverse' />
                             <span className='whitespace-nowrap text-label text-text-inverse font-semibold'>
                                 Explorar equipos
                             </span>
-                        </Link>
+                        </button>
                     </div>
-                </div>
+                </form>
             </section>
             {/* Sección de vehiculos */}
             <section className='w-full bg-surface flex flex-col items-center'>
