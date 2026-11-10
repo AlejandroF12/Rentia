@@ -92,6 +92,8 @@ export default function DetalleEquipoPage() {
   const [images, setImages] = useState([]);
   const [favorite, setFavoriteState] = useState(false);
   const [favoriteError, setFavoriteError] = useState('');
+  const [favoriteAnimation, setFavoriteAnimation] = useState(false);
+  const [favoriteNotice, setFavoriteNotice] = useState('');
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [imageZoom, setImageZoom] = useState(1);
@@ -185,19 +187,33 @@ export default function DetalleEquipoPage() {
             {profile?.role === 'cliente' && <button
               type="button"
               aria-label={favorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+              aria-pressed={favorite}
               disabled={!session?.user?.id}
+              className="relative flex size-10 items-center justify-center rounded-full border border-border bg-surface"
               onClick={async () => {
                 try {
                   setFavoriteError('');
-                  await setFavorite(session.user.id, equipmentId, !favorite);
-                  setFavoriteState((current) => !current);
+                  const nextFavorite = !favorite;
+                  await setFavorite(session.user.id, equipmentId, nextFavorite);
+                  setFavoriteState(nextFavorite);
+                  setFavoriteNotice(nextFavorite ? 'Equipo guardado en favoritos.' : 'Equipo quitado de favoritos.');
+                  if (nextFavorite) {
+                    setFavoriteAnimation(true);
+                    window.setTimeout(() => setFavoriteAnimation(false), 700);
+                  }
                 } catch (favoriteLoadError) {
                   setFavoriteError(favoriteLoadError.message);
                 }
               }}
             >
-              <Heart size={18} fill={favorite ? 'currentColor' : 'none'} />
+              <span className={`favorite-heart ${favoriteAnimation ? 'favorite-heart-pop' : ''}`}>
+                <Heart size={18} fill={favorite ? 'currentColor' : 'none'} />
+              </span>
+              <span aria-hidden="true" className={`favorite-burst ${favoriteAnimation ? 'favorite-burst-active' : ''}`}>
+                <i /><i /><i /><i />
+              </span>
             </button>}
+            <span className="sr-only" role="status" aria-live="polite">{favoriteNotice}</span>
             <button
               type="button"
               aria-label="Compartir"

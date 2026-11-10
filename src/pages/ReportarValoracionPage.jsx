@@ -35,8 +35,9 @@ export default function ReportarValoracionPage() {
     setSubmitting(true);
     setError('');
     try {
-      await createReport({ reporterId: session.user.id, reviewId, reason, description });
-      window.location.assign(`/reporte-enviado?tipo=valoracion&rol=${profile?.role || 'cliente'}`);
+      const report = await createReport({ reporterId: session.user.id, reviewId, reason, description });
+      const params = new URLSearchParams({ reporteId: report.id, tipo: 'valoracion', rol: profile?.role || 'cliente' });
+      window.location.assign(`/reporte-enviado?${params.toString()}`);
     } catch (submitError) {
       setError(submitError.message);
     } finally {

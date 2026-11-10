@@ -43,8 +43,9 @@ export default function ReportarPublicacionPage() {
     setSubmitting(true);
     setError('');
     try {
-      await createReport({ reporterId: session.user.id, equipmentId, reason, description });
-      window.location.assign(`/reporte-enviado${equipmentQuery}`);
+      const report = await createReport({ reporterId: session.user.id, equipmentId, reason, description });
+      const params = new URLSearchParams({ reporteId: report.id, id: equipmentId });
+      window.location.assign(`/reporte-enviado?${params.toString()}`);
     } catch (submitError) {
       setError(submitError.message);
     } finally {

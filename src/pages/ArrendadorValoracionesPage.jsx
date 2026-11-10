@@ -21,30 +21,32 @@ function ReviewCard({ review, received = false, showEquipmentLink = false }) {
       </div>
       <ReviewHighlights items={review.highlighted_aspects} />
       <p className="mt-4 whitespace-pre-wrap text-body text-text-muted">{review.comment || 'Sin comentario.'}</p>
-      {!received && (
-        <Link
-          to={`/valoraciones/arrendador-a-cliente?targetUserId=${review.target?.id}&equipmentId=${review.equipment?.id}&reviewType=${review.review_type || 'arrendador'}&edit=1`}
-          className="mt-4 inline-flex min-h-11 items-center text-label font-semibold text-text"
-        >
-          Editar valoración
-        </Link>
-      )}
-      {received && (
-        <Link
-          to={`/reportar-valoracion?reviewId=${review.id}`}
-          className="mt-4 inline-flex min-h-11 items-center text-label font-semibold text-danger"
-        >
-          Reportar valoración
-        </Link>
-      )}
-      {showEquipmentLink && review.equipment?.id && (
-        <Link
-          to={`/detalle-equipo?id=${encodeURIComponent(review.equipment.id)}`}
-          className="mt-4 inline-flex min-h-11 items-center text-label font-semibold text-primary"
-        >
-          Ver equipo valorado →
-        </Link>
-      )}
+      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+        {!received && (
+          <Link
+            to={`/valoraciones/arrendador-a-cliente?targetUserId=${review.target?.id}&equipmentId=${review.equipment?.id}&reviewType=${review.review_type || 'arrendador'}&edit=1`}
+            className="inline-flex min-h-11 items-center text-label font-semibold text-text"
+          >
+            Editar valoración
+          </Link>
+        )}
+        {received && (
+          <Link
+            to={`/reportar-valoracion?reviewId=${review.id}`}
+            className="inline-flex min-h-11 items-center text-label font-semibold text-danger"
+          >
+            Reportar valoración
+          </Link>
+        )}
+        {showEquipmentLink && review.equipment?.id && (
+          <Link
+            to={`/detalle-equipo?id=${encodeURIComponent(review.equipment.id)}`}
+            className="inline-flex min-h-11 items-center text-label font-semibold text-primary"
+          >
+            Ver equipo valorado →
+          </Link>
+        )}
+      </div>
     </Card>
   );
 }

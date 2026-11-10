@@ -11,6 +11,7 @@ import ImagenNoEncontrada from '../components/ImagenNoEncontrada';
 import { Puntaje } from '../components/StarRating';
 import { useAuth } from '../context/AuthContext';
 import {
+  loadEquipmentImages,
   loadOwnerEquipmentById,
   updateEquipmentPublication,
 } from '../services/equipmentService';
@@ -42,6 +43,7 @@ export default function GestionarPublicacionPage() {
   const equipmentId = searchParams.get('id');
   const [equipment, setEquipment] = useState(null);
   const [error, setError] = useState('');
+  const [publicationError, setPublicationError] = useState('');
   const [updating, setUpdating] = useState(false);
   const missingIdError = !equipmentId ? 'No se indicó el equipo que deseas gestionar.' : '';
 
@@ -56,11 +58,25 @@ export default function GestionarPublicacionPage() {
     if (!equipment || !session?.user?.id || updating) return;
     setUpdating(true);
     setError('');
+    setPublicationError('');
     try {
+      if (publicationStatus === 'publicada') {
+        const images = await loadEquipmentImages(equipment.id);
+        const missing = [];
+        if (!images.length) missing.push('una foto del equipo');
+        if (!equipment.name.trim()) missing.push('el nombre');
+        if (!equipment.category.trim()) missing.push('la categoría');
+        if (!equipment.description.trim()) missing.push('la descripción');
+        if (!equipment.municipality.trim()) missing.push('el municipio');
+        if (missing.length) {
+          setPublicationError(`Completa la publicación antes de hacerla visible: agrega ${missing.join(', ')}.`);
+          return;
+        }
+      }
       const updated = await updateEquipmentPublication(equipment.id, session.user.id, publicationStatus);
       setEquipment((current) => ({ ...current, ...updated }));
     } catch (updateError) {
-      setError(updateError.message);
+      setPublicationError(updateError.message);
     } finally {
       setUpdating(false);
     }
@@ -90,6 +106,8 @@ export default function GestionarPublicacionPage() {
         titulo="Tú decides cuándo mostrarlo."
         subtitulo="Gestiona la visibilidad sin confundirla con la disponibilidad."
       />
+
+      {publicationError && <p role="alert" className="mt-4 text-small text-danger">{publicationError}</p>}
 
       <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[1fr_288px] lg:items-start lg:gap-8">
         <div className="lg:hidden"><EquipoResumen equipment={equipment} /></div>

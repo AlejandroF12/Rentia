@@ -5,7 +5,7 @@ const APP_URL = 'https://rentia-ruddy.vercel.app';
 export async function loadProfile(userId) {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, email, phone, municipality, role, status, created_at')
+    .select('id, full_name, email, phone, municipality, role, status, created_at, suspension_reason, suspended_at')
     .eq('id', userId)
     .single();
 

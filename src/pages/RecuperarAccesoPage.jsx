@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import InfoBox from '../components/InfoBox';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { requestPasswordReset } from '../services/authService';
 
 export default function RecuperarAccesoPage() {
@@ -59,7 +60,9 @@ export default function RecuperarAccesoPage() {
       <InfoBox title="Tu información es privada" className="mt-5">
         Por seguridad, no confirmamos si un correo tiene una cuenta registrada.
       </InfoBox>
-      <p className="mt-5 text-small text-text-muted">¿No recuerdas tu correo? Centro de ayuda → Recuperación de acceso.</p>
+      <p className="mt-5 text-small text-text-muted">
+        ¿No recuerdas tu correo? <Link to="/ayuda#acceso" className="font-semibold text-primary">Centro de ayuda → Recuperación de acceso.</Link>
+      </p>
     </RecuperacionLayout>
   );
 }

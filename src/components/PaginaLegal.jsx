@@ -32,9 +32,9 @@ export default function PaginaLegal({ contenido }) {
           <section aria-labelledby="orientacion" className="mt-10 rounded-2xl bg-surface-muted p-5 md:p-6">
             <h2 id="orientacion" className="text-heading-md font-semibold text-text md:text-heading-lg">¿Necesitas orientación?</h2>
             <p className="mt-4 text-body leading-relaxed text-text-muted">
-              Centro de ayuda → Privacidad y cuenta. Allí puedes solicitar información, revisión o eliminación de tu cuenta.
+              Consulta la orientación y las opciones actualmente disponibles en Rentia. Algunas solicitudes aún no se pueden tramitar desde la aplicación.
             </p>
-            <Button as="a" href="#ayuda" variant="secondary" size="lg" fullWidth className="mt-4">Ir al Centro de ayuda</Button>
+            <Button as={Link} to="/ayuda" variant="secondary" size="lg" fullWidth className="mt-4">Ir al Centro de ayuda</Button>
           </section>
 
           <Button as={Link} to="/catalogo" size="lg" fullWidth className="mt-4">Volver a explorar equipos</Button>
@@ -55,9 +55,9 @@ export default function PaginaLegal({ contenido }) {
           <section className="rounded-2xl border border-border bg-surface p-6">
             <h2 className="text-heading-sm font-semibold text-text">Tu información, tu decisión.</h2>
             <p className="mt-4 text-body text-text-muted">
-              Para consultas sobre tus datos o tu cuenta, usa la ruta del Centro de ayuda. No necesitas publicar información privada.
+              Consulta las opciones de orientación disponibles sin publicar información privada.
             </p>
-            <Button as="a" href="#ayuda" variant="secondary" size="lg" fullWidth className="mt-4" trailingIcon={ArrowUpRight}>
+            <Button as={Link} to="/ayuda" variant="secondary" size="lg" fullWidth className="mt-4" trailingIcon={ArrowUpRight}>
               Centro de ayuda
             </Button>
           </section>

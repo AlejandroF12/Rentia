@@ -4,6 +4,7 @@ import Eyebrow from '../components/Eyebrow';
 import EquipoCard from '../components/EquipoCard';
 import { equipos } from '../data/muestra';
 import Footer from '../components/Footer';
+import { useAuth } from '../context/AuthContext';
 
 /** Contenido de fondo de cada pantalla con el menú abierto. */
 const fondos = {
@@ -24,11 +25,17 @@ const fondos = {
  * variant: "public" | "cliente" | "arrendador" | "admin"
  */
 export default function MenuPage({ variant = 'public' }) {
-  const f = fondos[variant];
+  const { profile } = useAuth();
+  const activeVariant = profile?.status === 'activo'
+    ? profile.role
+    : profile?.status === 'suspendido'
+      ? 'suspendido'
+      : variant;
+  const f = fondos[activeVariant] || fondos.public;
 
   return (
     <div className="relative min-h-screen bg-background font-sans text-text">
-      <Navbar variant={variant} menuOpen />
+      <Navbar variant={activeVariant} menuOpen />
 
       <main className="mx-auto max-w-[1440px] px-5 pb-16 pt-8 md:px-8 lg:px-16">
         <Eyebrow>{f.eyebrow}</Eyebrow>
@@ -56,7 +63,7 @@ export default function MenuPage({ variant = 'public' }) {
       {/* Velo + panel */}
       <div className="fixed inset-0 top-16 z-[1000] bg-overlay/40 backdrop-blur-sm md:top-[72px]" aria-hidden="true" />
       <div className="fixed right-0 top-16 z-[1001] w-full md:right-8 md:top-[88px] md:w-auto lg:right-16">
-        <MenuPanel variant={variant} />
+        <MenuPanel variant={activeVariant} />
       </div>
       <Footer />
     </div>

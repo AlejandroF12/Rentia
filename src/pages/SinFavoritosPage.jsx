@@ -14,24 +14,35 @@ import { useEffect, useState } from 'react';
 /** Favoritos sin elementos (estado vacío). */
 export default function SinFavoritosPage() {
   const { session, profile } = useAuth();
-  const [favorites, setFavorites] = useState([]);
-  const [error, setError] = useState('');
+  const userId = session?.user?.id;
+  const [favoritesLoad, setFavoritesLoad] = useState({ userId: null, data: [], error: '' });
 
   useEffect(() => {
-    if (!session?.user?.id) return;
-    loadClientFavorites(session.user.id)
-      .then(setFavorites)
-      .catch((loadError) => setError(loadError.message));
-  }, [session?.user?.id]);
+    let active = true;
+    if (!userId) return;
+
+    loadClientFavorites(userId)
+      .then((data) => { if (active) setFavoritesLoad({ userId, data, error: '' }); })
+      .catch((loadError) => { if (active) setFavoritesLoad({ userId, data: [], error: loadError.message }); });
+
+    return () => { active = false; };
+  }, [userId]);
+  const favoritesMatchUser = favoritesLoad.userId === userId;
+  const favorites = favoritesMatchUser ? favoritesLoad.data : [];
+  const loading = Boolean(userId) && !favoritesMatchUser;
+  const error = favoritesMatchUser ? favoritesLoad.error : '';
 
   const equiposFavoritos = favorites
     .filter(({ equipment }) => equipment)
     .map(({ equipment }) => ({
       ...equipment,
+      nombre: equipment.name,
+      categoria: equipment.category,
       lugar: equipment.municipality,
-      distancia: '',
-      puntaje: '—',
+      distancia: 'ubicación aproximada',
+      puntaje: equipment.rating == null ? '—' : equipment.rating.toFixed(1),
       disponible: equipment.is_available && equipment.publication_status === 'publicada',
+      imagen: equipment.image,
     }));
 
   return (
@@ -45,13 +56,30 @@ export default function SinFavoritosPage() {
 
       <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[1fr_288px] lg:items-start lg:gap-8">
         <div className="min-w-0">
-          <h2 className="text-label font-semibold text-text-muted lg:text-label">Favoritos ({equiposFavoritos.length})</h2>
+          <h2 className="text-label font-semibold text-text-muted lg:text-label">
+            Favoritos ({loading ? '…' : equiposFavoritos.length})
+          </h2>
           {error && <p role="alert" className="mt-4 text-small text-danger">{error}</p>}
-          {equiposFavoritos.length > 0 ? (
+          {loading ? (
+            <p role="status" aria-live="polite" className="mt-4 text-small text-text-muted">Cargando tus equipos favoritos…</p>
+          ) : equiposFavoritos.length > 0 ? (
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
-              {equiposFavoritos.map((equipo) => <EquipoCard key={equipo.id} equipo={equipo} favorito={false} />)}
+              {equiposFavoritos.map((equipo) => (
+                <EquipoCard
+                  key={equipo.id}
+                  equipo={equipo}
+                  isFavorite
+                  onFavoriteChange={(equipmentId, isFavorite) => {
+                    if (!isFavorite) {
+                      setFavoritesLoad((current) => current.userId === userId
+                        ? { ...current, data: current.data.filter((favorite) => favorite.equipment_id !== equipmentId) }
+                        : current);
+                    }
+                  }}
+                />
+              ))}
             </div>
-          ) : (
+          ) : !error ? (
           <Card className="mt-4 flex flex-col items-center px-5 py-10 text-center md:py-16">
             <Heart size={36} aria-hidden="true" className="text-text" strokeWidth={1.5} />
             <h3 className="mt-6 text-heading-lg font-semibold text-text md:mt-8">Aún no tienes favoritos.</h3>
@@ -62,7 +90,7 @@ export default function SinFavoritosPage() {
               Explorar equipos
             </Button>
           </Card>
-          )}
+          ) : null}
 
           <InfoBox title="Solo para ti" className="mt-6 lg:hidden">
             Guardar un equipo no lo reserva ni confirma su disponibilidad. Consulta siempre con el propietario.

@@ -29,7 +29,7 @@ import ArrendadorCalificaClientePage from './pages/ArrendadorCalificaClientePage
 import AdminUsuariosPage from './pages/AdminUsuariosPage'
 import AdminPublicacionesPage from './pages/AdminPublicacionesPage'
 import AdminReportesPage from './pages/AdminReportesPage'
-import ModeracionMotivoPage from './pages/ModeracionMotivoPage'
+import AdminResumenPage from './pages/AdminResumenPage'
 import CatalogoSinResultadosPage from './pages/CatalogoSinResultadosPage'
 import CatalogoErrorPage from './pages/CatalogoErrorPage'
 import CuentaSuspendidaPage from './pages/CuentaSuspendidaPage'
@@ -44,6 +44,9 @@ import ClienteValoracionesPage from './pages/ClienteValoracionesPage'
 import ArrendadorValoracionesPage from './pages/ArrendadorValoracionesPage'
 import ArrendadorPerfilPage from './pages/ArrendadorPerfilPage'
 import ResumenArrendadorPage from './pages/ResumenArrendadorPage'
+import PreferenciasPage from './pages/PreferenciasPage'
+import AyudaPage from './pages/AyudaPage'
+import AdminApelacionesPage from './pages/AdminApelacionesPage'
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
@@ -68,6 +71,10 @@ function RequireRole({ roles, children }) {
     return <div className="min-h-screen bg-surface" aria-busy="true" />
   }
 
+  if (profile?.status === 'suspendido') {
+    return <Navigate to="/cuenta-suspendida" replace />
+  }
+
   if (!profile || profile.status !== 'activo') {
     return <Navigate to="/ingresar" replace />
   }
@@ -86,8 +93,26 @@ function RequireAuth({ children }) {
     return <div className="min-h-screen bg-surface" aria-busy="true" />
   }
 
+  if (profile?.status === 'suspendido') {
+    return <Navigate to="/cuenta-suspendida" replace />
+  }
+
   if (!profile || profile.status !== 'activo') {
     return <Navigate to="/ingresar" replace />
+  }
+
+  return children
+}
+
+function RequireSuspended({ children }) {
+  const { loading, profile } = useAuth()
+
+  if (loading) {
+    return <div className="min-h-screen bg-surface" aria-busy="true" />
+  }
+
+  if (!profile || profile.status !== 'suspendido') {
+    return <Navigate to={profile?.status === 'activo' ? '/' : '/ingresar'} replace />
   }
 
   return children
@@ -135,10 +160,12 @@ function App() {
         <Route path='/valoraciones/arrendador-a-cliente' element={<RequireRole roles={['arrendador']}><MainLayout navVariant='arrendador'><ArrendadorCalificaClientePage /></MainLayout></RequireRole>} />
 
         {/* Administración */}
+        <Route path='/admin/resumen' element={<RequireRole roles={['admin']}><MainLayout navVariant='admin' footer={false}><AdminResumenPage /></MainLayout></RequireRole>} />
         <Route path='/admin/usuarios' element={<RequireRole roles={['admin']}><MainLayout navVariant='admin' footer={false}><AdminUsuariosPage /></MainLayout></RequireRole>} />
         <Route path='/admin/publicaciones' element={<RequireRole roles={['admin']}><MainLayout navVariant='admin' footer={false}><AdminPublicacionesPage /></MainLayout></RequireRole>} />
         <Route path='/admin/reportes' element={<RequireRole roles={['admin']}><MainLayout navVariant='admin' footer={false}><AdminReportesPage /></MainLayout></RequireRole>} />
-        <Route path='/admin/moderacion' element={<RequireRole roles={['admin']}><MainLayout navVariant='admin' footer={false}><ModeracionMotivoPage /></MainLayout></RequireRole>} />
+        <Route path='/admin/apelaciones' element={<RequireRole roles={['admin']}><MainLayout navVariant='admin' footer={false}><AdminApelacionesPage /></MainLayout></RequireRole>} />
+        <Route path='/admin/moderacion' element={<RequireRole roles={['admin']}><Navigate to='/admin/reportes' replace /></RequireRole>} />
 
         {/* Estados del catálogo */}
         <Route path='/catalogo/sin-resultados' element={<MainLayout navVariant='publicTexto'><CatalogoSinResultadosPage /></MainLayout>} />
@@ -148,12 +175,14 @@ function App() {
         <Route path='/reportar-publicacion' element={<RequireRole roles={['cliente']}><MainLayout navVariant='clienteTexto'><ReportarPublicacionPage /></MainLayout></RequireRole>} />
         <Route path='/reportar-valoracion' element={<RequireRole roles={['cliente', 'arrendador']}><MainLayout navVariant='clienteTexto'><ReportarValoracionPage /></MainLayout></RequireRole>} />
         <Route path='/reporte-enviado' element={<RequireRole roles={['cliente', 'arrendador']}><MainLayout navVariant='clienteTexto'><ReporteEnviadoPage /></MainLayout></RequireRole>} />
-        <Route path='/cuenta-suspendida' element={<MainLayout navVariant='suspendido' footerProps={{ copyright: '© 2026 Rentia · Hecho en Casanare', className: 'hidden md:block' }}><CuentaSuspendidaPage /></MainLayout>} />
+        <Route path='/cuenta-suspendida' element={<RequireSuspended><MainLayout navVariant='suspendido' footerProps={{ copyright: '© 2026 Rentia · Hecho en Casanare', className: 'hidden md:block' }}><CuentaSuspendidaPage /></MainLayout></RequireSuspended>} />
 
         {/* Información legal */}
         <Route path='/terminos' element={<MainLayout navVariant='publicTexto'><TerminosPage /></MainLayout>} />
         <Route path='/privacidad' element={<MainLayout navVariant='publicTexto'><PrivacidadPage /></MainLayout>} />
         <Route path='/normas' element={<MainLayout navVariant='publicTexto'><NormasPage /></MainLayout>} />
+        <Route path='/ayuda' element={<MainLayout navVariant='publicTexto'><AyudaPage /></MainLayout>} />
+        <Route path='/configuracion' element={<MainLayout><PreferenciasPage /></MainLayout>} />
 
         <Route path='*' element={<Navigate to='/' replace />} />
       </Routes>

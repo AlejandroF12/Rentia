@@ -5,14 +5,21 @@ import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { loadFeaturedEquipment } from '../services/equipmentService'
+import { loadFavoriteEquipmentIds } from '../services/clientService'
+import { useAuth } from '../context/AuthContext'
 
 export const Home = () => {
     const [featuredEquipment, setFeaturedEquipment] = useState([])
     const [featuredError, setFeaturedError] = useState('')
+    const [featuredLoaded, setFeaturedLoaded] = useState(false)
+    const [favoriteData, setFavoriteData] = useState({ userId: null, ids: [], error: '', loaded: false })
     const [searchTerm, setSearchTerm] = useState('')
     const [locationTerm, setLocationTerm] = useState('')
     const [availableOnly, setAvailableOnly] = useState(false)
     const navigate = useNavigate()
+    const { session, profile } = useAuth()
+    const favoriteUserId = profile?.role === 'cliente' ? session?.user?.id : null
+    const userFavoriteData = favoriteData.userId === favoriteUserId ? favoriteData : null
 
     const handleSearch = (event) => {
         event.preventDefault()
@@ -27,7 +34,26 @@ export const Home = () => {
         loadFeaturedEquipment()
             .then((items) => setFeaturedEquipment(items.filter((item) => item.rating > 0)))
             .catch((error) => setFeaturedError(error.message))
+            .finally(() => setFeaturedLoaded(true))
     }, [])
+
+    useEffect(() => {
+        const userId = favoriteUserId
+        let active = true
+        if (!userId) return () => { active = false }
+
+        loadFavoriteEquipmentIds(userId)
+            .then((ids) => {
+                if (!active) return
+                setFavoriteData({ userId, ids, error: '', loaded: true })
+            })
+            .catch((error) => {
+                if (!active) return
+                setFavoriteData({ userId, ids: [], error: error.message, loaded: false })
+            })
+
+        return () => { active = false }
+    }, [favoriteUserId])
 
     return (
         <div id='inicio' className='w-full'>
@@ -36,7 +62,7 @@ export const Home = () => {
                 {/* Sección 1 */}
                 <div className='w-full max-w-[90rem] grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-20'>
                     { /* Contenido del Hero */}
-                    <div className='flex w-full max-w-[35rem] flex-col gap-6'>
+                    <div className='motion-enter flex w-full max-w-[35rem] flex-col gap-6'>
                         <div className='flex flex-row items-center gap-[0.5rem]'>
                             <div className='w-[1.5rem] h-[2px] bg-success'></div>
                             <span className='text-caption text-success font-semibold'>EL LLANO NOS MUEVE</span>
@@ -59,12 +85,12 @@ export const Home = () => {
                         </div>
                     </div>
                     { /* Imagen del Hero */}
-                    <div className='w-full'>
+                    <div className='motion-enter motion-delay-2 w-full'>
                         <img src={heroImage} className='w-full aspect-[4/3] max-h-[27.5rem] object-cover rounded-2xl sm:rounded-3xl' alt='Retroexcavadora en Hero section' />
                     </div>
                 </div>
                 { /* Sección 2: Buscador */}
-                <form onSubmit={handleSearch} className='w-full max-w-[90rem] grid grid-cols-1 gap-4 rounded-lg border border-border p-4 shadow-[0px_0.75rem_2.5rem_0px_rgba(21,63,76,0.07)] sm:grid-cols-2 sm:p-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-center'>
+                <form onSubmit={handleSearch} className='motion-enter motion-delay-3 w-full max-w-[90rem] grid grid-cols-1 gap-4 rounded-lg border border-border p-4 shadow-[0px_0.75rem_2.5rem_0px_rgba(21,63,76,0.07)] sm:grid-cols-2 sm:p-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-center'>
                     <div className='flex min-w-0 flex-row items-center gap-3 lg:px-4'>
                         <Search className='w-[1.25rem] text-primary shrink-0 font-semibold' />
                         <div className='flex min-w-0 flex-col gap-1'>
@@ -108,7 +134,7 @@ export const Home = () => {
                         </div>
                     </div>
                     <div className='sm:col-span-2 lg:col-span-1'>
-                        <button type='submit' className='flex h-[2.875rem] w-full items-center justify-center gap-[0.625rem] rounded-[0.5rem] bg-primary px-[1.125rem] py-[0.8125rem] cursor-pointer lg:w-[10.625rem]'>
+                        <button type='submit' className='action-explore flex h-[2.875rem] w-full items-center justify-center gap-[0.625rem] rounded-[0.5rem] bg-primary px-[1.125rem] py-[0.8125rem] cursor-pointer lg:w-[10.625rem]'>
                             <ArrowRight className='w-[1.125rem] shrink-0 text-text-inverse' />
                             <span className='whitespace-nowrap text-label text-text-inverse font-semibold'>
                                 Explorar equipos
@@ -126,7 +152,7 @@ export const Home = () => {
                             <p className='text-text-muted text-small'>Encuentra lo que tu proyecto necesita</p>
                         </div>
                         <div className='w-full grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-                            <div className='flex min-w-0 flex-row items-center gap-3 rounded-xl bg-surface-muted p-4'>
+                            <div className='motion-enter motion-delay-1 flex min-w-0 flex-row items-center gap-3 rounded-xl bg-surface-muted p-4'>
                                 <div>
                                     <TractorIcon className='w-[1.5rem] h-[1.5rem] text-primary' />
                                 </div>
@@ -139,7 +165,7 @@ export const Home = () => {
                                     </p>
                                 </div>
                             </div>
-                            <div className='flex min-w-0 flex-row items-center gap-3 rounded-xl bg-surface-muted p-4'>
+                            <div className='motion-enter motion-delay-2 flex min-w-0 flex-row items-center gap-3 rounded-xl bg-surface-muted p-4'>
                                 <div>
                                     <Truck className='w-[1.5rem] h-[1.5rem] text-primary font-semibold' />
                                 </div>
@@ -152,7 +178,7 @@ export const Home = () => {
                                     </p>
                                 </div>
                             </div>
-                            <div className='flex min-w-0 flex-row items-center gap-3 rounded-xl bg-surface-muted p-4'>
+                            <div className='motion-enter motion-delay-3 flex min-w-0 flex-row items-center gap-3 rounded-xl bg-surface-muted p-4'>
                                 <div>
                                     <Sprout className='w-[1.5rem] h-[1.5rem] text-primary' />
                                 </div>
@@ -165,7 +191,7 @@ export const Home = () => {
                                     </p>
                                 </div>
                             </div>
-                            <div className='flex min-w-0 flex-row items-center gap-3 rounded-xl bg-surface-muted p-4'>
+                            <div className='motion-enter motion-delay-4 flex min-w-0 flex-row items-center gap-3 rounded-xl bg-surface-muted p-4'>
                                 <div>
                                     <Construction className='w-[1.5rem] h-[1.5rem] text-primary font-semibold' />
                                 </div>
@@ -188,7 +214,7 @@ export const Home = () => {
                             <div className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
                                 <h2 className='text-text text-title-mobile font-semibold md:text-title-desktop'>Grandes equipos, gente de aquí.</h2>
                                 <div className='flex items-end'>
-                                    <Link to='/catalogo' className='flex h-[2.875rem] w-full items-center justify-center gap-2 rounded-lg border border-border bg-primary-foreground px-4 py-3 cursor-pointer sm:w-[9rem]'>
+                                    <Link to='/catalogo' className='flex h-[2.875rem] w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 py-3 cursor-pointer transition-transform hover:-translate-y-0.5 sm:w-[9rem]'>
                                         <ArrowUpRight className='text-text w-[1.125rem]' />
                                         <span className='text-text text-label font-semibold'>Ver catálogo</span>
                                     </Link>
@@ -196,7 +222,11 @@ export const Home = () => {
                             </div>
                         </div>
                         {featuredError && <p role='alert' className='text-small text-danger'>{featuredError}</p>}
-                        {!featuredError && featuredEquipment.length === 0 && (
+                        {userFavoriteData?.error && <p role='alert' className='text-small text-danger'>{userFavoriteData.error}</p>}
+                        {!featuredError && !featuredLoaded && (
+                            <p role='status' className='text-body text-text-muted'>Cargando equipos destacados…</p>
+                        )}
+                        {!featuredError && featuredLoaded && featuredEquipment.length === 0 && (
                             <p className='text-body text-text-muted'>Aún no hay equipos disponibles con valoraciones publicadas.</p>
                         )}
                         {featuredEquipment.length > 0 && (
@@ -212,7 +242,14 @@ export const Home = () => {
                                             distancia: 'ubicación aproximada',
                                             puntaje: item.rating.toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
                                             disponible: item.is_available,
+                                            imagen: item.image,
                                         }}
+                                        favorito={profile?.role === 'cliente' && userFavoriteData?.loaded}
+                                        isFavorite={userFavoriteData?.ids.includes(item.id) ?? false}
+                                        onFavoriteChange={(id, value) => setFavoriteData((current) => current.userId !== favoriteUserId ? current : ({
+                                            ...current,
+                                            ids: value ? [...new Set([...current.ids, id])] : current.ids.filter((itemId) => itemId !== id),
+                                        }))}
                                     />
                                 ))}
                             </div>
@@ -263,7 +300,7 @@ export const Home = () => {
                                     <p className='text-text-inverse-muted text-body'>Publica tus equipos y conecta con nuevos clientes en tu región.</p>
                                 </div>
                                 <div>
-                                    <Link to='/crear-cuenta' className='flex h-12 w-full items-center justify-center gap-3 rounded-lg bg-primary-foreground px-5 py-4 cursor-pointer sm:w-[14.3125rem]'>
+                                    <Link to='/crear-cuenta' className='flex h-12 w-full items-center justify-center gap-3 rounded-lg bg-surface px-5 py-4 cursor-pointer transition-transform hover:-translate-y-0.5 sm:w-[14.3125rem]'>
                                         <span className='whitespace-nowrap text-label text-text font-semibold'>
                                             Quiero publicar mi equipo
                                         </span>

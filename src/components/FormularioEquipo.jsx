@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Check, ImagePlus, Lightbulb, X } from 'lucide-react';
+import { Check, ImagePlus, Lightbulb, Save, X } from 'lucide-react';
 import Badge, { EstadoBadge } from './Badge';
 import Button from './Button';
 import Card from './Card';
@@ -136,15 +136,15 @@ function SeccionDatos({ equipo, revision, errores }) {
     <Card>
       <TituloSeccion numero="02" chip={!revision}>Cuéntanos sobre tu equipo</TituloSeccion>
       <div className="mt-5 grid gap-5 md:grid-cols-2">
-        <Field id="nombre" name="nombre" label="Nombre del vehículo o maquinaria *" defaultValue={equipo.nombre} required className="md:col-span-2" />
-        <Select id="categoria" name="categoria" label="Categoría *" defaultValue={errores.categoria ? '' : equipo.categoria} required error={errores.categoria}>
+        <Field id="nombre" name="nombre" label="Nombre del vehículo o maquinaria *" defaultValue={equipo.nombre} aria-required="true" error={errores.nombre} className="md:col-span-2" />
+        <Select id="categoria" name="categoria" label="Categoría *" defaultValue={errores.categoria ? '' : equipo.categoria} aria-required="true" error={errores.categoria}>
           <option value="" disabled>Selecciona una categoría</option>
           {categoriasEquipo.map((c) => <option key={c} value={c}>{c}</option>)}
         </Select>
         <Field id="marca" name="marca" label="Marca y modelo" defaultValue={equipo.marca} />
         <Field id="anio" name="anio" label="Año" defaultValue={equipo.anio} inputMode="numeric" />
         <Field id="caracteristica" name="caracteristica" label="Característica principal" defaultValue={equipo.caracteristica} />
-        <Textarea id="descripcion" name="descripcion" label="Descripción *" rows={4} defaultValue={equipo.descripcion} required className="md:col-span-2" />
+        <Textarea id="descripcion" name="descripcion" label="Descripción *" rows={4} defaultValue={equipo.descripcion} aria-required="true" error={errores.descripcion} className="md:col-span-2" />
       </div>
     </Card>
   );
@@ -162,7 +162,7 @@ function SeccionUbicacion({ revision, errores, location, municipality, sector, o
           name="municipio"
           label="Municipio *"
           value={municipality}
-          required
+          aria-required="true"
           error={errores.municipio}
           hintClassName="rounded-md border border-primary bg-primary-alpha-14 px-3 py-2 font-semibold text-text"
           onChange={(event) => {
@@ -196,13 +196,13 @@ function SeccionUbicacion({ revision, errores, location, municipality, sector, o
   );
 }
 
-function PanelDisponibilidad({ equipo, revision }) {
+function PanelDisponibilidad({ equipo, revision, disponible, onAvailabilityChange }) {
   return (
     <Card className="p-5">
       <h2 className="text-body-lg font-semibold text-text md:text-heading-sm">Disponibilidad</h2>
       <div className="mt-4 flex items-center justify-between">
         <span className="text-label text-text">Equipo disponible</span>
-        <Toggle checked={equipo.disponible} label="Equipo disponible" />
+        <Toggle checked={disponible} label="Equipo disponible" onChange={onAvailabilityChange} />
       </div>
       <p className="mt-3 text-small text-text-muted">
         {revision ? (
@@ -279,20 +279,20 @@ function AccionesEscritorio({ modo, submitting, equipo, publicationStatus }) {
               )}
               {publicationStatus === 'borrador' ? (
                 <>
-                  <Button type="submit" name="action" value="borrador" formNoValidate variant="secondary" size="lg" disabled={submitting}>Guardar borrador</Button>
-                  <Button type="submit" name="action" value="publicar" size="lg" icon={Check} disabled={submitting}>Publicar equipo</Button>
+                  <Button type="submit" name="action" value="borrador" formNoValidate variant="secondary" size="lg" icon={Save} className="action-save" disabled={submitting}>Guardar borrador</Button>
+                  <Button type="submit" name="action" value="publicar" size="lg" icon={Check} className="action-publish" disabled={submitting}>Publicar equipo</Button>
                 </>
               ) : (
                 <>
-                  <Button type="submit" name="action" value="borrador" formNoValidate variant="secondary" size="lg" disabled={submitting}>Guardar como borrador</Button>
-                  <Button type="submit" name="action" value="guardar" size="lg" icon={Check} disabled={submitting}>Guardar cambios</Button>
+                  <Button type="submit" name="action" value="borrador" formNoValidate variant="secondary" size="lg" icon={Save} className="action-save" disabled={submitting}>Guardar como borrador</Button>
+                  <Button type="submit" name="action" value="guardar" size="lg" icon={Check} className="action-save" disabled={submitting}>Guardar cambios</Button>
                 </>
               )}
             </>
           ) : (
             <>
-              <Button type="submit" formNoValidate name="action" value="borrador" variant="secondary" size="lg" disabled={submitting}>Guardar borrador</Button>
-              <Button type="submit" size="lg" icon={Check} disabled={submitting}>{submitting ? 'Publicando...' : 'Publicar equipo'}</Button>
+              <Button type="submit" formNoValidate name="action" value="borrador" variant="secondary" size="lg" icon={Save} className="action-save" disabled={submitting}>Guardar borrador</Button>
+              <Button type="submit" size="lg" icon={Check} className="action-publish" disabled={submitting}>{submitting ? 'Publicando...' : 'Publicar equipo'}</Button>
             </>
           )}
         </div>
@@ -308,18 +308,18 @@ function AccionesMovil({ modo, resultado, equipo, submitting, publicationStatus 
   const editar = modo === 'editar';
   return (
     <div className="mt-6 flex flex-col gap-3 lg:hidden">
-      <Button type="submit" name="action" value={editar ? (publicationStatus === 'borrador' ? 'publicar' : 'guardar') : 'publicar'} size="lg" icon={Check} fullWidth disabled={submitting}>{submitting ? 'Guardando...' : editar ? (publicationStatus === 'borrador' ? 'Publicar equipo' : 'Guardar cambios') : 'Publicar equipo'}</Button>
+      <Button type="submit" name="action" value={editar ? (publicationStatus === 'borrador' ? 'publicar' : 'guardar') : 'publicar'} size="lg" icon={Check} className={editar && publicationStatus !== 'borrador' ? 'action-save' : 'action-publish'} fullWidth disabled={submitting}>{submitting ? 'Guardando...' : editar ? (publicationStatus === 'borrador' ? 'Publicar equipo' : 'Guardar cambios') : 'Publicar equipo'}</Button>
       {editar ? (
         publicationStatus === 'borrador' ? (
-          <Button type="submit" name="action" value="borrador" formNoValidate variant="secondary" size="lg" fullWidth disabled={submitting}>Guardar borrador</Button>
+          <Button type="submit" name="action" value="borrador" formNoValidate variant="secondary" size="lg" icon={Save} className="action-save" fullWidth disabled={submitting}>Guardar borrador</Button>
         ) : (
           <>
             <Button as={Link} to={`/detalle-equipo?id=${encodeURIComponent(equipo.id || '')}`} variant="secondary" size="lg" fullWidth>Ver publicación</Button>
-            <Button type="submit" name="action" value="borrador" formNoValidate variant="secondary" size="lg" fullWidth disabled={submitting}>Guardar como borrador</Button>
+            <Button type="submit" name="action" value="borrador" formNoValidate variant="secondary" size="lg" icon={Save} className="action-save" fullWidth disabled={submitting}>Guardar como borrador</Button>
           </>
         )
       ) : (
-        <Button type="submit" formNoValidate name="action" value="borrador" variant="secondary" size="lg" fullWidth disabled={submitting}>Guardar borrador</Button>
+        <Button type="submit" formNoValidate name="action" value="borrador" variant="secondary" size="lg" icon={Save} className="action-save" fullWidth disabled={submitting}>Guardar borrador</Button>
       )}
       {modo === 'revision' && (
         <p className="text-small text-text-muted">Tu borrador puede guardarse sin publicar. Corrige los campos indicados y vuelve a intentarlo.</p>
@@ -338,9 +338,11 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
   const { session, profile } = useAuth();
   const navigate = useNavigate();
   const [submitError, setSubmitError] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [images, setImages] = useState(equipo.imagenes || []);
   const [pendingFiles, setPendingFiles] = useState([]);
+  const [disponible, setDisponible] = useState(equipo.is_available ?? equipo.disponible ?? true);
   const [location, setLocation] = useState({
     latitude: equipo.latitude ?? null,
     longitude: equipo.longitude ?? null,
@@ -368,8 +370,22 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSubmitError('');
-    setSubmitting(true);
     const formData = new FormData(event.currentTarget);
+    const isDraft = event.nativeEvent.submitter?.value === 'borrador';
+    const nextErrors = {};
+    if (!isDraft) {
+      if (!images.length) nextErrors.fotos = 'Agrega al menos una foto del equipo para publicarlo.';
+      if (!String(formData.get('nombre') || '').trim()) nextErrors.nombre = 'Ingresa el nombre del equipo.';
+      if (!formData.get('categoria')) nextErrors.categoria = 'Selecciona una categoría.';
+      if (!String(formData.get('descripcion') || '').trim()) nextErrors.descripcion = 'Describe el equipo antes de publicarlo.';
+      if (!String(formData.get('municipio') || '').trim()) nextErrors.municipio = 'Ingresa el municipio del equipo.';
+    }
+    setValidationErrors(nextErrors);
+    if (Object.keys(nextErrors).length) {
+      setSubmitError('Corrige los campos indicados antes de publicar.');
+      return;
+    }
+    setSubmitting(true);
     try {
       const values = {
         name: formData.get('nombre'),
@@ -381,11 +397,10 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
         description: formData.get('descripcion'),
         municipality: formData.get('municipio'),
         sector: formData.get('sector'),
-        isAvailable: true,
+        isAvailable: disponible,
         latitude: formData.get('latitude'),
         longitude: formData.get('longitude'),
       };
-      const isDraft = event.nativeEvent.submitter?.value === 'borrador';
       const publicationAction = event.nativeEvent.submitter?.value;
       if (modo === 'editar') {
         await updateEquipment(equipo.id, session.user.id, values, publicationAction === 'publicar' ? 'publicada' : publicationAction === 'borrador' ? 'borrador' : undefined);
@@ -431,7 +446,7 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
   return (
     <form onSubmit={handleSubmit}>
       {submitError && <p role="alert" className="mt-6 text-small text-danger">{submitError}</p>}
-      {revision && cuenta > 0 && (
+      {(revision && cuenta > 0) && (
         <InfoBox tone="danger" title={`Revisa ${cuenta} campos para publicar`} className="mt-6 md:mt-8">
           Faltan fotos del equipo, categoría y ubicación. Conservamos los datos que ya escribiste.
         </InfoBox>
@@ -442,11 +457,11 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
       <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[1fr_288px] lg:items-start lg:gap-8">
         <div className="min-w-0">
           <div className="space-y-6">
-            <SeccionFotos revision={revision} error={errores.fotos} images={images} onAdd={handleAddImages} onRemove={handleRemoveImage} />
-            <SeccionDatos equipo={equipo} revision={revision} errores={errores} />
+            <SeccionFotos revision={revision} error={validationErrors.fotos || errores.fotos} images={images} onAdd={handleAddImages} onRemove={handleRemoveImage} />
+            <SeccionDatos equipo={equipo} revision={revision} errores={{ ...errores, ...validationErrors }} />
             <SeccionUbicacion
               revision={revision}
-              errores={errores}
+              errores={{ ...errores, ...validationErrors }}
               location={location}
               municipality={municipality}
               sector={sector}
@@ -460,8 +475,8 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
 
         <aside className="space-y-4">
           {revision && <div className="hidden lg:block">{insignia}</div>}
-          <div className="hidden lg:block"><PanelResumen equipo={equipo} modo={modo} ownerName={profile?.full_name} /></div>
-          <PanelDisponibilidad equipo={equipo} revision={revision} />
+          <div className="hidden lg:block"><PanelResumen equipo={{ ...equipo, disponible }} modo={modo} ownerName={profile?.full_name} /></div>
+          <PanelDisponibilidad equipo={equipo} revision={revision} disponible={disponible} onAvailabilityChange={() => setDisponible((value) => !value)} />
           <PanelAyuda modo={modo} />
         </aside>
       </div>

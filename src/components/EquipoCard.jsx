@@ -16,11 +16,13 @@ export default function EquipoCard({ equipo, favorito = true, estadoEnCuerpo = f
   const { session, profile } = useAuth();
   const [savingFavorite, setSavingFavorite] = useState(false);
   const [favoriteError, setFavoriteError] = useState('');
+  const [favoriteAnimation, setFavoriteAnimation] = useState(false);
+  const [favoriteNotice, setFavoriteNotice] = useState('');
   const favorite = isFavorite;
   const { categoria, nombre, lugar, distancia, puntaje, disponible, imagen } = equipo;
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-border bg-surface">
+    <article className="equipment-card motion-enter overflow-hidden rounded-2xl border border-border bg-surface">
       <div className="relative">
         {imagen ? (
           <img src={imagen} alt={nombre} className="aspect-[16/10] w-full object-cover md:aspect-[16/9]" />
@@ -44,20 +46,32 @@ export default function EquipoCard({ equipo, favorito = true, estadoEnCuerpo = f
               try {
                 await setFavorite(session.user.id, equipo.id, nextValue);
                 onFavoriteChange?.(equipo.id, nextValue);
+                setFavoriteNotice(nextValue ? 'Equipo guardado en favoritos.' : 'Equipo quitado de favoritos.');
+                if (nextValue) {
+                  setFavoriteAnimation(true);
+                  window.setTimeout(() => setFavoriteAnimation(false), 700);
+                }
               } catch (error) {
                 setFavoriteError(error.message);
               } finally {
                 setSavingFavorite(false);
               }
             }}
-            className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-surface text-text"
+            aria-pressed={favorite}
+            className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full bg-surface text-text shadow-sm"
           >
-            <Heart size={16} fill={favorite ? 'currentColor' : 'none'} aria-hidden="true" />
+            <span className={`favorite-heart ${favoriteAnimation ? 'favorite-heart-pop' : ''}`}>
+              <Heart size={17} fill={favorite ? 'currentColor' : 'none'} aria-hidden="true" />
+            </span>
+            <span aria-hidden="true" className={`favorite-burst ${favoriteAnimation ? 'favorite-burst-active' : ''}`}>
+              <i /><i /><i /><i />
+            </span>
           </button>
         )}
       </div>
 
       <div className="p-4 md:px-4 md:py-4">
+        <span className="sr-only" role="status" aria-live="polite">{favoriteNotice}</span>
         {favoriteError && <p role="alert" className="mb-2 text-caption text-danger">{favoriteError}</p>}
         {estadoEnCuerpo && <EstadoBadge disponible={disponible} className="mb-3 md:hidden" />}
         <p className="text-caption font-medium uppercase tracking-wide text-text-muted">{categoria}</p>

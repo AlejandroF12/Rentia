@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 export async function loadClientFavorites(userId) {
   const { data, error } = await supabase
     .from('favorites')
-    .select('equipment_id, created_at, equipment:equipment_id(id, name, category, municipality, is_available, publication_status)')
+    .select('equipment_id, created_at, equipment:equipment_id(id, name, category, municipality, is_available, publication_status, equipment_images(id, storage_path, display_order, is_cover), reviews(rating, review_type, is_published))')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
@@ -11,7 +11,42 @@ export async function loadClientFavorites(userId) {
     throw new Error(`No se pudieron cargar los favoritos: ${error.message}`);
   }
 
-  return data ?? [];
+  return (data ?? []).map((favorite) => {
+    const equipment = favorite.equipment;
+    if (!equipment) return favorite;
+    const images = [...(equipment.equipment_images ?? [])].sort((first, second) => (
+      Number(second.is_cover) - Number(first.is_cover) || first.display_order - second.display_order
+    ));
+    const reviews = (equipment.reviews ?? []).filter((review) => review.is_published && review.review_type === 'equipo');
+    return {
+      ...favorite,
+      equipment: {
+        ...equipment,
+        image: images[0]
+          ? supabase.storage.from('equipment-images').getPublicUrl(images[0].storage_path).data.publicUrl
+          : null,
+        rating: reviews.length
+          ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length
+          : null,
+      },
+    };
+  });
+}
+
+export async function updateClientProfile(userId, { fullName, phone, municipality }) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({
+      full_name: fullName.trim(),
+      phone: phone.trim() || null,
+      municipality: municipality.trim() || null,
+    })
+    .eq('id', userId)
+    .select('id, full_name, email, phone, municipality, role, status, created_at')
+    .single();
+
+  if (error) throw new Error(`No se pudo actualizar el perfil: ${error.message}`);
+  return data;
 }
 
 export async function loadFavoriteEquipmentIds(userId) {
@@ -47,6 +82,18 @@ export async function createReport({ reporterId, equipmentId = null, reviewId = 
     .single();
 
   if (error) throw new Error(`No se pudo enviar el reporte: ${error.message}`);
+  return data;
+}
+
+export async function loadClientReport(reportId, reporterId) {
+  const { data, error } = await supabase
+    .from('reports')
+    .select('id, reason, description, status, created_at, equipment:equipment_id(id, name, municipality), review:review_id(id, rating, comment)')
+    .eq('id', reportId)
+    .eq('reporter_id', reporterId)
+    .maybeSingle();
+
+  if (error) throw new Error(`No se pudo cargar el reporte: ${error.message}`);
   return data;
 }
 
@@ -188,9 +235,8 @@ export async function loadReviewForEdit(authorId, targetUserId, equipmentId, rev
     .eq('target_user_id', targetUserId)
     .eq('equipment_id', equipmentId)
     .eq('review_type', reviewType)
-    .single();
+    .maybeSingle();
 
-  if (error?.code === 'PGRST116') return null;
   if (error) throw new Error(`No se pudo cargar la valoración: ${error.message}`);
   return data;
 }

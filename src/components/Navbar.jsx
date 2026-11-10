@@ -5,7 +5,7 @@ import Badge from './Badge';
 import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import MenuPanel from './MenuPanel';
-import { getUser } from '../data/users';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * variant:
@@ -19,13 +19,25 @@ import { getUser } from '../data/users';
  */
 export default function Navbar({ variant = 'public', menuOpen = false }) {
   const { pathname, hash } = useLocation();
-  const esAdmin = variant === 'admin';
-  const textoPublico = variant === 'publicTexto';
-  const textoCliente = variant === 'clienteTexto';
-  const sinPin = variant === 'simple' || textoPublico || textoCliente;
-  const sinSesion = variant === 'public' || variant === 'simple' || textoPublico;
-  const rol = sinSesion ? null : getUser(textoCliente ? 'cliente' : variant);
-  const variantMenu = textoPublico ? 'public' : textoCliente ? 'cliente' : variant;
+  const { profile, loading } = useAuth();
+  const sessionVariant = !loading && profile?.status === 'activo'
+    ? profile.role
+    : !loading && profile?.status === 'suspendido'
+      ? 'suspendido'
+      : null;
+  const effectiveVariant = sessionVariant || variant;
+  const esAdmin = effectiveVariant === 'admin';
+  const textoPublico = effectiveVariant === 'publicTexto';
+  const textoCliente = effectiveVariant === 'clienteTexto';
+  const sinPin = effectiveVariant === 'simple' || textoPublico || textoCliente;
+  const sinSesion = effectiveVariant === 'public' || effectiveVariant === 'simple' || textoPublico;
+  const role = sessionVariant || (textoCliente ? 'cliente' : effectiveVariant);
+  const labels = { cliente: 'Cliente', arrendador: 'Arrendador', admin: 'Administración', suspendido: 'Suspendido' };
+  const rol = sinSesion ? null : {
+    label: labels[role] || 'Cuenta',
+    initials: (profile?.full_name || '').split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase(),
+  };
+  const variantMenu = textoPublico ? 'public' : textoCliente ? 'cliente' : effectiveVariant;
   const [isOpen, setIsOpen] = useState(menuOpen);
   const isMenuOpen = menuOpen || isOpen;
   const MenuIcon = isMenuOpen ? X : Menu;
@@ -74,11 +86,13 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
 
         {/* Acciones (escritorio) */}
         <div className="hidden items-center justify-end gap-5 xl:flex">
-          {rol && textoCliente ? (
+          {loading ? (
+            <span aria-label="Cargando sesión" className="h-9 w-28 animate-pulse rounded-full bg-surface-muted" />
+          ) : rol && textoCliente ? (
             <p className="flex items-center gap-3 text-label font-semibold text-text">
               <span>{rol.label}</span>
               <span aria-hidden="true">·</span>
-              <span>{rol.initials}</span>
+              <span>{rol.initials || '—'}</span>
             </p>
           ) : rol ? (
             <>
@@ -117,11 +131,11 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
         </div>
 
         {/* Hamburguesa (móvil) */}
-        <button type="button" aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'} className="text-text-muted xl:hidden" onClick={() => setIsOpen((open) => !open)}>
+        <button type="button" aria-label={loading ? 'Cargando sesión' : isMenuOpen ? 'Cerrar menú' : 'Abrir menú'} disabled={loading} className="text-text-muted disabled:opacity-50 xl:hidden" onClick={() => setIsOpen((open) => !open)}>
           <MenuIcon size={24} />
         </button>
       </div>
-      {isMenuOpen && variant !== 'simple' && (
+      {isMenuOpen && effectiveVariant !== 'simple' && (
         <>
           <button type="button" aria-label="Cerrar menú" className="fixed inset-0 top-16 z-[1000] bg-overlay/40 backdrop-blur-sm xl:top-[72px]" onClick={() => setIsOpen(false)} />
           <div className="fixed right-0 top-16 z-[1001] w-full sm:right-5 sm:w-auto xl:right-16 xl:top-[80px]">

@@ -28,10 +28,10 @@ export default function IngresarPage() {
       const destinations = {
         cliente: '/cliente',
         arrendador: '/arrendador/equipos',
-        admin: '/admin/usuarios',
+        admin: '/admin/resumen',
       };
       const profile = await loadProfile(user.id);
-      navigate(destinations[profile.role] || '/');
+      navigate(profile.status === 'suspendido' ? '/cuenta-suspendida' : destinations[profile.role] || '/');
     } catch (submitError) {
       setError(submitError.message);
     } finally {
@@ -56,7 +56,7 @@ export default function IngresarPage() {
           </a>
         </div>
 
-        <Button type="submit" size="lg" fullWidth icon={ArrowRight} disabled={submitting}>
+        <Button type="submit" size="lg" fullWidth icon={ArrowRight} disabled={submitting} className="action-login">
           {submitting ? 'Ingresando...' : 'Ingresar'}
         </Button>
         {error && <p role="alert" className="text-small text-danger">{error}</p>}
@@ -64,7 +64,7 @@ export default function IngresarPage() {
 
       {/* Escritorio */}
       <Link to="/crear-cuenta" className="mt-6 hidden text-center text-small font-semibold text-primary lg:block">¿Primera vez aquí? Crea tu cuenta →</Link>
-      <Link to="/normas" className="mt-8 hidden text-center text-small text-text-muted lg:block">¿Necesitas una mano? Centro de ayuda</Link>
+      <Link to="/ayuda" className="mt-8 hidden text-center text-small text-text-muted lg:block">¿Necesitas una mano? Centro de ayuda</Link>
 
       {/* Móvil */}
       <div className="lg:hidden">
@@ -72,7 +72,7 @@ export default function IngresarPage() {
         <p className="mt-5 text-small text-text-muted">Tu espacio se adapta a tu rol: cliente, arrendador o administración.</p>
         <p className="mt-5 text-label font-semibold text-text-muted">El trabajo une. El Llano nos mueve.</p>
         <p className="mt-5 inline-flex items-center gap-1 text-small text-text-muted">
-          <Link to="/normas">¿Necesitas una mano? Centro de ayuda <ArrowUpRight size={12} aria-hidden="true" /></Link>
+          <Link to="/ayuda">¿Necesitas una mano? Centro de ayuda <ArrowUpRight size={12} aria-hidden="true" /></Link>
         </p>
       </div>
     </AuthLayout>

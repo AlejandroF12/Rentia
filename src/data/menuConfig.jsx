@@ -1,5 +1,3 @@
-import { getUser } from './users';
-
 export const menus = {
   public: {
     superior: 'CASANARE, COLOMBIA',
@@ -11,7 +9,7 @@ export const menus = {
     ],
   },
   cliente: {
-    usuario: { nombre: getUser('cliente').name, detalle: getUser('cliente').detail },
+    usuario: { nombre: 'Tu perfil', detalle: 'Cliente' },
     rol: 'Cliente',
     items: [
       { texto: 'Explorar equipos', href: '/catalogo' },
@@ -23,7 +21,7 @@ export const menus = {
     ],
   },
   arrendador: {
-    usuario: { nombre: getUser('arrendador').name, detalle: getUser('arrendador').detail },
+    usuario: { nombre: 'Tu perfil', detalle: 'Arrendador' },
     rol: 'Arrendador',
     items: [
       { texto: 'Explorar equipos', href: '/catalogo' },
@@ -35,7 +33,7 @@ export const menus = {
     ],
   },
   suspendido: {
-    usuario: { nombre: getUser('suspendido').name, detalle: getUser('suspendido').detail },
+    usuario: { nombre: 'Tu perfil', detalle: 'Cuenta suspendida' },
     rol: 'Suspendido',
     items: [
       { texto: 'Explorar equipos', href: '/catalogo' },
@@ -45,9 +43,10 @@ export const menus = {
     ],
   },
   admin: {
-    usuario: { nombre: getUser('admin').name, sinAvatar: true },
+    usuario: { nombre: 'Administración', sinAvatar: true },
     rol: 'Administración',
     items: [
+      { texto: 'Resumen', activo: true, href: '/admin/resumen' },
       { texto: 'Usuarios', activo: true, href: '/admin/usuarios' },
       { texto: 'Publicaciones', href: '/admin/publicaciones' },
       { texto: 'Reportes', href: '/admin/reportes' },

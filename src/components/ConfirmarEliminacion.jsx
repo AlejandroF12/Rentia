@@ -12,7 +12,7 @@ import InfoBox from './InfoBox';
  * y, cuando se active, dentro de "Gestionar publicación").
  * resultado: muestra el aviso de éxito y el botón "Volver a mis equipos".
  */
-export default function ConfirmarEliminacion({ nombre = 'Equipo', equipoId, resultado = false, onConfirm, className = '' }) {
+export default function ConfirmarEliminacion({ nombre = 'Equipo', equipoId, resultado = false, onConfirm, submitting = false, className = '' }) {
   const [confirmationText, setConfirmationText] = useState('');
   const [understood, setUnderstood] = useState(false);
   const canConfirm = confirmationText.trim() === 'ELIMINAR' && understood;
@@ -21,7 +21,7 @@ export default function ConfirmarEliminacion({ nombre = 'Equipo', equipoId, resu
     <Card tone="danger" className={className}>
       <h2 className="text-heading-lg font-semibold text-text">¿Eliminar {nombre} definitivamente?</h2>
       <p className="mt-3 text-body-lg text-text-muted">
-        Se retirarán la publicación y sus fotos. No podrás recuperarlas ni volver a publicar esta misma ficha. Tu cuenta y tus otras publicaciones no se eliminan.
+        Se retirarán la publicación y sus fotos. El registro básico puede conservarse internamente si está asociado a un reporte de moderación. No podrás restaurarla ni volver a publicar esta ficha.
       </p>
 
       <Field id="confirmar-eliminar" label="Escribe ELIMINAR para continuar" value={confirmationText} onChange={(event) => setConfirmationText(event.target.value)} className="mt-6 [&_label]:text-small [&_input]:h-11" />
@@ -33,15 +33,15 @@ export default function ConfirmarEliminacion({ nombre = 'Equipo', equipoId, resu
         <Button as={Link} to={equipoId ? `/arrendador/equipos/gestionar?id=${encodeURIComponent(equipoId)}` : '/arrendador/equipos'} variant="secondary" size="lg" className="w-full md:w-auto">
           Cancelar y conservar equipo
         </Button>
-        <button type="button" onClick={onConfirm} disabled={!onConfirm || !canConfirm} className="inline-flex items-center justify-center gap-2 py-2 text-label font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-50">
-          <Trash2 size={14} aria-hidden="true" /> Sí, eliminar definitivamente
+        <button type="button" onClick={onConfirm} disabled={!onConfirm || !canConfirm || submitting || resultado} className="inline-flex items-center justify-center gap-2 py-2 text-label font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-50">
+          <Trash2 size={14} aria-hidden="true" /> {submitting ? 'Retirando...' : resultado ? 'Publicación retirada' : 'Sí, eliminar definitivamente'}
         </button>
       </div>
 
       {resultado && (
         <div className="mt-6 space-y-4">
-          <InfoBox tone="success" title="Resultado al confirmar: publicación eliminada">
-            {nombre} se retiró definitivamente del catálogo y de Mis equipos. Tus otras publicaciones no cambiaron.
+          <InfoBox tone="success" title="Resultado al confirmar: publicación retirada">
+            {nombre} ya no aparece en el catálogo ni en Mis equipos. El historial de moderación se conserva.
           </InfoBox>
           <Button as={Link} to="/arrendador/equipos" variant="secondary" size="lg" className="w-full md:w-auto">
             Volver a mis equipos

@@ -14,8 +14,3 @@ export const equipos = [
   { id: 5, categoria: 'Transporte de carga', nombre: 'Volqueta doble troque', lugar: 'Tauramena', distancia: '64 km', puntaje: '—', disponible: false },
   { id: 6, categoria: 'Agrícola', nombre: 'Tractor John Deere 6110', lugar: 'Villanueva', distancia: '112 km', puntaje: '—', disponible: true },
 ];
-
-export const opiniones = [
-  { id: 1, autor: 'un cliente', fecha: '12 oct. 2026', texto: 'Carlos respondió con claridad y el equipo estaba en muy buenas condiciones. Excelente atención para nuestro proyecto en Yopal.' },
-  { id: 2, autor: 'un cliente', fecha: '8 oct. 2026', texto: 'La información fue clara y resolvió mis dudas sobre el equipo y el traslado.' },
-];

@@ -1,8 +1,4 @@
-/**
- * Interruptor (disponibilidad, etc.).
- * Por ahora es visual: `checked` define cómo se ve. Cuando haya estado,
- * pásale `onChange` y controla `checked` desde el padre.
- */
+/** Interruptor controlado para disponibilidad y preferencias. */
 export default function Toggle({ checked = false, label, onChange, className = '', ...props }) {
   return (
     <button

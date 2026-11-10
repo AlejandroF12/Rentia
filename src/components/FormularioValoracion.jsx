@@ -132,10 +132,10 @@ export default function FormularioValoracion({ datos, volverA = '/perfil-publico
               {declaracion}
             </Checkbox>
 
-            <p className="mt-5 flex items-center gap-3 text-small text-text-muted">
+            <div className="mt-5 flex items-center gap-3 text-small text-text-muted">
               <Avatar className="hidden size-8 md:flex" />
               {publicadoComo}
-            </p>
+            </div>
 
             {submitError && <p role="alert" className="mt-5 text-small text-danger">{submitError}</p>}
             {success && <InfoBox tone="success" title={isEditing ? 'Valoración actualizada' : 'Valoración publicada'} className="mt-5">Gracias por compartir una experiencia real.</InfoBox>}

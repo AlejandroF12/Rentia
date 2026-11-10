@@ -2,17 +2,16 @@ import { Link } from 'react-router-dom';
 import { CircleHelp, LogOut, ArrowUpRight, ChevronDown, X } from 'lucide-react';
 import Avatar from '../components/Avatar';
 import { menusLaterales } from '../data/menuLateral';
-import { getUser } from '../data/users';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 /** Barra bajo el navbar en móvil: "Arrendador | Carlos Rojas". */
 function BarraRol({ rol, className = '' }) {
   const { profile } = useAuth();
-  const usuarioDemo = getUser(rol);
-  const usuario = profile
-    ? { label: rol === 'cliente' ? 'Cliente' : 'Arrendador', name: profile.full_name }
-    : usuarioDemo;
+  const usuario = {
+    label: { cliente: 'Cliente', arrendador: 'Arrendador', admin: 'Administrador' }[rol] || 'Cuenta',
+    name: profile?.full_name || 'Tu perfil',
+  };
   return (
     <div className={`flex h-10 items-center justify-between border-b border-border bg-surface px-5 text-small ${className}`}>
       <span className="font-semibold text-text">{usuario.label}</span>
@@ -101,9 +100,9 @@ function MenuLateral({ rol, activo }) {
         <CircleHelp size={16} aria-hidden="true" className="text-text" />
         <p className="mt-3 text-label font-semibold text-text">Estamos cerca</p>
         <p className="mt-2 text-small text-text-muted">Encuentra orientación para usar Rentia.</p>
-        <a href="#ayuda" className="mt-3 inline-flex items-center gap-1 text-small font-semibold text-text">
+        <Link to="/ayuda" className="mt-3 inline-flex min-h-11 items-center gap-1 text-small font-semibold text-text">
           Centro de ayuda <ArrowUpRight size={12} aria-hidden="true" />
-        </a>
+        </Link>
       </div>
 
       <Link to="/" onClick={handleSignOut} className="mt-4 inline-flex items-center gap-2 px-1 text-small text-text-muted">

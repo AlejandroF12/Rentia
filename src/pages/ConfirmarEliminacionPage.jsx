@@ -13,28 +13,43 @@ export default function ConfirmarEliminacionPage() {
   const [searchParams] = useSearchParams();
   const equipmentId = searchParams.get('id');
   const [equipment, setEquipment] = useState(null);
+  const [loadedKey, setLoadedKey] = useState('');
   const [error, setError] = useState('');
-  const [deleted, setDeleted] = useState(false);
+  const [deletedEquipmentId, setDeletedEquipmentId] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const missingIdError = !equipmentId ? 'No se indicó el equipo que deseas eliminar.' : '';
+  const loadKey = `${session?.user?.id || ''}:${equipmentId || ''}`;
 
   useEffect(() => {
     if (!equipmentId || !session?.user?.id) return;
-    loadOwnerEquipmentById(equipmentId, session.user.id)
-      .then(setEquipment)
-      .catch((loadError) => setError(loadError.message));
+    loadOwnerEquipmentById(equipmentId, session.user.id, { includeEliminated: true })
+      .then((loadedEquipment) => {
+        setEquipment(loadedEquipment);
+        setError('');
+        setLoadedKey(`${session.user.id}:${equipmentId}`);
+      })
+      .catch((loadError) => {
+        setEquipment(null);
+        setError(loadError.message);
+        setLoadedKey(`${session.user.id}:${equipmentId}`);
+      });
   }, [equipmentId, session?.user?.id]);
 
   const handleDelete = async () => {
-    if (!equipment || !session?.user?.id) return;
+    if (!equipment || !session?.user?.id || deleting) return;
+    setDeleting(true);
+    setError('');
     try {
       await deleteEquipment(equipment.id, session.user.id);
-      setDeleted(true);
+      setDeletedEquipmentId(equipment.id);
     } catch (deleteError) {
       setError(deleteError.message);
+    } finally {
+      setDeleting(false);
     }
   };
 
-  if (missingIdError || error) {
+  if (missingIdError || (error && !equipment)) {
     return (
       <DashboardLayout rol="arrendador" activo="equipos">
         <p role="alert" className="text-small text-danger">{error || missingIdError}</p>
@@ -42,7 +57,7 @@ export default function ConfirmarEliminacionPage() {
     );
   }
 
-  if (!equipment) {
+  if (loadedKey !== loadKey || !equipment) {
     return <DashboardLayout rol="arrendador" activo="equipos"><p className="text-small text-text-muted">Cargando equipo...</p></DashboardLayout>;
   }
 
@@ -55,8 +70,9 @@ export default function ConfirmarEliminacionPage() {
         subtitulo="Esta decisión es permanente. Si solo necesitas una pausa, deja de publicar."
       />
 
+      {error && <p role="alert" className="mb-4 text-small text-danger">{error}</p>}
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_288px] lg:items-start lg:gap-8">
-        <ConfirmarEliminacion nombre={equipment.name} equipoId={equipment.id} resultado={deleted} onConfirm={handleDelete} />
+        <ConfirmarEliminacion key={equipment.id} nombre={equipment.name} equipoId={equipment.id} resultado={deletedEquipmentId === equipment.id} onConfirm={handleDelete} submitting={deleting} />
         <aside className="space-y-4">
           <InfoBox title="Equipo seleccionado">{equipment.name} · {equipment.municipality}</InfoBox>
           <Card className="p-5">

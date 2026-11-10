@@ -1,4 +1,4 @@
-import { ChevronRight, LogOut, ArrowUpRight } from 'lucide-react';
+import { ChevronRight, LogOut, ArrowUpRight, Settings } from 'lucide-react';
 import Avatar from './Avatar';
 import Badge from './Badge';
 import Button from './Button';
@@ -11,11 +11,12 @@ export default function MenuPanel({ variant = 'public', onClose, accountOnly = f
   const { profile, signOut } = useAuth();
   const { pathname } = useLocation();
   const m = menus[variant];
+  const profileRole = { cliente: 'Cliente', arrendador: 'Arrendador', admin: 'Administración' }[profile?.role] || 'Cuenta';
   const user = m.usuario && profile
     ? {
       ...m.usuario,
       nombre: profile.full_name,
-      detalle: profile.municipality ? `${profile.role === 'cliente' ? 'Cliente' : 'Arrendador'} · ${profile.municipality}` : m.usuario.detalle,
+      detalle: profile.municipality ? `${profileRole} · ${profile.municipality}` : m.usuario.detalle,
     }
     : m.usuario;
   const activeItem = m.items
@@ -82,10 +83,32 @@ export default function MenuPanel({ variant = 'public', onClose, accountOnly = f
         ))}
       </ul>
 
-      <p className="mt-5 inline-flex items-center gap-1 text-small text-text-muted">
+      <div className="mt-2 border-t border-border pt-2">
+        <Link
+          to="/configuracion"
+          onClick={onClose}
+          aria-current={pathname === '/configuracion' ? 'page' : undefined}
+          className={`flex min-h-12 items-center justify-between gap-3 rounded-lg px-4 py-2 text-body ${
+            pathname === '/configuracion' ? 'bg-primary font-semibold text-primary-foreground' : 'text-text hover:bg-surface-muted'
+          }`}
+        >
+          <span className="inline-flex items-center gap-2"><Settings size={16} aria-hidden="true" /> Configuración</span>
+          <ChevronRight size={16} aria-hidden="true" />
+        </Link>
+      </div>
+
+      <Link to="/ayuda" onClick={onClose} className="mt-5 inline-flex min-h-11 items-center gap-1 text-small text-text-muted">
         Centro de ayuda <ArrowUpRight size={10} aria-hidden="true" />
-      </p>
-      <p className="mt-4 text-small text-text-muted">Privacidad · Términos · Normas</p>
+      </Link>
+      <nav aria-label="Información legal" className="mt-4">
+        <ul className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-small text-text-muted">
+          <li><Link to="/privacidad" onClick={onClose} className="min-h-11 inline-flex items-center hover:text-text">Privacidad</Link></li>
+          <li aria-hidden="true">·</li>
+          <li><Link to="/terminos" onClick={onClose} className="min-h-11 inline-flex items-center hover:text-text">Términos</Link></li>
+          <li aria-hidden="true">·</li>
+          <li><Link to="/normas" onClick={onClose} className="min-h-11 inline-flex items-center hover:text-text">Normas</Link></li>
+        </ul>
+      </nav>
 
       <Button type="button" variant="secondary" size="lg" fullWidth className="mt-5" onClick={onClose}>Cerrar menú</Button>
     </div>

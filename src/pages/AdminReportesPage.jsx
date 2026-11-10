@@ -1,145 +1,105 @@
-import { Link } from 'react-router-dom';
-import { ArrowDown, ArrowUpRight, Ban, Check, Flag, History, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Check, Flag, Eye, EyeOff } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Button from '../components/Button';
+import Card from '../components/Card';
+import Badge from '../components/Badge';
 import Estadistica from '../components/Estadistica';
-import InfoBox from '../components/InfoBox';
-import Select from '../components/Select';
 import Textarea from '../components/Textarea';
-import TileEquipo from '../components/TileEquipo';
-import { CabeceraAdmin, PestanasAdmin, EstadoInsignia } from '../components/AdminComunes';
-import { estadosReporte, reportes, resumenReportes } from '../data/moderacion';
+import { CabeceraAdmin, PestanasAdmin } from '../components/AdminComunes';
+import { useAuth } from '../context/AuthContext';
+import { loadAdminOverview, setAdminReviewVisibility, updateAdminEquipmentStatus, updateAdminReport } from '../services/adminService';
 
-function TarjetaReporte({ reporte }) {
-  const { id, fechaWeb, fechaMovil, titulo, equipo, municipio, estado, nota, seleccionado } = reporte;
-  return (
-    <li>
-      <article
-        className={`rounded-2xl border p-5 ${
-          seleccionado ? 'border-transparent bg-surface-muted lg:border-primary' : 'border-border bg-surface'
-        }`}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-small text-text-muted lg:text-caption">
-            {id} · <span className="lg:hidden">{fechaMovil}</span>
-            <span className="hidden lg:inline">{fechaWeb}</span>
-          </p>
-          <ArrowUpRight size={14} aria-hidden="true" className="hidden shrink-0 text-text lg:block" />
-        </div>
-        <h3 className="mt-4 text-heading-md font-semibold text-text lg:mt-3 lg:text-heading-sm">{titulo}</h3>
-        <p className="mt-3 text-small text-text-muted">{equipo} · {municipio}</p>
-        <EstadoInsignia catalogo={estadosReporte} estado={estado} className="mt-4 lg:mt-3" />
-        {nota && <p className="mt-3 hidden text-caption text-text-muted lg:block">{nota}</p>}
-
-        <Button
-          as={Link}
-          to="/admin/reportes"
-          variant="secondary"
-          size="lg"
-          fullWidth
-          className="mt-5 lg:hidden"
-        >
-          {seleccionado ? (
-            <>Caso seleccionado <ArrowDown size={14} aria-hidden="true" /></>
-          ) : (
-            'Ver detalle →'
-          )}
-        </Button>
-      </article>
-    </li>
-  );
-}
-
-function DetalleReporte() {
-  return (
-    <section aria-label="Detalle del reporte REP-108" className="rounded-2xl border border-border bg-surface p-5 lg:p-6">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-label font-semibold uppercase tracking-wide text-text-muted lg:text-caption lg:font-medium">Reporte REP-108</p>
-        <span className="hidden lg:inline-flex"><EstadoInsignia catalogo={estadosReporte} estado="revision" /></span>
-      </div>
-      <h2 className="mt-4 text-heading-lg font-semibold text-text lg:mt-5">Posible uso de fotografías ajenas</h2>
-      <EstadoInsignia catalogo={estadosReporte} estado="revision" className="mt-4 lg:hidden" />
-
-      <TileEquipo
-        nombre="Cargador frontal"
-        detalle="Pablo Ortega · Aguazul"
-        externo
-        iconoClassName="lg:bg-surface-selected"
-        className="mt-5 lg:mt-6"
-      />
-
-      <p className="mt-6 text-body-lg font-semibold text-text-muted lg:text-small lg:text-text">Reportado por María López · Cliente</p>
-      <p className="mt-3 text-small text-text-muted lg:mt-2 lg:text-caption">18 oct. 2026 · 09:40</p>
-      <p className="mt-3 text-body-lg text-text-muted lg:text-body">
-        “Las fotografías parecen corresponder a otro equipo publicado. No coinciden con la descripción ni con la ubicación indicada.”
-      </p>
-
-      <hr className="my-6 hidden border-border lg:block" />
-
-      <Textarea
-        id="nota-moderacion"
-        label="Nota interna de moderación"
-        rows={3}
-        className="mt-6 lg:mt-0"
-        defaultValue="Se identificaron imágenes coincidentes en otra publicación. Revisar origen y consistencia de los datos del propietario."
-      />
-
-      <InfoBox title="Trazabilidad" icon={History} className="mt-5 lg:hidden">
-        Andrea Pérez tomó el caso · Hoy, 10:05
-      </InfoBox>
-      <p className="mt-5 hidden items-center gap-3 rounded-xl bg-surface-muted px-4 py-3 text-small text-text-muted lg:flex">
-        <History size={16} aria-hidden="true" className="text-text" /> Andrea Pérez tomó el caso · Hoy, 10:05
-      </p>
-
-      <h3 className="mt-6 text-heading-md font-semibold text-text lg:text-heading-sm">Acciones de moderación</h3>
-      <div className="mt-4 flex flex-col gap-3 lg:flex-row">
-        <Button type="button" variant="secondary" size="lg" icon={Ban} className="lg:px-6">Suspender publicación</Button>
-        <Button as={Link} to="/admin/moderacion" variant="danger" size="lg" icon={Trash2} className="lg:px-6">Eliminar publicación</Button>
-      </div>
-      <Button type="button" size="lg" fullWidth className="mt-3" icon={Check}>Marcar como resuelto</Button>
-      <p className="mt-4 text-small text-text-muted lg:text-caption">
-        Suspender oculta temporalmente. Eliminar lo retira definitivamente y requiere confirmación. Toda decisión queda registrada.
-      </p>
-    </section>
-  );
-}
+const labels = { pendiente: 'Pendiente', revision: 'En revisión', resuelto: 'Resuelto' };
+const tones = { pendiente: 'warning', revision: 'warning', resuelto: 'success' };
 
 export default function AdminReportesPage() {
+  const [data, setData] = useState({ reports: [] });
+  const [selectedId, setSelectedId] = useState('');
+  const [note, setNote] = useState('');
+  const [statusFilter, setStatusFilter] = useState('todos');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const { profile } = useAuth();
+  const reload = useCallback(() => loadAdminOverview().then((nextData) => { setData(nextData); setSelectedId((current) => current || nextData.reports[0]?.id || ''); }).catch((loadError) => setError(loadError.message)), []);
+  useEffect(() => { reload(); }, [reload]);
+  const reports = useMemo(() => data.reports.filter((report) => statusFilter === 'todos' || report.status === statusFilter), [data.reports, statusFilter]);
+  const selected = reports.find((report) => report.id === selectedId) || reports[0];
+  const counts = {
+    pendiente: data.reports.filter((report) => report.status === 'pendiente').length,
+    revision: data.reports.filter((report) => report.status === 'revision').length,
+    resuelto: data.reports.filter((report) => report.status === 'resuelto').length,
+  };
+  const resolve = async (action) => {
+    if (!selected) return;
+    if (action === 'resolve' && !note.trim()) {
+      setError('Agrega una nota antes de resolver el reporte.');
+      return;
+    }
+    setSaving(true); setError('');
+    try {
+      if (action === 'hide') {
+        await updateAdminReport(selected.id, 'revision', note, profile?.id);
+        if (selected.equipment?.id) await updateAdminEquipmentStatus(selected.equipment.id, 'suspendida');
+      } else {
+        await updateAdminReport(selected.id, action === 'take' ? 'revision' : 'resuelto', note, profile?.id);
+      }
+      await reload();
+    } catch (saveError) {
+      await reload();
+      setError(saveError.message);
+    }
+    finally { setSaving(false); }
+  };
+  const changeReviewVisibility = async (isPublished) => {
+    if (!selected?.review?.id) return;
+    setSaving(true); setError('');
+    try {
+      await setAdminReviewVisibility(selected.review.id, isPublished);
+      await reload();
+    } catch (saveError) { setError(saveError.message); }
+    finally { setSaving(false); }
+  };
   return (
     <DashboardLayout rol="admin" activo="reportes">
       <CabeceraAdmin seccion="Reportes" titulo="Escuchar. Revisar. Actuar." subtitulo="Da respuesta a los reportes de la comunidad." />
-
-      <div className="mt-6 grid grid-cols-3 gap-3 md:mt-8 md:gap-5">
-        <Estadistica valor={resumenReportes.pendientes} etiqueta="Pendientes" icono={Flag} />
-        <Estadistica valor={resumenReportes.revision} etiqueta="En revisión" icono={Flag} />
-        <Estadistica valor={resumenReportes.resueltos} etiqueta="Resueltos" icono={Flag} />
-      </div>
-
-      <PestanasAdmin activa="reportes" />
-
-      <Select id="filtrar-reportes" label="Filtrar reportes" defaultValue="todos" className="mt-6 lg:hidden">
-        <option value="todos">Todos · Más recientes</option>
-        <option>Pendientes</option>
-        <option>En revisión</option>
-        <option>Resueltos</option>
-      </Select>
-
-      <div className="mt-6 grid gap-5 lg:grid-cols-[370px_minmax(0,1fr)] lg:items-start lg:gap-6">
-        <section aria-labelledby="reportes-recientes">
-          <div className="hidden items-center justify-between lg:flex">
-            <h2 id="reportes-recientes" className="text-heading-sm font-semibold text-text">Reportes recientes</h2>
-            <button type="button" className="inline-flex items-center gap-1 text-small text-text-muted">
-              Más recientes <ArrowDown size={12} aria-hidden="true" />
-            </button>
+      <div className="mt-6 grid grid-cols-3 gap-3 md:mt-8 md:gap-5"><Estadistica valor={counts.pendiente} etiqueta="Pendientes" icono={Flag} /><Estadistica valor={counts.revision} etiqueta="En revisión" icono={Flag} /><Estadistica valor={counts.resuelto} etiqueta="Resueltos" icono={Flag} /></div>
+      <PestanasAdmin activa="reportes" reportCount={counts.pendiente + counts.revision} />
+      {error && <p role="alert" className="mt-4 text-small text-danger">{error}</p>}
+      <label className="mt-5 block max-w-sm text-label font-semibold text-text">
+        Filtrar reportes
+        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-border bg-surface px-4 font-normal">
+          <option value="todos">Todos los estados</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="revision">En revisión</option>
+          <option value="resuelto">Resueltos</option>
+        </select>
+      </label>
+      <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,370px)_minmax(0,1fr)]">
+        <section aria-label="Reportes recientes" className="grid gap-3">{reports.map((report) => <button type="button" key={report.id} onClick={() => { setSelectedId(report.id); setNote(report.resolution_note || ''); }} className={`text-left ${selected?.id === report.id ? 'ring-2 ring-primary' : ''}`}><Card className="p-4"><div className="flex items-center justify-between gap-3"><p className="font-semibold text-text">{report.reason}</p><Badge tone={tones[report.status]}>{labels[report.status]}</Badge></div><p className="mt-2 text-small text-text-muted">{report.equipment?.name || (report.review ? 'Valoración reportada' : 'Contenido')} · {report.reporter?.full_name || 'Usuario'}</p><p className="mt-2 text-caption text-text-muted">{new Date(report.created_at).toLocaleString('es-CO')}</p></Card></button>)}{!reports.length && <Card><p className="text-body text-text-muted">No hay reportes registrados.</p></Card>}</section>
+        {selected && <Card>
+          <p className="text-caption uppercase text-text-muted">Reporte seleccionado</p>
+          <h2 className="mt-2 text-heading-md font-semibold text-text">{selected.reason}</h2>
+          <p className="mt-3 text-body text-text-muted">{selected.description || 'Sin descripción.'}</p>
+          <p className="mt-4 text-small text-text-muted">Reportado por {selected.reporter?.full_name || 'usuario'} · {selected.equipment?.name || (selected.review ? 'Valoración' : 'Contenido')}</p>
+          {selected.review && (
+            <section className="mt-5 rounded-xl border border-border bg-surface-muted p-4" aria-label="Valoración reportada">
+              <p className="font-semibold text-text">Valoración · {selected.review.rating}/5</p>
+              <p className="mt-2 text-small text-text-muted">{selected.review.comment}</p>
+              <p className="mt-2 text-caption text-text-muted">Visibilidad: {selected.review.is_published ? 'Pública' : 'Oculta'}</p>
+              <Button type="button" variant="secondary" icon={selected.review.is_published ? EyeOff : Eye} disabled={saving} className="mt-4" onClick={() => changeReviewVisibility(!selected.review.is_published)}>
+                {selected.review.is_published ? 'Ocultar valoración' : 'Restaurar valoración'}
+              </Button>
+            </section>
+          )}
+          <Textarea id="nota-admin" label="Nota interna de moderación" rows={4} value={note} onChange={(event) => setNote(event.target.value)} className="mt-6" />
+          <div className="mt-5 flex flex-wrap gap-3">
+            {selected.status === 'pendiente' && <Button type="button" variant="secondary" disabled={saving} onClick={() => resolve('take')}>Tomar caso</Button>}
+            {selected.status !== 'resuelto' && selected.equipment?.id && <Button type="button" variant="secondary" icon={EyeOff} disabled={saving} onClick={() => resolve('hide')}>Ocultar publicación</Button>}
+            {selected.status !== 'resuelto' && <Button type="button" icon={Check} disabled={saving} onClick={() => resolve('resolve')}>Marcar resuelto</Button>}
           </div>
-          <ul className="space-y-5 lg:mt-4 lg:space-y-4">
-            {reportes.map((reporte) => (
-              <TarjetaReporte key={reporte.id} reporte={reporte} />
-            ))}
-          </ul>
-        </section>
-
-        <DetalleReporte />
+          {selected.reviewed_by && <p className="mt-4 text-caption text-text-muted">Revisado por {selected.reviewer?.full_name || 'administración'}{selected.reviewed_at ? ` · ${new Date(selected.reviewed_at).toLocaleString('es-CO')}` : ''}.</p>}
+        </Card>}
       </div>
     </DashboardLayout>
   );

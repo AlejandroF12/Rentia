@@ -51,12 +51,16 @@ function TarjetaPerfil({ className = '' }) {
   );
 }
 
-function TarjetaReputacion({ className = '', reviewSummary }) {
+function TarjetaReputacion({ className = '', reviewSummary, loading, hasError }) {
   const r = reviewSummary;
   return (
     <section className={`rounded-2xl bg-primary p-5 text-primary-foreground md:p-6 ${className}`}>
       <p className="text-small text-text-inverse-muted">Tu reputación como cliente</p>
-      {r?.received.length ? (
+      {loading ? (
+        <p role="status" aria-live="polite" className="mt-5 text-label">Cargando tus valoraciones…</p>
+      ) : hasError ? (
+        <p className="mt-5 text-label">No fue posible cargar tus valoraciones.</p>
+      ) : r?.received.length ? (
         <>
           <p className="mt-3 text-title-desktop font-semibold leading-none">
             {r.average.toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} <span className="text-body-lg font-normal text-text-inverse-muted">/ 5</span>
@@ -82,39 +86,53 @@ function Estadistica({ valor, etiqueta }) {
 
 export default function MiEspacioClientePage() {
   const { profile, session } = useAuth();
-  const [reviewSummary, setReviewSummary] = useState(null);
-  const [favorites, setFavorites] = useState([]);
-  const [reviewError, setReviewError] = useState('');
-  const [favoriteError, setFavoriteError] = useState('');
+  const userId = session?.user?.id;
+  const [reviewLoad, setReviewLoad] = useState({ userId: null, data: null, error: '' });
+  const [favoritesLoad, setFavoritesLoad] = useState({ userId: null, data: [], error: '' });
+  const [activeReviewTab, setActiveReviewTab] = useState('enviadas');
   useEffect(() => {
-    if (!session?.user?.id) return;
-    Promise.all([
-      loadClientReviewSummary(session.user.id),
-      loadClientFavorites(session.user.id),
-    ])
-      .then(([summary, loadedFavorites]) => {
-        setReviewSummary(summary);
-        setFavorites(loadedFavorites);
-      })
-      .catch((error) => {
-        setReviewError(error.message);
-        setFavoriteError(error.message);
-      });
-  }, [session?.user?.id]);
+    let active = true;
+    if (!userId) return;
+
+    loadClientReviewSummary(userId)
+      .then((data) => { if (active) setReviewLoad({ userId, data, error: '' }); })
+      .catch((error) => { if (active) setReviewLoad({ userId, data: null, error: error.message }); });
+    loadClientFavorites(userId)
+      .then((data) => { if (active) setFavoritesLoad({ userId, data, error: '' }); })
+      .catch((error) => { if (active) setFavoritesLoad({ userId, data: [], error: error.message }); });
+
+    return () => { active = false; };
+  }, [userId]);
+  const reviewMatchesUser = reviewLoad.userId === userId;
+  const favoritesMatchUser = favoritesLoad.userId === userId;
+  const reviewSummary = reviewMatchesUser ? reviewLoad.data : null;
+  const favorites = favoritesMatchUser ? favoritesLoad.data : [];
+  const reviewError = reviewMatchesUser ? reviewLoad.error : '';
+  const favoriteError = favoritesMatchUser ? favoritesLoad.error : '';
+  const reviewsLoading = Boolean(userId) && !reviewMatchesUser;
+  const favoritesLoading = Boolean(userId) && !favoritesMatchUser;
   const favoritos = favorites
     .filter(({ equipment }) => equipment)
     .map(({ equipment }) => ({
       ...equipment,
+      nombre: equipment.name,
+      categoria: equipment.category,
       lugar: equipment.municipality,
-      distancia: '',
-      puntaje: '—',
+      distancia: 'ubicación aproximada',
+      puntaje: equipment.rating == null ? '—' : equipment.rating.toFixed(1),
       disponible: equipment.is_available && equipment.publication_status === 'publicada',
+      imagen: equipment.image,
     }));
-  const v = reviewSummary?.sent[0];
+  const activeReviews = activeReviewTab === 'enviadas' ? reviewSummary?.sent : reviewSummary?.received;
+  const v = activeReviews?.[0];
+  const reviewName = activeReviewTab === 'enviadas' ? v?.target?.full_name : v?.author?.full_name;
+  const editReviewUrl = v
+    ? `/valoraciones/cliente-a-arrendador?targetUserId=${v.target?.id}&equipmentId=${v.equipment?.id}&reviewType=${v.review_type || 'arrendador'}&edit=1`
+    : '/valoraciones/politica';
   const stats = {
-    favoritos: favorites.length,
-    enviadas: reviewSummary?.sent.length || 0,
-    recibidas: reviewSummary?.received.length || 0,
+    favoritos: favoritesLoading ? '—' : favoritos.length,
+    enviadas: reviewsLoading ? '—' : reviewSummary?.sent.length || 0,
+    recibidas: reviewsLoading ? '—' : reviewSummary?.received.length || 0,
   };
 
   return (
@@ -143,14 +161,39 @@ export default function MiEspacioClientePage() {
           <section aria-labelledby="titulo-favoritos">
             <div className="flex items-baseline justify-between gap-4">
               <h2 id="titulo-favoritos" className="text-heading-md font-semibold text-text lg:text-heading-lg">Equipos que te interesan</h2>
-              <span className="hidden text-small text-text-muted lg:inline">{favorites.length} favoritos</span>
+              <span className="text-small text-text-muted">
+                {favoritesLoading ? 'Cargando favoritos…' : `${favoritos.length} favoritos`}
+              </span>
             </div>
             {favoriteError && <p role="alert" className="mt-4 text-small text-danger">{favoriteError}</p>}
-            <div className="mt-4 grid gap-4 lg:grid-cols-2">
-              {favoritos.map((equipo) => (
-                <EquipoCard key={equipo.id} equipo={equipo} />
-              ))}
-            </div>
+            {favoritesLoading ? (
+              <p role="status" aria-live="polite" className="mt-4 text-small text-text-muted">Cargando tus equipos favoritos…</p>
+            ) : favoritos.length ? (
+              <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                {favoritos.map((equipo) => (
+                  <EquipoCard
+                    key={equipo.id}
+                    equipo={equipo}
+                    isFavorite
+                    onFavoriteChange={(equipmentId, isFavorite) => {
+                      if (!isFavorite) {
+                        setFavoritesLoad((current) => current.userId === userId
+                          ? { ...current, data: current.data.filter((favorite) => favorite.equipment_id !== equipmentId) }
+                          : current);
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+            ) : !favoriteError ? (
+              <Card className="mt-4 p-6 text-center">
+                <p className="text-label font-semibold text-text">Aún no tienes equipos favoritos.</p>
+                <p className="mt-2 text-small text-text-muted">Guarda equipos del catálogo para encontrarlos aquí.</p>
+                <Button as={Link} to="/catalogo" variant="secondary" size="lg" className="mt-4 w-full md:w-auto">
+                  Explorar equipos
+                </Button>
+              </Card>
+            ) : null}
           </section>
 
           <Card aria-labelledby="titulo-comunidad">
@@ -161,37 +204,56 @@ export default function MiEspacioClientePage() {
 
             <Tabs
               label="Valoraciones"
-              className="mt-4 hidden lg:flex"
+              className="mt-4"
               items={[
-                { id: 'enviadas', label: `Enviadas (${reviewSummary?.sent.length || 0})`, activo: true },
-                { id: 'recibidas', label: `Recibidas (${reviewSummary?.received.length || 0})` },
+                { id: 'enviadas', label: `Enviadas (${reviewsLoading ? '…' : reviewSummary?.sent.length || 0})`, activo: activeReviewTab === 'enviadas' },
+                { id: 'recibidas', label: `Recibidas (${reviewsLoading ? '…' : reviewSummary?.received.length || 0})`, activo: activeReviewTab === 'recibidas' },
               ]}
+              onSelect={setActiveReviewTab}
             />
-            <p className="mt-3 text-small text-text-muted lg:hidden">Enviadas ({reviewSummary?.sent.length || 0}) · Recibidas ({reviewSummary?.received.length || 0})</p>
 
             {reviewError && <p role="alert" className="mt-5 text-small text-danger">{reviewError}</p>}
-            {v ? <div className="mt-5 flex items-start gap-3">
+            {reviewsLoading ? <p role="status" aria-live="polite" className="mt-5 text-small text-text-muted">Cargando tus valoraciones…</p> : v ? <div className="mt-5 flex items-start gap-3">
               <Avatar className="size-11 shrink-0" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-label font-semibold text-text">Valoración para {v.target?.full_name || 'usuario de Rentia'}</p>
+                    <p className="text-label font-semibold text-text">
+                      Valoración {activeReviewTab === 'enviadas' ? 'para' : 'de'} {reviewName || 'usuario de Rentia'}
+                    </p>
                     <p className="mt-1 text-caption text-text-muted">{v.equipment?.name || 'Equipo relacionado'}</p>
                   </div>
                   <StarRating size={12} value={v.rating} className="hidden shrink-0 lg:flex" />
                 </div>
                 <StarRating size={16} value={v.rating} className="mt-3 lg:hidden" />
-                <p className="mt-3 text-small text-text-muted">{v.comment}</p>
-                <Link to={`/valoraciones/cliente-a-arrendador?targetUserId=${v.target?.id}&equipmentId=${v.equipment?.id}&edit=1`} className="mt-3 hidden text-small font-semibold text-text lg:inline-block">
-                  Editar mi valoración
+                <p className="mt-3 text-small text-text-muted">{v.comment || 'Sin comentario.'}</p>
+                <Link
+                  to={activeReviewTab === 'enviadas' ? editReviewUrl : '/cliente/valoraciones'}
+                  className="mt-3 hidden text-small font-semibold text-text lg:inline-block"
+                >
+                  {activeReviewTab === 'enviadas' ? 'Editar mi valoración' : 'Ver valoración'}
                 </Link>
               </div>
-            </div> : <InfoBox title="Aún no tienes valoraciones publicadas" className="mt-5">
-                Cuando valores a un arrendador después de contactarlo, tu opinión aparecerá aquí.
-              </InfoBox>}
+            </div> : !reviewError ? <InfoBox
+              title={activeReviewTab === 'enviadas' ? 'Aún no tienes valoraciones enviadas' : 'Aún no tienes valoraciones recibidas'}
+              className="mt-5"
+            >
+              {activeReviewTab === 'enviadas'
+                ? 'Cuando valores a un arrendador después de contactarlo, tu opinión aparecerá aquí.'
+                : 'Cuando un arrendador valore tu experiencia, su opinión aparecerá aquí.'}
+            </InfoBox> : null}
 
             <div className="mt-5 flex flex-col gap-3 lg:hidden">
-              <Button as={Link} to={v ? `/valoraciones/cliente-a-arrendador?targetUserId=${v.target?.id}&equipmentId=${v.equipment?.id}&edit=1` : '/valoraciones/politica'} variant="secondary" size="lg" fullWidth>{v ? 'Editar mi valoración' : 'Crear mi valoración'}</Button>
+              {activeReviewTab === 'enviadas' && (
+                <Button as={Link} to={editReviewUrl} variant="secondary" size="lg" fullWidth>
+                  {v ? 'Editar mi valoración' : 'Crear mi valoración'}
+                </Button>
+              )}
+              {activeReviewTab === 'recibidas' && v && (
+                <Button as={Link} to="/cliente/valoraciones" variant="secondary" size="lg" fullWidth>
+                  Ver valoración recibida
+                </Button>
+              )}
               <Button as={Link} to="/valoraciones/politica" variant="secondary" size="lg" fullWidth>Calificar otro contacto</Button>
             </div>
 
@@ -204,7 +266,7 @@ export default function MiEspacioClientePage() {
             </div>
           </Card>
 
-          <TarjetaReputacion className="lg:hidden" reviewSummary={reviewSummary} />
+          <TarjetaReputacion className="lg:hidden" reviewSummary={reviewSummary} loading={reviewsLoading} hasError={Boolean(reviewError)} />
           <Button as={Link} to="/cliente/valoraciones" variant="secondary" size="lg" fullWidth className="lg:hidden">
             Ver valoraciones
           </Button>
@@ -212,7 +274,7 @@ export default function MiEspacioClientePage() {
 
         <aside className="hidden space-y-4 lg:block">
           <TarjetaPerfil />
-          <TarjetaReputacion reviewSummary={reviewSummary} />
+          <TarjetaReputacion reviewSummary={reviewSummary} loading={reviewsLoading} hasError={Boolean(reviewError)} />
         </aside>
       </div>
     </DashboardLayout>

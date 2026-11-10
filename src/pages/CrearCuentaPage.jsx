@@ -117,7 +117,7 @@ export default function CrearCuentaPage() {
 
       <Button as={Link} to="/ingresar" variant="secondary" size="lg" fullWidth className="mt-4 border-2 border-primary text-primary">Ya tengo cuenta · Ingresar</Button>
       <Link to="/catalogo" className="mt-6 block text-center text-small text-text-muted">¿Solo quieres explorar? Ir al catálogo →</Link>
-      <Link to="/normas" className="mt-6 hidden text-center text-small text-text-muted lg:block">¿Necesitas una mano? Centro de ayuda</Link>
+      <Link to="/ayuda" className="mt-6 hidden text-center text-small text-text-muted lg:block">¿Necesitas una mano? Centro de ayuda</Link>
     </AuthLayout>
   );
 }

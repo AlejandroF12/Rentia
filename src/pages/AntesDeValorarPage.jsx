@@ -46,10 +46,10 @@ export default function AntesDeValorarPage() {
             </InfoBox>
 
             <div className="mt-5 space-y-4">
-              <Checkbox id="declaro-contacto" defaultChecked className="text-small">
+              <Checkbox id="declaro-contacto" className="text-small">
                 Declaro que tuve contacto directo previo y que esta valoración refleja mi propia experiencia.
               </Checkbox>
-              <Checkbox id="entiendo-normas" defaultChecked className="text-small">
+              <Checkbox id="entiendo-normas" className="text-small">
                 Entiendo que solo puedo tener una valoración por persona y que no debo incluir datos privados ni contenido abusivo.
               </Checkbox>
             </div>

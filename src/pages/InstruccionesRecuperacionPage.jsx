@@ -2,6 +2,7 @@ import { MailCheck, ArrowUpRight } from 'lucide-react';
 import RecuperacionLayout from '../layouts/RecuperacionLayout';
 import Button from '../components/Button';
 import InfoBox from '../components/InfoBox';
+import { Link } from 'react-router-dom';
 
 export default function InstruccionesRecuperacionPage() {
   return (
@@ -15,7 +16,7 @@ export default function InstruccionesRecuperacionPage() {
           <p className="mt-3 text-label text-text-muted">
             Revisa correo no deseado y comprueba la dirección que escribiste. Espera unos minutos antes de solicitar otro enlace.
           </p>
-          <Button variant="secondary" size="lg" fullWidth trailingIcon={ArrowUpRight} className="mt-5">Centro de ayuda</Button>
+          <Button as={Link} to="/ayuda#acceso" variant="secondary" size="lg" fullWidth trailingIcon={ArrowUpRight} className="mt-5">Centro de ayuda</Button>
         </div>
       }
     >

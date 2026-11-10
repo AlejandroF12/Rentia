@@ -28,6 +28,7 @@ const DEFAULT_FILTERS = {
   gpsActive: false,
   availableOnly: false,
 };
+const EQUIPMENT_PAGE_SIZE = 9;
 
 function Filtros({ filters, onChange, onApply, onReset, filterError, onUseLocation, locationRequesting }) {
   const gpsActive = Boolean(filters.gpsActive);
@@ -109,6 +110,7 @@ export default function CatalogoPage() {
   const [filters, setFilters] = useState(initialFilters);
   const [appliedFilters, setAppliedFilters] = useState(initialFilters);
   const [sort, setSort] = useState('distance');
+  const [page, setPage] = useState(1);
   const [userLocation, setUserLocation] = useState(null);
   const [locationRequesting, setLocationRequesting] = useState(false);
   const [locationError, setLocationError] = useState('');
@@ -162,12 +164,18 @@ export default function CatalogoPage() {
       disponible: item.is_available,
     }));
   }, [equipment, appliedFilters, sort, userLocation]);
+  const totalPages = Math.ceil(visibleEquipment.length / EQUIPMENT_PAGE_SIZE);
+  const currentPage = Math.min(page, Math.max(totalPages, 1));
+  const paginatedEquipment = useMemo(() => (
+    visibleEquipment.slice((currentPage - 1) * EQUIPMENT_PAGE_SIZE, currentPage * EQUIPMENT_PAGE_SIZE)
+  ), [visibleEquipment, currentPage]);
 
   const updateFilters = (changes) => setFilters((current) => ({ ...current, ...changes }));
   const applyFilters = (event) => {
     event.preventDefault();
     setFilterError('');
     setLoading(true);
+    setPage(1);
     const apply = async () => {
       let nextFilters = filters;
       if (!userLocation && filters.municipality.trim() && !filters.municipalityCoordinates) {
@@ -192,6 +200,7 @@ export default function CatalogoPage() {
   };
   const resetFilters = () => {
     setLoading(true);
+    setPage(1);
     setUserLocation(null);
     setFilters({ ...DEFAULT_FILTERS, gpsActive: false });
     setAppliedFilters({ ...DEFAULT_FILTERS, gpsActive: false });
@@ -200,6 +209,7 @@ export default function CatalogoPage() {
   const applySearch = (event) => {
     event.preventDefault();
     setLoading(true);
+    setPage(1);
     setAppliedSearch(search);
   };
   const useUserLocation = () => {
@@ -212,6 +222,7 @@ export default function CatalogoPage() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setUserLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude });
+        setPage(1);
         setFilters((current) => ({ ...current, gpsActive: true, radius: current.radius || 150 }));
         setAppliedFilters((current) => ({ ...current, gpsActive: true }));
         setLocationRequesting(false);
@@ -298,7 +309,7 @@ export default function CatalogoPage() {
               <h2 id="resultados" className="text-label text-text md:text-body">{loading ? 'Cargando equipos...' : `${visibleEquipment.length} equipos publicados`}</h2>
               <label className="inline-flex items-center gap-2 text-small text-text-muted">
                 Ordenar
-                <select value={sort} onChange={(event) => setSort(event.target.value)} className="bg-transparent font-semibold text-text">
+                <select value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }} className="bg-transparent font-semibold text-text">
                   <option value="distance">Más cercanos</option>
                   <option value="recent">Más recientes</option>
                   <option value="name">Nombre</option>
@@ -317,7 +328,7 @@ export default function CatalogoPage() {
               {loading && Array.from({ length: 6 }, (_, index) => <Skeleton key={index} className="aspect-[16/10] w-full md:aspect-[16/9]" />)}
               {error && <p role="alert" className="text-small text-danger">{error}</p>}
               {!loading && !error && visibleEquipment.length === 0 && <p className="text-body text-text-muted">No hay equipos publicados que coincidan con tu búsqueda.</p>}
-              {!loading && visibleEquipment.map((equipo) => (
+              {!loading && paginatedEquipment.map((equipo) => (
                 <EquipoCard
                   key={equipo.id}
                   equipo={equipo}
@@ -328,9 +339,11 @@ export default function CatalogoPage() {
               ))}
             </div>
 
-            <div className="mt-10">
-              <Pagination />
-            </div>
+            {!loading && !error && totalPages > 1 && (
+              <div className="mt-10">
+                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
+              </div>
+            )}
           </section>
         </div>
       </main>

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { loadProfile } from '../services/authService';
 
@@ -8,6 +8,12 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const refreshProfile = useCallback(async () => {
+    if (!session?.user?.id) return null;
+    const nextProfile = await loadProfile(session.user.id);
+    setProfile(nextProfile);
+    return nextProfile;
+  }, [session]);
 
   useEffect(() => {
     let active = true;
@@ -40,14 +46,20 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      loadProfile(nextSession.user.id)
-        .then((nextProfile) => {
-          if (active) setProfile(nextProfile);
-        })
-        .catch((error) => console.error(error))
-        .finally(() => {
-          if (active) setLoading(false);
-        });
+      setLoading(true);
+      setTimeout(() => {
+        loadProfile(nextSession.user.id)
+          .then((nextProfile) => {
+            if (active) setProfile(nextProfile);
+          })
+          .catch((error) => {
+            console.error(error);
+            if (active) setProfile(null);
+          })
+          .finally(() => {
+            if (active) setLoading(false);
+          });
+      }, 0);
     });
 
     return () => {
@@ -60,8 +72,9 @@ export function AuthProvider({ children }) {
     session,
     profile,
     loading,
+    refreshProfile,
     signOut: () => supabase.auth.signOut(),
-  }), [session, profile, loading]);
+  }), [session, profile, loading, refreshProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

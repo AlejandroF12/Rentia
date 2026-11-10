@@ -30,6 +30,28 @@ export async function loadEquipmentImages(equipmentId) {
   return (data ?? []).map((image) => ({ ...image, url: imageUrl(image.storage_path) }));
 }
 
+export async function loadEquipmentCoverImages(equipmentIds) {
+  const ids = [...new Set(equipmentIds.filter(Boolean))];
+  if (!ids.length) return new Map();
+
+  const { data, error } = await supabase
+    .from('equipment_images')
+    .select('equipment_id, storage_path, display_order, is_cover')
+    .in('equipment_id', ids)
+    .order('is_cover', { ascending: false })
+    .order('display_order', { ascending: true });
+
+  if (error) throw new Error(`No se pudieron cargar las imágenes: ${error.message}`);
+
+  const coverImages = new Map();
+  for (const image of data ?? []) {
+    if (!coverImages.has(image.equipment_id)) {
+      coverImages.set(image.equipment_id, imageUrl(image.storage_path));
+    }
+  }
+  return coverImages;
+}
+
 export async function uploadEquipmentImages(equipmentId, files) {
   const uploaded = [];
   const existing = await loadEquipmentImages(equipmentId);
@@ -103,6 +125,7 @@ export async function updateEquipment(equipmentId, ownerId, values, publicationS
     })
     .eq('id', equipmentId)
     .eq('owner_id', ownerId)
+    .neq('publication_status', 'eliminada')
     .select()
     .single();
 
@@ -115,6 +138,7 @@ export async function loadOwnerEquipment(ownerId) {
     .from('equipment')
     .select('id, name, category, municipality, is_available, publication_status, updated_at')
     .eq('owner_id', ownerId)
+    .neq('publication_status', 'eliminada')
     .order('updated_at', { ascending: false });
 
   if (error) throw new Error(`No se pudieron cargar tus equipos: ${error.message}`);
@@ -158,7 +182,7 @@ export async function loadFeaturedEquipment() {
 
   if (error) throw new Error(`No se pudieron cargar los equipos destacados: ${error.message}`);
 
-  return (data ?? [])
+  const featured = (data ?? [])
     .map((item) => {
       const reviews = (item.reviews ?? []).filter((review) => review.is_published && review.review_type === 'equipo');
       const rating = reviews.length
@@ -168,6 +192,8 @@ export async function loadFeaturedEquipment() {
     })
     .sort((first, second) => second.rating - first.rating || first.name.localeCompare(second.name))
     .slice(0, 3);
+  const coverImages = await loadEquipmentCoverImages(featured.map((item) => item.id));
+  return featured.map((item) => ({ ...item, image: coverImages.get(item.id) ?? null }));
 }
 
 export async function loadEquipmentById(equipmentId) {
@@ -193,13 +219,14 @@ export async function loadEquipmentOwner(ownerId) {
   return data;
 }
 
-export async function loadOwnerEquipmentById(equipmentId, ownerId) {
-  const { data, error } = await supabase
+export async function loadOwnerEquipmentById(equipmentId, ownerId, { includeEliminated = false } = {}) {
+  let query = supabase
     .from('equipment')
     .select('id, name, category, brand, model, model_year, main_feature, description, municipality, sector, latitude, longitude, is_available, publication_status')
     .eq('id', equipmentId)
-    .eq('owner_id', ownerId)
-    .single();
+    .eq('owner_id', ownerId);
+  if (!includeEliminated) query = query.neq('publication_status', 'eliminada');
+  const { data, error } = await query.single();
 
   if (error) throw new Error(`No se pudo cargar el equipo: ${error.message}`);
   return data;
@@ -211,6 +238,7 @@ export async function updateEquipmentAvailability(equipmentId, ownerId, isAvaila
     .update({ is_available: isAvailable })
     .eq('id', equipmentId)
     .eq('owner_id', ownerId)
+    .neq('publication_status', 'eliminada')
     .select('id, is_available, updated_at')
     .single();
 
@@ -224,6 +252,7 @@ export async function updateEquipmentPublication(equipmentId, ownerId, publicati
     .update({ publication_status: publicationStatus })
     .eq('id', equipmentId)
     .eq('owner_id', ownerId)
+    .neq('publication_status', 'eliminada')
     .select('id, publication_status, updated_at')
     .single();
 
@@ -232,11 +261,39 @@ export async function updateEquipmentPublication(equipmentId, ownerId, publicati
 }
 
 export async function deleteEquipment(equipmentId, ownerId) {
-  const { error } = await supabase
-    .from('equipment')
-    .delete()
-    .eq('id', equipmentId)
-    .eq('owner_id', ownerId);
+  const { data: images, error: imagesError } = await supabase
+    .from('equipment_images')
+    .select('storage_path')
+    .eq('equipment_id', equipmentId);
 
-  if (error) throw new Error(`No se pudo eliminar el equipo: ${error.message}`);
+  if (imagesError) throw new Error(`No se pudieron preparar las imágenes para eliminarlas: ${imagesError.message}`);
+
+  const { data: archived, error: archiveError } = await supabase
+    .from('equipment')
+    .update({ publication_status: 'eliminada' })
+    .eq('id', equipmentId)
+    .eq('owner_id', ownerId)
+    .select('id')
+    .maybeSingle();
+
+  if (archiveError) throw new Error(`No se pudo retirar el equipo: ${archiveError.message}`);
+  if (!archived) throw new Error('No se encontró el equipo o no tienes permiso para eliminarlo.');
+
+  const paths = (images ?? []).map((image) => image.storage_path);
+  if (paths.length) {
+    const { error: storageError } = await supabase.storage
+      .from('equipment-images')
+      .remove(paths);
+
+    if (storageError) throw new Error(`La publicación se retiró del catálogo, pero no se pudieron eliminar las fotos: ${storageError.message}`);
+  }
+
+  const { error: imageRowsError } = await supabase
+    .from('equipment_images')
+    .delete()
+    .eq('equipment_id', equipmentId);
+
+  if (imageRowsError) {
+    throw new Error(`La publicación se retiró del catálogo, pero no se pudieron limpiar los registros de fotos: ${imageRowsError.message}`);
+  }
 }
