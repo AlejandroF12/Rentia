@@ -12,7 +12,7 @@ import { useAuth } from '../context/AuthContext';
  *  - "public"     visitante (Ingresar + Publicar equipo)
  *  - "cliente" | "arrendador" | "admin"   sesión iniciada (rol + iniciales)
  *  - "simple"     páginas de recuperación de contraseña
- *  - "publicTexto"  visitante con "Ingresar · Publicar equipo" como texto (legales, catálogo sin resultados)
+ *  - "publicTexto"  visitante con CTA de publicar en páginas de texto (legales, catálogo sin resultados)
  *  - "clienteTexto" cliente con "Cliente · ML" como texto (reportar publicación)
  *  - "suspendido"   cuenta suspendida (insignia "Suspendido" + iniciales)
  * menuOpen: solo cambia el icono (X en vez de hamburguesa/chevron).
@@ -111,12 +111,17 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
                 </span>
               </button>
             </>
-          ) : variant === 'simple' || textoPublico ? (
+          ) : variant === 'simple' ? (
             <p className="flex items-center gap-3 text-label font-semibold text-text">
               <Link to="/ingresar">Ingresar</Link>
               <span aria-hidden="true">·</span>
               <Link to="/crear-cuenta">Publicar equipo</Link>
             </p>
+          ) : textoPublico ? (
+            <>
+              <Link to="/ingresar" className="text-label text-text">Ingresar</Link>
+              <Button as={Link} to="/crear-cuenta" size="lg" icon={Plus}>Publicar equipo</Button>
+            </>
           ) : (
             <>
               <Link to="/ingresar" className="text-label text-text">Ingresar</Link>
