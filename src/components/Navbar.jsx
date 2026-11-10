@@ -39,7 +39,7 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
   };
   const variantMenu = textoPublico ? 'public' : textoCliente ? 'cliente' : effectiveVariant;
   const [isOpen, setIsOpen] = useState(menuOpen);
-  const isMenuOpen = menuOpen || isOpen;
+  const isMenuOpen = effectiveVariant !== 'simple' && (menuOpen || isOpen);
   const MenuIcon = isMenuOpen ? X : Menu;
   useEffect(() => {
     if (!isMenuOpen) return undefined;
@@ -131,9 +131,11 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
         </div>
 
         {/* Hamburguesa (móvil) */}
-        <button type="button" aria-label={loading ? 'Cargando sesión' : isMenuOpen ? 'Cerrar menú' : 'Abrir menú'} disabled={loading} className="flex size-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted disabled:opacity-50 xl:hidden" onClick={() => setIsOpen((open) => !open)}>
-          <MenuIcon size={24} />
-        </button>
+        {effectiveVariant !== 'simple' && (
+          <button type="button" aria-label={loading ? 'Cargando sesión' : isMenuOpen ? 'Cerrar menú' : 'Abrir menú'} disabled={loading} className="flex size-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted disabled:opacity-50 xl:hidden" onClick={() => setIsOpen((open) => !open)}>
+            <MenuIcon size={24} />
+          </button>
+        )}
       </div>
       {isMenuOpen && effectiveVariant !== 'simple' && (
         <>

@@ -12,7 +12,7 @@ function PanelEditorial() {
       <img src={regLogImage} alt="Equipo de trabajo en Casanare" className="absolute inset-0 size-full object-cover" />
       <div className="absolute inset-0 bg-linear-to-t from-overlay-editorial via-overlay/20 to-transparent" aria-hidden="true" />
       <div className="relative flex h-full flex-col justify-between p-10 text-text-inverse">
-        <Logo inverse />
+        <Logo className="auth-brand-logo" />
         <div>
           <p className="text-caption font-semibold uppercase tracking-wider text-text-inverse-muted">De aquí, para hacer más.</p>
           <p className="mt-4 text-title-desktop font-medium leading-tight">
