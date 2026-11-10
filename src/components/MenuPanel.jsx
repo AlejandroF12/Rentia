@@ -43,12 +43,12 @@ export default function MenuPanel({ variant = 'public', onClose, accountOnly = f
   };
 
   return (
-    <div className="max-h-[calc(100dvh-4rem)] w-full overflow-y-auto bg-surface p-5 shadow-[0_8px_24px_var(--color-shadow-alpha-7)] md:max-h-[calc(100dvh-5rem)] md:w-[348px] md:rounded-2xl md:border md:border-border">
+    <div className="menu-scroll-panel max-h-[calc(100dvh-4rem)] w-full min-w-0 max-w-full overflow-x-hidden overflow-y-auto overscroll-contain bg-surface p-5 shadow-[0_8px_24px_var(--color-shadow-alpha-7)] md:max-h-[calc(100dvh-5rem)] md:w-[348px] md:rounded-2xl md:border md:border-border">
       {user ? (
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           {!user.sinAvatar && <Avatar className="size-14" />}
-          <div>
-            <p className={`text-heading-sm text-text ${user.sinAvatar ? '' : 'font-semibold'}`}>{user.nombre}</p>
+          <div className="min-w-0 flex-1">
+            <p className={`break-words text-heading-sm text-text [overflow-wrap:anywhere] ${user.sinAvatar ? '' : 'font-semibold'}`}>{user.nombre}</p>
             {user.detalle && <p className="text-small text-text-muted">{user.detalle}</p>}
           </div>
         </div>

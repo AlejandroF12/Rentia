@@ -90,15 +90,15 @@ html[data-theme='dark'] {
   --color-primary: #76b8a2;
   --color-primary-foreground: #102b28;
   --color-accent: #8bcfa5;
-  --color-text: #e6efed;
-  --color-text-muted: #b6c6c5;
+  --color-text: #e8eeed;
+  --color-text-muted: #b9c5c6;
   --color-text-inverse: #ffffff;
   --color-text-inverse-muted: #d7e5e2;
-  --color-background: #10191c;
-  --color-surface: #182529;
-  --color-surface-muted: #223237;
-  --color-surface-selected: #2b4145;
-  --color-border: #34474b;
+  --color-background: #171c1f;
+  --color-surface: #20272b;
+  --color-surface-muted: #293237;
+  --color-surface-selected: #354147;
+  --color-border: #3a474c;
   --color-success: #83c89d;
   --color-success-subtle: #1d382b;
   --color-warning: #e6b76c;
@@ -109,9 +109,9 @@ html[data-theme='dark'] {
   --color-map-background: #263832;
   --color-map-land: #405744;
   --color-map-water: #284954;
-  --color-overlay: #061012;
-  --color-shadow: #000000;
-  --color-overlay-editorial: #061012f5;
+  --color-overlay: #0c1113;
+  --color-shadow: #0c1113;
+  --color-overlay-editorial: #0c1113f5;
   --color-primary-alpha-8: #76b8a214;
   --color-primary-alpha-14: #76b8a224;
   --color-primary-alpha-22: #76b8a238;
@@ -121,6 +121,25 @@ html[data-theme='dark'] {
   --color-shadow-alpha-7: #00000040;
   --color-canvas-background: #223237;
   --color-canvas-label: #dcebe7;
+}
+
+html[data-theme='dark'] .brand-logo {
+  filter: brightness(0) invert(1);
+}
+
+:root {
+  --rentia-card-shadow: 0 2px 12px rgba(21, 63, 76, 0.08);
+  --rentia-card-hover-shadow: 0 12px 30px rgba(21, 63, 76, 0.14);
+}
+
+html[data-theme='dark'] {
+  --rentia-card-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  --rentia-card-hover-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
 }
 
 @layer base {
@@ -195,13 +214,37 @@ html[data-theme='dark'] {
 }
 
 .equipment-card {
+  box-shadow: var(--rentia-card-shadow);
   transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+@media (hover: hover) {
+  .equipment-card:hover {
+    box-shadow: var(--rentia-card-hover-shadow);
+  }
+}
+
+.surface-card {
+  box-shadow: var(--rentia-card-shadow);
+}
+
+.menu-scroll-panel {
+  scrollbar-color: var(--color-border) transparent;
+  scrollbar-width: thin;
+}
+
+.menu-scroll-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.menu-scroll-panel::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background-color: var(--color-border);
 }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .equipment-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px var(--color-shadow-alpha-7);
+    transform: translateY(-3px);
   }
 }
 

@@ -351,7 +351,7 @@ export default function DetalleEquipoPage() {
           <div className="max-h-[92vh] w-full max-w-5xl overflow-auto rounded-2xl bg-surface p-4 shadow-2xl md:p-6">
             <div className="flex items-center justify-between gap-4 border-b border-border pb-4">
               <h2 className="text-heading-md font-semibold text-text">Fotos de {equipment.name}</h2>
-              <button type="button" aria-label="Cerrar galería" onClick={() => setGalleryOpen(false)} className="flex size-9 items-center justify-center rounded-full bg-surface-muted text-text"><X size={18} /></button>
+              <button type="button" aria-label="Cerrar galería" onClick={() => setGalleryOpen(false)} className="flex size-11 items-center justify-center rounded-full bg-surface-muted text-text sm:size-9"><X size={18} /></button>
             </div>
             <div className="mt-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_180px]">
               <div className="relative flex min-h-[280px] items-center justify-center overflow-hidden rounded-xl bg-background">
@@ -362,15 +362,15 @@ export default function DetalleEquipoPage() {
                   style={{ transform: `scale(${imageZoom})` }}
                 />
                 <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-xl bg-surface/95 p-1 shadow">
-                  <button type="button" aria-label="Alejar imagen" onClick={() => setImageZoom((current) => Math.max(1, current - 0.25))} className="flex size-9 items-center justify-center rounded-lg text-text hover:bg-surface-muted"><ZoomOut size={17} /></button>
+                  <button type="button" aria-label="Alejar imagen" onClick={() => setImageZoom((current) => Math.max(1, current - 0.25))} className="flex size-11 items-center justify-center rounded-lg text-text hover:bg-surface-muted sm:size-9"><ZoomOut size={17} /></button>
                   <span className="min-w-12 text-center text-small font-semibold text-text">{Math.round(imageZoom * 100)}%</span>
-                  <button type="button" aria-label="Acercar imagen" onClick={() => setImageZoom((current) => Math.min(3, current + 0.25))} className="flex size-9 items-center justify-center rounded-lg text-text hover:bg-surface-muted"><ZoomIn size={17} /></button>
-                  <button type="button" aria-label="Restablecer zoom" onClick={() => setImageZoom(1)} className="flex size-9 items-center justify-center rounded-lg text-text hover:bg-surface-muted"><RotateCcw size={15} /></button>
+                  <button type="button" aria-label="Acercar imagen" onClick={() => setImageZoom((current) => Math.min(3, current + 0.25))} className="flex size-11 items-center justify-center rounded-lg text-text hover:bg-surface-muted sm:size-9"><ZoomIn size={17} /></button>
+                  <button type="button" aria-label="Restablecer zoom" onClick={() => setImageZoom(1)} className="flex size-11 items-center justify-center rounded-lg text-text hover:bg-surface-muted sm:size-9"><RotateCcw size={15} /></button>
                 </div>
                 {images.length > 1 && (
                   <>
-                    <button type="button" aria-label="Imagen anterior" onClick={() => setSelectedImage((current) => (current - 1 + images.length) % images.length)} className="absolute left-3 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-surface/95 text-text shadow"><ChevronLeft size={18} /></button>
-                    <button type="button" aria-label="Imagen siguiente" onClick={() => setSelectedImage((current) => (current + 1) % images.length)} className="absolute right-3 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-surface/95 text-text shadow"><ChevronRight size={18} /></button>
+                    <button type="button" aria-label="Imagen anterior" onClick={() => setSelectedImage((current) => (current - 1 + images.length) % images.length)} className="absolute left-3 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-surface/95 text-text shadow sm:size-9"><ChevronLeft size={18} /></button>
+                    <button type="button" aria-label="Imagen siguiente" onClick={() => setSelectedImage((current) => (current + 1) % images.length)} className="absolute right-3 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-surface/95 text-text shadow sm:size-9"><ChevronRight size={18} /></button>
                   </>
                 )}
               </div>

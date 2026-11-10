@@ -104,7 +104,9 @@ export default function CatalogoPage() {
   const initialSearch = searchParams.get('search') || '';
   const initialMunicipality = searchParams.get('municipality') || '';
   const initialAvailable = searchParams.get('available') === 'true';
-  const initialFilters = { ...DEFAULT_FILTERS, municipality: initialMunicipality, municipalityCoordinates: initialMunicipality ? null : DEFAULT_FILTERS.municipalityCoordinates, availableOnly: initialAvailable };
+  const requestedCategory = searchParams.get('category');
+  const initialCategory = tiposEquipo.includes(requestedCategory) ? requestedCategory : '';
+  const initialFilters = { ...DEFAULT_FILTERS, categories: initialCategory ? [initialCategory] : [], municipality: initialMunicipality, municipalityCoordinates: initialMunicipality ? null : DEFAULT_FILTERS.municipalityCoordinates, availableOnly: initialAvailable };
   const [search, setSearch] = useState(initialSearch);
   const [appliedSearch, setAppliedSearch] = useState(initialSearch);
   const [filters, setFilters] = useState(initialFilters);
@@ -256,7 +258,7 @@ export default function CatalogoPage() {
             placeholder="Buscar maquinaria o vehículo"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            className="h-10 min-w-0 flex-1 bg-transparent px-2 text-body text-text placeholder:text-text-muted focus:outline-none"
+            className="h-11 min-w-0 flex-1 bg-transparent px-2 text-body text-text placeholder:text-text-muted focus:outline-none sm:h-10"
           />
           <Button type="submit" size="lg">
             <span className="lg:hidden">Buscar</span>
@@ -271,11 +273,11 @@ export default function CatalogoPage() {
             <SlidersHorizontal size={18} aria-hidden="true" className="text-text-muted" />
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            <select aria-label="Tipo de equipo" value={filters.categories[0] || ''} onChange={(event) => updateFilters({ categories: event.target.value ? [event.target.value] : [] })} className="h-9 rounded-lg border border-border bg-surface px-3 text-small text-text">
+            <select aria-label="Tipo de equipo" value={filters.categories[0] || ''} onChange={(event) => updateFilters({ categories: event.target.value ? [event.target.value] : [] })} className="h-11 rounded-lg border border-border bg-surface px-3 text-small text-text sm:h-9">
               <option value="">Todos los tipos</option>
               {tiposEquipo.slice(1).map((tipo) => <option key={tipo} value={tipo}>{tipo}</option>)}
             </select>
-            <label className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-small text-text">
+            <label className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-small text-text sm:h-9">
               <span>Hasta</span>
               <input aria-label="Radio de búsqueda" type="number" min="10" max="300" value={filters.radius} disabled={!filters.gpsActive} onChange={(event) => updateFilters({ radius: Number(event.target.value) || 10 })} className="w-12 bg-transparent text-center disabled:cursor-not-allowed disabled:opacity-40" />
               <span>km</span>
@@ -285,9 +287,9 @@ export default function CatalogoPage() {
               value={filters.municipality}
               onChange={(event) => updateFilters({ municipality: event.target.value, municipalityCoordinates: null })}
               placeholder="Municipio"
-              className="h-9 min-w-32 rounded-lg border border-border bg-surface px-3 text-small text-text"
+              className="h-11 min-w-32 rounded-lg border border-border bg-surface px-3 text-small text-text sm:h-9"
             />
-            <label className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-small text-text">
+            <label className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-small text-text sm:h-9">
               <input type="checkbox" checked={filters.availableOnly} onChange={(event) => updateFilters({ availableOnly: event.target.checked })} className="accent-primary" />
               Solo disponibles
             </label>
@@ -309,7 +311,7 @@ export default function CatalogoPage() {
               <h2 id="resultados" className="text-label text-text md:text-body">{loading ? 'Cargando equipos...' : `${visibleEquipment.length} equipos publicados`}</h2>
               <label className="inline-flex items-center gap-2 text-small text-text-muted">
                 Ordenar
-                <select value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }} className="bg-transparent font-semibold text-text">
+                <select value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }} className="min-h-11 bg-transparent font-semibold text-text sm:min-h-0">
                   <option value="distance">Más cercanos</option>
                   <option value="recent">Más recientes</option>
                   <option value="name">Nombre</option>

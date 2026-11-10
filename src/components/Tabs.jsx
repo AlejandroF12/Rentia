@@ -12,7 +12,7 @@ export default function Tabs({ items, onSelect, label = 'Filtros', className = '
           role="tab"
           aria-selected={!!item.activo}
           onClick={onSelect ? () => onSelect(item.id) : undefined}
-          className={item.activo ? 'font-semibold text-text' : 'text-text-muted'}
+          className={`min-h-11 px-1 ${item.activo ? 'font-semibold text-text' : 'text-text-muted'}`}
         >
           {item.label}
         </button>

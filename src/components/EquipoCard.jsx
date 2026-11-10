@@ -58,7 +58,7 @@ export default function EquipoCard({ equipo, favorito = true, estadoEnCuerpo = f
               }
             }}
             aria-pressed={favorite}
-            className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full bg-surface text-text shadow-sm"
+            className="absolute right-3 top-3 flex size-11 items-center justify-center rounded-full bg-surface text-text shadow-sm"
           >
             <span className={`favorite-heart ${favoriteAnimation ? 'favorite-heart-pop' : ''}`}>
               <Heart size={17} fill={favorite ? 'currentColor' : 'none'} aria-hidden="true" />
@@ -83,9 +83,12 @@ export default function EquipoCard({ equipo, favorito = true, estadoEnCuerpo = f
           </span>
           <Puntaje valor={puntaje} className="shrink-0" />
         </div>
-        <Link to={`/detalle-equipo?id=${equipo.id}`} className="mt-3 flex items-center justify-between border-t border-border pt-3 text-label font-semibold text-text">
+        <Link
+          to={`/detalle-equipo?id=${equipo.id}`}
+          className="group mt-3 flex min-h-11 items-center justify-between rounded-lg bg-primary px-4 py-3 text-label font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        >
           Ver equipo
-          <ArrowUpRight size={14} aria-hidden="true" />
+          <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </Link>
       </div>
     </article>

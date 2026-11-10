@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 export default function Pagination({ currentPage, totalPages, onPageChange }) {
   if (totalPages <= 1) return null;
 
-  const base = 'flex size-9 items-center justify-center rounded-lg text-label text-text-muted hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40';
+  const base = 'flex size-11 items-center justify-center rounded-lg text-label text-text-muted hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40 sm:size-9';
   return (
     <nav aria-label="Paginación" className="flex items-center justify-center gap-2">
       <button

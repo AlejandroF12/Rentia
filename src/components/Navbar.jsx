@@ -131,7 +131,7 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
         </div>
 
         {/* Hamburguesa (móvil) */}
-        <button type="button" aria-label={loading ? 'Cargando sesión' : isMenuOpen ? 'Cerrar menú' : 'Abrir menú'} disabled={loading} className="text-text-muted disabled:opacity-50 xl:hidden" onClick={() => setIsOpen((open) => !open)}>
+        <button type="button" aria-label={loading ? 'Cargando sesión' : isMenuOpen ? 'Cerrar menú' : 'Abrir menú'} disabled={loading} className="flex size-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted disabled:opacity-50 xl:hidden" onClick={() => setIsOpen((open) => !open)}>
           <MenuIcon size={24} />
         </button>
       </div>

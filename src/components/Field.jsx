@@ -66,7 +66,7 @@ export function PasswordField({ hint, ...props }) {
         <button
           type="button"
           aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+          className="absolute right-1 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted"
           onClick={() => setVisible((current) => !current)}
         >
           {visible ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}

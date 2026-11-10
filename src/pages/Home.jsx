@@ -103,7 +103,7 @@ export const Home = () => {
                                 placeholder='Maquinaria o vehículo'
                                 value={searchTerm}
                                 onChange={(event) => setSearchTerm(event.target.value)}
-                                className='w-full min-w-0 text-label text-text-muted focus:outline-none' />
+                                className='min-h-11 w-full min-w-0 text-label text-text-muted focus:outline-none' />
                         </div>
                     </div>
                     <div className='flex min-w-0 flex-row items-center gap-3 border-border sm:border-l sm:pl-4 lg:px-4'>
@@ -118,7 +118,7 @@ export const Home = () => {
                                 placeholder='Municipio o ciudad'
                                 value={locationTerm}
                                 onChange={(event) => setLocationTerm(event.target.value)}
-                                className='w-full min-w-0 text-label text-text-muted focus:outline-none' />
+                                className='min-h-11 w-full min-w-0 text-label text-text-muted focus:outline-none' />
                         </div>
                     </div>
                     <div className='flex min-w-0 flex-row items-center gap-3 border-border sm:border-t sm:pt-4 lg:border-l lg:border-t-0 lg:px-4 lg:pt-0'>
@@ -127,7 +127,7 @@ export const Home = () => {
                             <label htmlFor='search_filtro' className='text-caption text-primary'>
                                 Disponibilidad
                             </label>
-                            <select value={availableOnly ? 'available' : 'all'} onChange={(event) => setAvailableOnly(event.target.value === 'available')} className='bg-transparent text-label text-text-muted focus:outline-none'>
+                            <select value={availableOnly ? 'available' : 'all'} onChange={(event) => setAvailableOnly(event.target.value === 'available')} className='min-h-11 bg-transparent text-label text-text-muted focus:outline-none'>
                                 <option value='all'>Todos los equipos</option>
                                 <option value='available'>Solo disponibles</option>
                             </select>
@@ -152,33 +152,33 @@ export const Home = () => {
                             <p className='text-text-muted text-small'>Encuentra lo que tu proyecto necesita</p>
                         </div>
                         <div className='w-full grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-                            <div className='motion-enter motion-delay-1 flex min-w-0 flex-row items-center gap-3 rounded-xl bg-surface-muted p-4'>
+                            <Link to={`/catalogo?category=${encodeURIComponent('Movimiento de tierra')}`} className='motion-enter motion-delay-1 group flex min-w-0 items-center gap-3 rounded-xl bg-surface-muted p-4 transition-colors hover:bg-surface-selected focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'>
                                 <div>
                                     <TractorIcon className='w-[1.5rem] h-[1.5rem] text-primary' />
                                 </div>
                                 <div>
-                                    <p className='text-caption text-primary font-semibold'>
+                                    <p className='text-caption font-semibold text-primary'>
                                         Movimiento de tierra
                                     </p>
-                                    <p className='text-label text-text-muted'>
-                                        Explorar categoría
+                                    <p className='text-label text-text-muted group-hover:text-text'>
+                                        Ver equipos de esta categoría
                                     </p>
                                 </div>
-                            </div>
-                            <div className='motion-enter motion-delay-2 flex min-w-0 flex-row items-center gap-3 rounded-xl bg-surface-muted p-4'>
+                            </Link>
+                            <Link to={`/catalogo?category=${encodeURIComponent('Transporte de carga')}`} className='motion-enter motion-delay-2 group flex min-w-0 items-center gap-3 rounded-xl bg-surface-muted p-4 transition-colors hover:bg-surface-selected focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'>
                                 <div>
                                     <Truck className='w-[1.5rem] h-[1.5rem] text-primary font-semibold' />
                                 </div>
                                 <div>
-                                    <p className='text-caption text-primary'>
+                                    <p className='text-caption font-semibold text-primary'>
                                         Transporte de carga
                                     </p>
-                                    <p className='text-label text-text-muted'>
-                                        Explorar categoría
+                                    <p className='text-label text-text-muted group-hover:text-text'>
+                                        Ver equipos de esta categoría
                                     </p>
                                 </div>
-                            </div>
-                            <div className='motion-enter motion-delay-3 flex min-w-0 flex-row items-center gap-3 rounded-xl bg-surface-muted p-4'>
+                            </Link>
+                            <Link to={`/catalogo?category=${encodeURIComponent('Agrícola')}`} className='motion-enter motion-delay-3 group flex min-w-0 items-center gap-3 rounded-xl bg-surface-muted p-4 transition-colors hover:bg-surface-selected focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'>
                                 <div>
                                     <Sprout className='w-[1.5rem] h-[1.5rem] text-primary' />
                                 </div>
@@ -186,24 +186,24 @@ export const Home = () => {
                                     <p className='text-caption text-primary font-semibold'>
                                         Agrícola
                                     </p>
-                                    <p className='text-label text-text-muted'>
-                                        Explorar categoría
+                                    <p className='text-label text-text-muted group-hover:text-text'>
+                                        Ver equipos de esta categoría
                                     </p>
                                 </div>
-                            </div>
-                            <div className='motion-enter motion-delay-4 flex min-w-0 flex-row items-center gap-3 rounded-xl bg-surface-muted p-4'>
+                            </Link>
+                            <Link to={`/catalogo?category=${encodeURIComponent('Elevación y apoyo')}`} className='motion-enter motion-delay-4 group flex min-w-0 items-center gap-3 rounded-xl bg-surface-muted p-4 transition-colors hover:bg-surface-selected focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'>
                                 <div>
                                     <Construction className='w-[1.5rem] h-[1.5rem] text-primary font-semibold' />
                                 </div>
                                 <div>
-                                    <p className='text-caption text-primary'>
+                                    <p className='text-caption font-semibold text-primary'>
                                         Elevación y apoyo
                                     </p>
-                                    <p className='text-label text-text-muted'>
-                                        Explorar categoría
+                                    <p className='text-label text-text-muted group-hover:text-text'>
+                                        Ver equipos de esta categoría
                                     </p>
                                 </div>
-                            </div>
+                            </Link>
                         </div>
                     </div>
                     <div id='catalogo' className='w-full flex flex-col gap-6'>
@@ -258,51 +258,66 @@ export const Home = () => {
                 </div>
             </section>
             {/* Sección CTA */}
-            <section className='w-full h-auto'>
-                <div className='mx-auto w-full max-w-[90rem] flex flex-col gap-10 px-4 pb-12 sm:px-8 lg:gap-12 lg:px-16 lg:pb-16'>
-                    <div id='como-funciona' className='w-full scroll-mt-6 grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-4'>
-                        <div className='flex gap-[1rem]'>
-                            <div>
-                                <span className='text-success text-label font-semibold'>01</span>
+            <section className='w-full bg-background'>
+                <div className='mx-auto flex w-full max-w-[90rem] flex-col gap-10 px-4 py-12 sm:px-8 lg:gap-12 lg:px-16 lg:py-16'>
+                    <section id='como-funciona' aria-labelledby='como-funciona-title' className='scroll-mt-24'>
+                        <div className='mb-6 max-w-2xl'>
+                            <p className='text-caption font-semibold uppercase tracking-wide text-success'>Claro y directo</p>
+                            <h2 id='como-funciona-title' className='mt-2 text-title-mobile font-semibold text-text md:text-title-desktop'>¿Cómo funciona Rentia?</h2>
+                            <p className='mt-3 text-body-lg text-text-muted'>Conectamos a quienes necesitan un equipo con las personas que lo ofrecen. La búsqueda es aquí; los detalles del alquiler se acuerdan directamente entre ustedes.</p>
+                        </div>
+                        <div className='grid gap-5 lg:grid-cols-2'>
+                            <div className='surface-card rounded-2xl border border-border bg-surface p-5 sm:p-6'>
+                                <h3 className='text-heading-md font-semibold text-text'>Si buscas un equipo</h3>
+                                <ol className='mt-5 space-y-5'>
+                                    <li className='flex gap-4'>
+                                        <span className='flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-small font-semibold text-primary-foreground'>1</span>
+                                        <div><p className='font-semibold text-text'>Busca y compara</p><p className='mt-1 text-small leading-relaxed text-text-muted'>Filtra por tipo, municipio y disponibilidad; revisa fotos, ubicación aproximada y detalles de cada publicación.</p></div>
+                                    </li>
+                                    <li className='flex gap-4'>
+                                        <span className='flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-small font-semibold text-primary-foreground'>2</span>
+                                        <div><p className='font-semibold text-text'>Contacta al arrendador</p><p className='mt-1 text-small leading-relaxed text-text-muted'>Inicia sesión para ver las opciones de contacto que el arrendador haya autorizado y pregúntale por el equipo.</p></div>
+                                    </li>
+                                    <li className='flex gap-4'>
+                                        <span className='flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-small font-semibold text-primary-foreground'>3</span>
+                                        <div><p className='font-semibold text-text'>Acuerden el alquiler</p><p className='mt-1 text-small leading-relaxed text-text-muted'>Confirmen directamente precio, fechas, entrega y condiciones. Después de tu experiencia, puedes dejar una valoración.</p></div>
+                                    </li>
+                                </ol>
+                                <Link to='/catalogo' className='mt-6 inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 text-label font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'>Explorar equipos <ArrowRight size={16} aria-hidden='true' /></Link>
                             </div>
-                            <div className='flex flex-col'>
-                                <p className='text-text text-body font-semibold'>Encuentra tu equipo</p>
-                                <p className='text-text-muted text-small'>Explora por categoría y cercanía.</p>
+                            <div className='surface-card rounded-2xl border border-border bg-surface p-5 sm:p-6'>
+                                <h3 className='text-heading-md font-semibold text-text'>Si ofreces un equipo</h3>
+                                <ol className='mt-5 space-y-5'>
+                                    <li className='flex gap-4'>
+                                        <span className='flex size-9 shrink-0 items-center justify-center rounded-full bg-success-subtle text-small font-semibold text-success'>1</span>
+                                        <div><p className='font-semibold text-text'>Crea tu cuenta de arrendador</p><p className='mt-1 text-small leading-relaxed text-text-muted'>Completa tu perfil y configura si autorizas que usuarios con sesión vean tu teléfono.</p></div>
+                                    </li>
+                                    <li className='flex gap-4'>
+                                        <span className='flex size-9 shrink-0 items-center justify-center rounded-full bg-success-subtle text-small font-semibold text-success'>2</span>
+                                        <div><p className='font-semibold text-text'>Publica y mantén al día tu equipo</p><p className='mt-1 text-small leading-relaxed text-text-muted'>Añade fotos, descripción y municipio; actualiza la disponibilidad cuando cambie.</p></div>
+                                    </li>
+                                    <li className='flex gap-4'>
+                                        <span className='flex size-9 shrink-0 items-center justify-center rounded-full bg-success-subtle text-small font-semibold text-success'>3</span>
+                                        <div><p className='font-semibold text-text'>Conversa y coordina directamente</p><p className='mt-1 text-small leading-relaxed text-text-muted'>Responde a las personas interesadas y acuerda con ellas el precio, las fechas y las condiciones.</p></div>
+                                    </li>
+                                </ol>
                             </div>
                         </div>
-                        <div className='flex gap-[1rem]'>
-                            <div>
-                                <span className='text-success text-label font-semibold'>02</span>
-                            </div>
-                            <div className='flex flex-col'>
-                                <p className='text-text text-body font-semibold'>Habla con el propietario</p>
-                                <p className='text-text-muted text-small'>Contacta por WhatsApp o llamada.</p>
-                            </div>
-                        </div>
-                        <div className='flex items-center justify-start gap-[1rem]'>
-                            <div>
-                                <span className='text-success text-label font-semibold'>03</span>
-                            </div>
-                            <div className='flex flex-col'>
-                                <p className='text-text text-body font-semibold'>Comparte tu experiencia</p>
-                                <p className='text-text-muted text-small'>Tu valoración fortalece la comunidad.</p>
-                            </div>
-                        </div>
-                    </div>
+                    </section>
                     <div className='w-full'>
                         <div className='w-full rounded-3xl bg-primary p-6 sm:p-8 lg:p-11'>
                             <div>
-                                <p className='text-text-inverse-muted text-label uppercase'>Para los que mueven el llano</p>
+                                <p className='text-text-inverse-muted text-label uppercase'>Para arrendadores de la región</p>
                             </div>
                             <div className='flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between'>
                                 <div>
-                                    <h2 className='text-text-inverse text-title-mobile md:text-title-desktop'>Tus vehículos tienen mucho por hacer.</h2>
-                                    <p className='text-text-inverse-muted text-body'>Publica tus equipos y conecta con nuevos clientes en tu región.</p>
+                                    <h2 className='text-text-inverse text-title-mobile md:text-title-desktop'>¿Tienes un equipo para alquilar?</h2>
+                                    <p className='text-text-inverse-muted text-body'>Publícalo en Rentia y conecta con personas que buscan equipos en Casanare.</p>
                                 </div>
                                 <div>
                                     <Link to='/crear-cuenta' className='flex h-12 w-full items-center justify-center gap-3 rounded-lg bg-surface px-5 py-4 cursor-pointer transition-transform hover:-translate-y-0.5 sm:w-[14.3125rem]'>
                                         <span className='whitespace-nowrap text-label text-text font-semibold'>
-                                            Quiero publicar mi equipo
+                                            Crear cuenta de arrendador
                                         </span>
                                         <ArrowUpRight className='w-[1.125rem] shrink-0 text-text' />
                                     </Link>

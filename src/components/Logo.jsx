@@ -7,7 +7,7 @@ export default function Logo({ inverse = false, className = '' }) {
       <img
         src={rentiaLogo}
         alt="Rentia"
-        className={`h-auto w-24 object-contain md:w-28 ${inverse ? 'brightness-0 invert' : ''}`}
+        className={`brand-logo h-auto w-24 object-contain md:w-28 ${inverse ? 'brightness-0 invert' : ''}`}
       />
     </Link>
   );

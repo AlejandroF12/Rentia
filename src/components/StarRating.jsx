@@ -16,7 +16,7 @@ export default function StarRating({ size = 16, className = '', value = 5, onCha
             aria-checked={i + 1 === value}
             disabled={disabled}
             onClick={() => onChange(i + 1)}
-            className="rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed"
+            className="flex size-11 items-center justify-center rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed sm:size-9"
           >
             <Star size={size} fill={i < roundedValue ? 'currentColor' : 'none'} strokeWidth={i < roundedValue ? 0 : 1.5} aria-hidden="true" />
           </button>

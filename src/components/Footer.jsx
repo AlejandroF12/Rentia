@@ -16,9 +16,9 @@ export default function Footer({
         <div className="mt-8 flex flex-col gap-3 text-small text-text-muted md:flex-row md:items-center md:justify-between">
           <p>{copyright}</p>
           <nav aria-label="Información legal" className="flex flex-wrap gap-x-4 gap-y-2">
-            <Link to="/privacidad" className="hover:text-text">Privacidad</Link>
-            <Link to="/terminos" className="hover:text-text">Términos</Link>
-            <Link to="/normas" className="hover:text-text">Normas</Link>
+            <Link to="/privacidad" className="inline-flex min-h-11 items-center hover:text-text">Privacidad</Link>
+            <Link to="/terminos" className="inline-flex min-h-11 items-center hover:text-text">Términos</Link>
+            <Link to="/normas" className="inline-flex min-h-11 items-center hover:text-text">Normas</Link>
           </nav>
         </div>
       </div>
