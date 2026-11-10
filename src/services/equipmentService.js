@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { loadPublicEquipmentOwner } from './profileService';
 
 const imageUrl = (path) => supabase.storage.from('equipment-images').getPublicUrl(path).data.publicUrl;
 
@@ -209,14 +210,7 @@ export async function loadEquipmentById(equipmentId) {
 }
 
 export async function loadEquipmentOwner(ownerId) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, full_name, phone, municipality')
-    .eq('id', ownerId)
-    .single();
-
-  if (error) throw new Error(`No se pudo cargar el propietario: ${error.message}`);
-  return data;
+  return loadPublicEquipmentOwner(ownerId);
 }
 
 export async function loadOwnerEquipmentById(equipmentId, ownerId, { includeEliminated = false } = {}) {

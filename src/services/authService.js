@@ -5,7 +5,7 @@ const APP_URL = 'https://rentia-ruddy.vercel.app';
 export async function loadProfile(userId) {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, email, phone, municipality, role, status, created_at, suspension_reason, suspended_at')
+    .select('id, full_name, email, phone, municipality, role, status, contact_authorized, created_at, suspension_reason, suspended_at')
     .eq('id', userId)
     .single();
 
@@ -23,12 +23,12 @@ export async function signIn(email, password, remember) {
   return data;
 }
 
-export async function signUp({ email, password, fullName, phone, role }) {
+export async function signUp({ email, password, fullName, phone, role, contactAuthorized }) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { full_name: fullName, phone, role },
+      data: { full_name: fullName, phone, role, contact_authorized: role === 'arrendador' && contactAuthorized === true },
       emailRedirectTo: `${APP_URL}/`,
     },
   });

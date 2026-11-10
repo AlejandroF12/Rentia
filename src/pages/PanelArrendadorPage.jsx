@@ -152,6 +152,18 @@ export default function PanelArrendadorPage() {
         }
       />
 
+      {profile?.contact_authorized !== true && (
+        <div role="status" className="mt-6">
+          <InfoBox tone="warning" title="Tu celular no está habilitado para recibir contactos">
+            Los clientes con sesión activa no podrán ver tu teléfono para llamarte o escribirte por WhatsApp. Si quieres habilitarlo, configúralo en{' '}
+            <Link to="/arrendador/perfil" className="font-semibold underline underline-offset-2">
+              Mi perfil
+            </Link>
+            .
+          </InfoBox>
+        </div>
+      )}
+
       <div className="mt-6 grid grid-cols-3 gap-3 md:mt-8 md:gap-5">
         <Estadistica valor={equipment.length} etiqueta="Equipos" />
         <Estadistica valor={published.length} etiqueta="Publicados" />

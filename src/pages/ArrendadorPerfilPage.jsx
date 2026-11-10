@@ -4,18 +4,20 @@ import Card from '../components/Card';
 import Avatar from '../components/Avatar';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
+import Checkbox from '../components/Checkbox';
 import Field from '../components/Field';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { updateClientProfile } from '../services/clientService';
 
 export default function ArrendadorPerfilPage() {
-  const { profile, session } = useAuth();
+  const { profile, session, refreshProfile } = useAuth();
   const metadata = session?.user?.user_metadata || {};
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(profile?.full_name || metadata.full_name || '');
   const [phone, setPhone] = useState(profile?.phone || metadata.phone || '');
   const [municipality, setMunicipality] = useState(profile?.municipality || '');
+  const [contactAuthorized, setContactAuthorized] = useState(Boolean(profile?.contact_authorized));
   const [error, setError] = useState('');
   const [saved, setSaved] = useState('');
   const [saving, setSaving] = useState(false);
@@ -30,7 +32,8 @@ export default function ArrendadorPerfilPage() {
     }
     setSaving(true);
     try {
-      await updateClientProfile(session.user.id, { fullName, phone, municipality });
+      await updateClientProfile(session.user.id, { fullName, phone, municipality, contactAuthorized });
+      await refreshProfile();
       setSaved('Perfil actualizado correctamente.');
       setEditing(false);
     } catch (saveError) {
@@ -60,6 +63,7 @@ export default function ArrendadorPerfilPage() {
         <dl className="mt-5 space-y-4 border-t border-border pt-5">
           <div><dt className="text-caption text-text-muted">Correo electrónico</dt><dd className="mt-1 text-label text-text">{email}</dd></div>
           <div><dt className="text-caption text-text-muted">Celular</dt><dd className="mt-1 text-label text-text">{phone || 'No registrado'}</dd></div>
+          <div><dt className="text-caption text-text-muted">Visibilidad del celular</dt><dd className="mt-1 text-label text-text">{profile?.contact_authorized ? 'Autorizado para usuarios con sesión activa' : 'No autorizado'}</dd></div>
           <div><dt className="text-caption text-text-muted">Miembro desde</dt><dd className="mt-1 text-label text-text">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' }) : 'No disponible'}</dd></div>
         </dl>
         {saved && <p role="status" className="mt-5 text-small text-success">{saved}</p>}
@@ -72,6 +76,9 @@ export default function ArrendadorPerfilPage() {
             <Field id="arrendador-perfil-nombre" label="Nombre completo" value={fullName} onChange={(event) => setFullName(event.target.value)} />
             <Field id="arrendador-perfil-celular" label="Celular" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} />
             <Field id="arrendador-perfil-municipio" label="Municipio" value={municipality} onChange={(event) => setMunicipality(event.target.value)} />
+            <Checkbox id="perfil-autoriza-celular" checked={contactAuthorized} onChange={(event) => setContactAuthorized(event.target.checked)}>
+              Autorizo mostrar mi nombre y celular a usuarios con sesión activa cuando tenga un equipo publicado. Puedo retirar esta autorización desde aquí.
+            </Checkbox>
             {error && <p role="alert" className="text-small text-danger">{error}</p>}
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button type="submit" size="lg" disabled={saving}>{saving ? 'Guardando...' : 'Guardar cambios'}</Button>

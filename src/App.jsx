@@ -1,52 +1,53 @@
 import { MainLayout } from './layouts/MainLayout'
-import { Home } from './pages/Home'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { useAuth } from './context/AuthContext'
-import CatalogoPage from './pages/CatalogoPage'
-import CrearCuentaPage from './pages/CrearCuentaPage'
-import DetalleEquipoPage from './pages/DetalleEquipoPage'
-import IngresarPage from './pages/IngresarPage'
-import InstruccionesRecuperacionPage from './pages/InstruccionesRecuperacionPage'
-import MenuAdministracionPage from './pages/MenuAdministracionPage'
-import MenuArrendadorPage from './pages/MenuArrendadorPage'
-import MenuClientePage from './pages/MenuClientePage'
-import MenuPublicoPage from './pages/MenuPublicoPage'
-import NuevaContrasenaPage from './pages/NuevaContrasenaPage'
-import PerfilPublicoPage from './pages/PerfilPublicoPage'
-import RecuperarAccesoPage from './pages/RecuperarAccesoPage'
-import PanelArrendadorPage from './pages/PanelArrendadorPage'
-import AgregarVehiculoPage from './pages/AgregarVehiculoPage'
-import EditarVehiculoPage from './pages/EditarVehiculoPage'
-import ValidacionPublicarPage from './pages/ValidacionPublicarPage'
-import GestionarPublicacionPage from './pages/GestionarPublicacionPage'
-import ConfirmarEliminacionPage from './pages/ConfirmarEliminacionPage'
-import MiEspacioClientePage from './pages/MiEspacioClientePage'
-import SinFavoritosPage from './pages/SinFavoritosPage'
-import AntesDeValorarPage from './pages/AntesDeValorarPage'
-import ClienteCalificaArrendadorPage from './pages/ClienteCalificaArrendadorPage'
-import ArrendadorCalificaClientePage from './pages/ArrendadorCalificaClientePage'
-import AdminUsuariosPage from './pages/AdminUsuariosPage'
-import AdminPublicacionesPage from './pages/AdminPublicacionesPage'
-import AdminReportesPage from './pages/AdminReportesPage'
-import AdminResumenPage from './pages/AdminResumenPage'
-import CatalogoSinResultadosPage from './pages/CatalogoSinResultadosPage'
-import CatalogoErrorPage from './pages/CatalogoErrorPage'
-import CuentaSuspendidaPage from './pages/CuentaSuspendidaPage'
-import ReportarPublicacionPage from './pages/ReportarPublicacionPage'
-import ReporteEnviadoPage from './pages/ReporteEnviadoPage'
-import ReportarValoracionPage from './pages/ReportarValoracionPage'
-import TerminosPage from './pages/TerminosPage'
-import PrivacidadPage from './pages/PrivacidadPage'
-import NormasPage from './pages/NormasPage'
-import ClientePerfilPage from './pages/ClientePerfilPage'
-import ClienteValoracionesPage from './pages/ClienteValoracionesPage'
-import ArrendadorValoracionesPage from './pages/ArrendadorValoracionesPage'
-import ArrendadorPerfilPage from './pages/ArrendadorPerfilPage'
-import ResumenArrendadorPage from './pages/ResumenArrendadorPage'
-import PreferenciasPage from './pages/PreferenciasPage'
-import AyudaPage from './pages/AyudaPage'
-import AdminApelacionesPage from './pages/AdminApelacionesPage'
+
+const Home = lazy(() => import('./pages/Home').then((module) => ({ default: module.Home })))
+const CatalogoPage = lazy(() => import('./pages/CatalogoPage'))
+const CrearCuentaPage = lazy(() => import('./pages/CrearCuentaPage'))
+const DetalleEquipoPage = lazy(() => import('./pages/DetalleEquipoPage'))
+const IngresarPage = lazy(() => import('./pages/IngresarPage'))
+const InstruccionesRecuperacionPage = lazy(() => import('./pages/InstruccionesRecuperacionPage'))
+const MenuAdministracionPage = lazy(() => import('./pages/MenuAdministracionPage'))
+const MenuArrendadorPage = lazy(() => import('./pages/MenuArrendadorPage'))
+const MenuClientePage = lazy(() => import('./pages/MenuClientePage'))
+const MenuPublicoPage = lazy(() => import('./pages/MenuPublicoPage'))
+const NuevaContrasenaPage = lazy(() => import('./pages/NuevaContrasenaPage'))
+const PerfilPublicoPage = lazy(() => import('./pages/PerfilPublicoPage'))
+const RecuperarAccesoPage = lazy(() => import('./pages/RecuperarAccesoPage'))
+const PanelArrendadorPage = lazy(() => import('./pages/PanelArrendadorPage'))
+const AgregarVehiculoPage = lazy(() => import('./pages/AgregarVehiculoPage'))
+const EditarVehiculoPage = lazy(() => import('./pages/EditarVehiculoPage'))
+const ValidacionPublicarPage = lazy(() => import('./pages/ValidacionPublicarPage'))
+const GestionarPublicacionPage = lazy(() => import('./pages/GestionarPublicacionPage'))
+const ConfirmarEliminacionPage = lazy(() => import('./pages/ConfirmarEliminacionPage'))
+const MiEspacioClientePage = lazy(() => import('./pages/MiEspacioClientePage'))
+const SinFavoritosPage = lazy(() => import('./pages/SinFavoritosPage'))
+const AntesDeValorarPage = lazy(() => import('./pages/AntesDeValorarPage'))
+const ClienteCalificaArrendadorPage = lazy(() => import('./pages/ClienteCalificaArrendadorPage'))
+const ArrendadorCalificaClientePage = lazy(() => import('./pages/ArrendadorCalificaClientePage'))
+const AdminUsuariosPage = lazy(() => import('./pages/AdminUsuariosPage'))
+const AdminPublicacionesPage = lazy(() => import('./pages/AdminPublicacionesPage'))
+const AdminReportesPage = lazy(() => import('./pages/AdminReportesPage'))
+const AdminResumenPage = lazy(() => import('./pages/AdminResumenPage'))
+const CatalogoSinResultadosPage = lazy(() => import('./pages/CatalogoSinResultadosPage'))
+const CatalogoErrorPage = lazy(() => import('./pages/CatalogoErrorPage'))
+const CuentaSuspendidaPage = lazy(() => import('./pages/CuentaSuspendidaPage'))
+const ReportarPublicacionPage = lazy(() => import('./pages/ReportarPublicacionPage'))
+const ReporteEnviadoPage = lazy(() => import('./pages/ReporteEnviadoPage'))
+const ReportarValoracionPage = lazy(() => import('./pages/ReportarValoracionPage'))
+const TerminosPage = lazy(() => import('./pages/TerminosPage'))
+const PrivacidadPage = lazy(() => import('./pages/PrivacidadPage'))
+const NormasPage = lazy(() => import('./pages/NormasPage'))
+const ClientePerfilPage = lazy(() => import('./pages/ClientePerfilPage'))
+const ClienteValoracionesPage = lazy(() => import('./pages/ClienteValoracionesPage'))
+const ArrendadorValoracionesPage = lazy(() => import('./pages/ArrendadorValoracionesPage'))
+const ArrendadorPerfilPage = lazy(() => import('./pages/ArrendadorPerfilPage'))
+const ResumenArrendadorPage = lazy(() => import('./pages/ResumenArrendadorPage'))
+const PreferenciasPage = lazy(() => import('./pages/PreferenciasPage'))
+const AyudaPage = lazy(() => import('./pages/AyudaPage'))
+const AdminApelacionesPage = lazy(() => import('./pages/AdminApelacionesPage'))
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
@@ -122,7 +123,8 @@ function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <Routes>
+      <Suspense fallback={<div className="min-h-screen bg-surface" aria-busy="true" />}>
+        <Routes>
         <Route path='/' element={<MainLayout><Home /></MainLayout>} />
         <Route path='/catalogo' element={<MainLayout><CatalogoPage /></MainLayout>} />
         <Route path='/detalle-equipo' element={<MainLayout><DetalleEquipoPage /></MainLayout>} />
@@ -185,7 +187,8 @@ function App() {
         <Route path='/configuracion' element={<MainLayout><PreferenciasPage /></MainLayout>} />
 
         <Route path='*' element={<Navigate to='/' replace />} />
-      </Routes>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

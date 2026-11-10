@@ -45,18 +45,24 @@ function TarjetaPropietario({ owner, equipmentId }) {
 
       <div className="mt-4 space-y-3">
         <Button type="button" onClick={handleWhatsApp} size="lg" fullWidth icon={MessageCircle} trailingIcon={ArrowUpRight} disabled={Boolean(session && !phoneDigits)}>
-          {session ? 'Contactar por WhatsApp' : 'Inicia sesión para contactar'}
+          {session ? (phoneDigits ? 'Contactar por WhatsApp' : 'Contacto no disponible') : 'Inicia sesión para contactar'}
         </Button>
         <Button type="button" onClick={handleCall} variant="secondary" size="lg" fullWidth icon={Phone} trailingIcon={ArrowUpRight} disabled={Boolean(session && !phone)}>
-          {session ? `Llamar a ${ownerName}` : 'Inicia sesión para llamar'}
+          {session ? (phone ? `Llamar a ${ownerName}` : 'Contacto no disponible') : 'Inicia sesión para llamar'}
         </Button>
       </div>
 
-      <InfoBox icon={ArrowUpRight} className="mt-4">
-        El contacto y la negociación son directos con el propietario, fuera de Rentia.
-      </InfoBox>
+      {phone ? (
+        <InfoBox icon={ArrowUpRight} className="mt-4">
+          El contacto y la negociación son directos con el propietario, fuera de Rentia.
+        </InfoBox>
+      ) : (
+        <InfoBox className="mt-4">
+          El contacto del propietario no está disponible para esta publicación.
+        </InfoBox>
+      )}
 
-          <a href={owner?.id ? `/perfil-publico?ownerId=${owner.id}` : '#'} className="mt-4 inline-block text-small font-semibold text-text">Ver perfil y valoraciones →</a>
+          {owner?.id && <a href={`/perfil-publico?ownerId=${owner.id}`} className="mt-4 inline-block text-small font-semibold text-text">Ver perfil y valoraciones →</a>}
           {profile?.role === 'cliente' && owner?.id && (
             <Link
               to={`/valoraciones/cliente-a-arrendador?targetUserId=${encodeURIComponent(owner.id)}&equipmentId=${encodeURIComponent(equipmentId)}&reviewType=equipo`}

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { loadPublicEquipmentOwner, loadPublicProfile as fetchPublicProfile, loadPublicProfiles } from './profileService';
 
 export async function loadClientFavorites(userId) {
   const { data, error } = await supabase
@@ -33,16 +34,19 @@ export async function loadClientFavorites(userId) {
   });
 }
 
-export async function updateClientProfile(userId, { fullName, phone, municipality }) {
+export async function updateClientProfile(userId, { fullName, phone, municipality, contactAuthorized }) {
+  const updates = {
+    full_name: fullName.trim(),
+    phone: phone.trim() || null,
+    municipality: municipality.trim() || null,
+  };
+  if (typeof contactAuthorized === 'boolean') updates.contact_authorized = contactAuthorized;
+
   const { data, error } = await supabase
     .from('profiles')
-    .update({
-      full_name: fullName.trim(),
-      phone: phone.trim() || null,
-      municipality: municipality.trim() || null,
-    })
+    .update(updates)
     .eq('id', userId)
-    .select('id, full_name, email, phone, municipality, role, status, created_at')
+    .select('id, full_name, email, phone, municipality, role, status, contact_authorized, created_at')
     .single();
 
   if (error) throw new Error(`No se pudo actualizar el perfil: ${error.message}`);
@@ -100,7 +104,7 @@ export async function loadClientReport(reportId, reporterId) {
 export async function loadClientReviews(userId) {
   const { data, error } = await supabase
     .from('reviews')
-    .select('id, rating, comment, highlighted_aspects, review_type, created_at, target:target_user_id(id, full_name, role), equipment:equipment_id(id, name)')
+    .select('id, rating, comment, highlighted_aspects, review_type, created_at, target_user_id, equipment:equipment_id(id, name)')
     .eq('author_id', userId)
     .order('created_at', { ascending: false });
 
@@ -108,19 +112,23 @@ export async function loadClientReviews(userId) {
     throw new Error(`No se pudieron cargar las valoraciones: ${error.message}`);
   }
 
-  return data ?? [];
+  const profiles = await loadPublicProfiles((data ?? []).map((review) => review.target_user_id));
+  return (data ?? []).map(({ target_user_id: targetUserId, ...review }) => ({
+    ...review,
+    target: profiles.get(targetUserId) ?? null,
+  }));
 }
 
 export async function loadClientReviewSummary(userId) {
   const [sentResult, receivedResult] = await Promise.all([
     supabase
       .from('reviews')
-      .select('id, rating, comment, highlighted_aspects, review_type, created_at, target:target_user_id(id, full_name, role), equipment:equipment_id(id, name)')
+      .select('id, rating, comment, highlighted_aspects, review_type, created_at, target_user_id, equipment:equipment_id(id, name)')
       .eq('author_id', userId)
       .order('created_at', { ascending: false }),
     supabase
       .from('reviews')
-      .select('id, rating, comment, highlighted_aspects, review_type, created_at, author:author_id(full_name, role), equipment:equipment_id(id, name)')
+      .select('id, rating, comment, highlighted_aspects, review_type, created_at, author_id, equipment:equipment_id(id, name)')
       .eq('target_user_id', userId)
       .eq('is_published', true)
       .order('created_at', { ascending: false }),
@@ -133,26 +141,34 @@ export async function loadClientReviewSummary(userId) {
     throw new Error(`No se pudieron cargar las valoraciones recibidas: ${receivedResult.error.message}`);
   }
 
-  const received = receivedResult.data ?? [];
+  const profileIds = [
+    ...(sentResult.data ?? []).map((review) => review.target_user_id),
+    ...(receivedResult.data ?? []).map((review) => review.author_id),
+  ];
+  const profiles = await loadPublicProfiles(profileIds);
+  const sent = (sentResult.data ?? []).map(({ target_user_id: targetUserId, ...review }) => ({
+    ...review,
+    target: profiles.get(targetUserId) ?? null,
+  }));
+  const received = (receivedResult.data ?? []).map(({ author_id: authorId, ...review }) => ({
+    ...review,
+    author: profiles.get(authorId) ?? null,
+  }));
   const average = received.length
     ? received.reduce((total, review) => total + review.rating, 0) / received.length
     : null;
 
   return {
-    sent: sentResult.data ?? [],
+    sent,
     received,
     average,
   };
 }
 
 export async function loadPublicProfile(userId) {
-  const [profileResult, equipmentResult, reviewsResult] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('id, full_name, phone, municipality, created_at, role')
-      .eq('id', userId)
-      .eq('role', 'arrendador')
-      .single(),
+  const [profile, contact, equipmentResult, reviewsResult] = await Promise.all([
+    fetchPublicProfile(userId),
+    loadPublicEquipmentOwner(userId),
     supabase
       .from('equipment')
       .select('id, name, category, municipality, is_available, publication_status')
@@ -161,30 +177,31 @@ export async function loadPublicProfile(userId) {
       .order('created_at', { ascending: false }),
     supabase
       .from('reviews')
-      .select('id, rating, comment, highlighted_aspects, review_type, created_at, author:author_id(full_name)')
+      .select('id, rating, comment, highlighted_aspects, review_type, created_at, author_id')
       .eq('target_user_id', userId)
       .eq('is_published', true)
       .order('created_at', { ascending: false }),
   ]);
 
-  if (profileResult.error) throw new Error(`No se pudo cargar el perfil público: ${profileResult.error.message}`);
   if (equipmentResult.error) throw new Error(`No se pudieron cargar los equipos del arrendador: ${equipmentResult.error.message}`);
   if (reviewsResult.error) throw new Error(`No se pudieron cargar las valoraciones: ${reviewsResult.error.message}`);
+  const profiles = await loadPublicProfiles((reviewsResult.data ?? []).map((review) => review.author_id));
+
+  if (profile.role !== 'arrendador') throw new Error('El perfil solicitado no corresponde a un arrendador.');
 
   return {
-    profile: profileResult.data,
+    profile: { ...profile, phone: contact?.phone || null },
     equipment: equipmentResult.data ?? [],
-    reviews: reviewsResult.data ?? [],
+    reviews: (reviewsResult.data ?? []).map(({ author_id: authorId, ...review }) => ({
+      ...review,
+      author: profiles.get(authorId) ?? null,
+    })),
   };
 }
 
 export async function loadReviewContext(targetUserId, equipmentId) {
   const [targetResult, equipmentResult] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('id, full_name, municipality, role')
-      .eq('id', targetUserId)
-      .single(),
+    fetchPublicProfile(targetUserId),
     supabase
       .from('equipment')
       .select('id, name, municipality, owner_id')
@@ -192,11 +209,10 @@ export async function loadReviewContext(targetUserId, equipmentId) {
       .single(),
   ]);
 
-  if (targetResult.error) throw new Error(`No se pudo cargar la persona a valorar: ${targetResult.error.message}`);
   if (equipmentResult.error) throw new Error(`No se pudo cargar el equipo relacionado: ${equipmentResult.error.message}`);
 
   return {
-    target: targetResult.data,
+    target: targetResult,
     equipment: equipmentResult.data,
   };
 }
@@ -230,7 +246,7 @@ export async function createReview({ authorId, targetUserId, equipmentId, rating
 export async function loadReviewForEdit(authorId, targetUserId, equipmentId, reviewType) {
   const { data, error } = await supabase
     .from('reviews')
-    .select('id, rating, comment, highlighted_aspects, review_type, target:target_user_id(id, full_name, municipality, role), equipment:equipment_id(id, name, municipality)')
+    .select('id, rating, comment, highlighted_aspects, review_type, equipment:equipment_id(id, name, municipality)')
     .eq('author_id', authorId)
     .eq('target_user_id', targetUserId)
     .eq('equipment_id', equipmentId)

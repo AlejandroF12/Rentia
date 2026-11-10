@@ -3,7 +3,6 @@ import { Check, ImagePlus, Lightbulb, Save, X } from 'lucide-react';
 import Badge, { EstadoBadge } from './Badge';
 import Button from './Button';
 import Card from './Card';
-import Checkbox from './Checkbox';
 import Field from './Field';
 import ImagenNoEncontrada from './ImagenNoEncontrada';
 import InfoBox from './InfoBox';
@@ -196,7 +195,7 @@ function SeccionUbicacion({ revision, errores, location, municipality, sector, o
   );
 }
 
-function PanelDisponibilidad({ equipo, revision, disponible, onAvailabilityChange }) {
+function PanelDisponibilidad({ revision, disponible, onAvailabilityChange }) {
   return (
     <Card className="p-5">
       <h2 className="text-body-lg font-semibold text-text md:text-heading-sm">Disponibilidad</h2>
@@ -214,9 +213,10 @@ function PanelDisponibilidad({ equipo, revision, disponible, onAvailabilityChang
           </>
         )}
       </p>
-      <Checkbox id="autoriza-celular" defaultChecked className={`mt-4 text-small ${revision ? '' : 'lg:hidden'}`}>
-        Autorizo mostrar mi celular {equipo.celular || 'registrado en mi perfil'} para WhatsApp y llamadas.
-      </Checkbox>
+      <p className="mt-4 text-small text-text-muted">
+        El celular solo se comparte con usuarios con sesión activa si autorizas su visibilidad en{' '}
+        <Link to="/arrendador/perfil" className="font-semibold text-primary underline">Mi perfil</Link>.
+      </p>
     </Card>
   );
 }
@@ -476,7 +476,7 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
         <aside className="space-y-4">
           {revision && <div className="hidden lg:block">{insignia}</div>}
           <div className="hidden lg:block"><PanelResumen equipo={{ ...equipo, disponible }} modo={modo} ownerName={profile?.full_name} /></div>
-          <PanelDisponibilidad equipo={equipo} revision={revision} disponible={disponible} onAvailabilityChange={() => setDisponible((value) => !value)} />
+          <PanelDisponibilidad revision={revision} disponible={disponible} onAvailabilityChange={() => setDisponible((value) => !value)} />
           <PanelAyuda modo={modo} />
         </aside>
       </div>

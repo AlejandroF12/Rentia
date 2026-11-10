@@ -10,10 +10,10 @@ import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { getPasswordError } from '../utils/passwordValidation';
 
-function OpcionRol({ valor, icono: Icono, titulo, descripcion, marcado = false }) {
+function OpcionRol({ valor, icono: Icono, titulo, descripcion, marcado = false, onChange }) {
   return (
     <label className="relative flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-surface p-4 has-checked:border-2 has-checked:border-primary has-checked:bg-surface-muted lg:flex-col lg:gap-4">
-      <input type="radio" name="rol" value={valor} defaultChecked={marcado} className="peer sr-only" />
+      <input type="radio" name="rol" value={valor} checked={marcado} onChange={() => onChange(valor)} className="peer sr-only" />
       <span
         aria-hidden="true"
         className="mt-0.5 size-4 shrink-0 rounded-full border border-border bg-surface peer-checked:border-[5px] peer-checked:border-primary lg:absolute lg:right-4 lg:top-4 lg:mt-0"
@@ -32,6 +32,7 @@ export default function CrearCuentaPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('arrendador');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -55,11 +56,12 @@ export default function CrearCuentaPage() {
         password: formData.get('clave'),
         fullName: formData.get('nombre'),
         phone: formData.get('celular'),
-        role: formData.get('rol'),
+        role: selectedRole,
+        contactAuthorized: selectedRole === 'arrendador' && formData.get('mostrar-celular') === 'on',
       });
 
       if (session) {
-        navigate(formData.get('rol') === 'arrendador' ? '/arrendador/equipos' : '/cliente');
+        navigate(selectedRole === 'arrendador' ? '/arrendador/equipos' : '/cliente');
       } else {
         setMessage('Cuenta creada. Revisa tu correo para confirmar el acceso.');
       }
@@ -80,8 +82,8 @@ export default function CrearCuentaPage() {
         <fieldset>
           <legend className="mb-3 text-label font-semibold text-text">¿Cómo quieres usar Rentia?</legend>
           <div className="grid gap-3 lg:grid-cols-2">
-            <OpcionRol valor="cliente" icono={User} titulo="Soy cliente" descripcion="Busco equipos" />
-            <OpcionRol valor="arrendador" icono={Tractor} titulo="Soy arrendador" descripcion="Publico mis equipos" marcado />
+            <OpcionRol valor="cliente" icono={User} titulo="Soy cliente" descripcion="Busco equipos" marcado={selectedRole === 'cliente'} onChange={setSelectedRole} />
+            <OpcionRol valor="arrendador" icono={Tractor} titulo="Soy arrendador" descripcion="Publico mis equipos" marcado={selectedRole === 'arrendador'} onChange={setSelectedRole} />
           </div>
         </fieldset>
 
@@ -102,9 +104,11 @@ export default function CrearCuentaPage() {
           <Checkbox id="terminos" name="terminos" className="text-small">
             Acepto los Términos de uso y la Política de privacidad de Rentia.
           </Checkbox>
-          <Checkbox id="mostrar-celular" name="mostrar-celular" className="text-small">
-            Autorizo mostrar mi celular en mis publicaciones para recibir WhatsApp y llamadas directas.
-          </Checkbox>
+          {selectedRole === 'arrendador' && (
+            <Checkbox id="mostrar-celular" name="mostrar-celular" className="text-small">
+              Autorizo mostrar mi nombre y celular a usuarios con sesión activa cuando tenga un equipo publicado. Puedo retirar esta autorización desde Mi perfil.
+            </Checkbox>
+          )}
           <p className="text-small text-text-muted">Tu correo no será público. Puedes revisar tus autorizaciones en Mi perfil.</p>
         </div>
 
