@@ -1,0 +1,8 @@
+{
+  "appId": "me.rentiaapp.app",
+  "appName": "Rentia",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

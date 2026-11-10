@@ -81,6 +81,26 @@ Las migraciones abarcan perfiles y roles, publicaciones e imágenes, favoritos, 
 
 Las redirecciones de confirmación de cuenta y recuperación de contraseña están configuradas en [`src/services/authService.js`](./src/services/authService.js). Al usar otro dominio, actualiza allí la URL de la aplicación y añade los dominios correspondientes a las URL permitidas de Supabase Auth.
 
+## Aplicación Android de prueba
+
+La app Android reutiliza la interfaz React compilada y se conecta al mismo proyecto de Supabase. Esta configuración permite instalar una versión privada para pruebas; no publica la app en Google Play.
+
+Requisitos:
+
+- Node.js y dependencias del proyecto instaladas.
+- Android Studio con Android SDK y las herramientas de compilación instaladas.
+- Un teléfono Android con depuración USB activada, o un emulador.
+- `.env.local` configurado con las variables de Supabase antes de compilar.
+
+Flujo de trabajo:
+
+1. Ejecuta `npm install`.
+2. Ejecuta `npm run android:sync` para compilar la web y copiarla al proyecto nativo.
+3. Ejecuta `npm run android:open` para abrir el proyecto en Android Studio.
+4. Espera la sincronización de Gradle, conecta el teléfono con depuración USB autorizada y pulsa **Run** en Android Studio.
+
+Cada cambio de interfaz requiere volver a ejecutar `npm run android:sync` y ejecutar/instalar de nuevo la app. Los cambios de datos en Supabase se comparten con la web sin recompilar. Los enlaces de confirmación de cuenta y recuperación todavía abren el sitio web; el retorno directo desde esos enlaces a la app requiere configurar Android App Links más adelante.
+
 ## Compilar y comprobar
 
 ```bash

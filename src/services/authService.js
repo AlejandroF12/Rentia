@@ -1,6 +1,6 @@
 import { setRememberSession, supabase } from '../lib/supabaseClient';
 
-const APP_URL = 'https://rentia-ruddy.vercel.app';
+const APP_URL = 'https://www.rentiaapp.me';
 
 export async function loadProfile(userId) {
   const { data, error } = await supabase
