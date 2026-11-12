@@ -10,6 +10,7 @@ import { loadAdminOverview, updateAdminEquipmentStatus } from '../services/admin
 
 const labels = { publicada: 'Visible', revision: 'En revisión', suspendida: 'Suspendida', eliminada: 'Eliminada', borrador: 'Borrador', oculta: 'Oculta' };
 const tones = { publicada: 'success', revision: 'warning', suspendida: 'danger', eliminada: 'neutral', borrador: 'neutral', oculta: 'warning' };
+const hiddenByAccount = { suspendido: 'Oculta: cuenta suspendida', eliminado: 'Oculta: cuenta eliminada' };
 
 export default function AdminPublicacionesPage() {
   const [data, setData] = useState({ equipment: [] });
@@ -21,7 +22,7 @@ export default function AdminPublicacionesPage() {
   useEffect(() => { reload(); }, []);
   const equipment = useMemo(() => data.equipment.filter((item) => `${item.name} ${item.owner?.full_name || ''} ${item.municipality}`.toLowerCase().includes(search.trim().toLowerCase())), [data.equipment, search]);
   const counts = {
-    publicada: data.equipment.filter((item) => item.publication_status === 'publicada').length,
+    publicada: data.equipment.filter((item) => item.publication_status === 'publicada' && item.owner?.status === 'activo').length,
     revision: data.equipment.filter((item) => item.publication_status === 'revision').length,
     suspendida: data.equipment.filter((item) => item.publication_status === 'suspendida').length,
   };
@@ -43,10 +44,43 @@ export default function AdminPublicacionesPage() {
       <input aria-label="Buscar publicación" placeholder="Buscar equipo, propietario o municipio" value={search} onChange={(event) => setSearch(event.target.value)} className="mt-6 h-11 w-full rounded-lg border border-border bg-surface px-4 text-label" />
       {error && <p role="alert" className="mt-4 text-small text-danger">{error}</p>}
       <section aria-label="Publicaciones" className="mt-5 grid gap-3">
-        {equipment.map((item) => <button type="button" key={item.id} onClick={() => setSelectedId(item.id)} className={`text-left ${selectedId === item.id ? 'ring-2 ring-primary' : ''}`}><Card className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div><p className="font-semibold text-text">{item.name}</p><p className="text-small text-text-muted">{item.owner?.full_name || 'Propietario'} · {item.category} · {item.municipality}</p></div><Badge tone={tones[item.publication_status]}>{labels[item.publication_status] || item.publication_status}</Badge></Card></button>)}
+        {equipment.map((item) => {
+          const accountLabel = hiddenByAccount[item.owner?.status];
+          return (
+            <button type="button" key={item.id} onClick={() => setSelectedId(item.id)} className={`text-left ${selectedId === item.id ? 'ring-2 ring-primary' : ''}`}>
+              <Card className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="font-semibold text-text">{item.name}</p>
+                  <p className="text-small text-text-muted">{item.owner?.full_name || 'Propietario'} · {item.category} · {item.municipality}</p>
+                </div>
+                <Badge tone={accountLabel ? (item.owner.status === 'suspendido' ? 'danger' : 'neutral') : tones[item.publication_status]}>
+                  {accountLabel || labels[item.publication_status] || item.publication_status}
+                </Badge>
+              </Card>
+            </button>
+          );
+        })}
         {!equipment.length && <Card><p className="text-body text-text-muted">No hay publicaciones que coincidan.</p></Card>}
       </section>
-      {selected && <Card className="mt-6"><p className="text-caption uppercase text-text-muted">Publicación seleccionada</p><h2 className="mt-2 text-heading-md font-semibold text-text">{selected.name}</h2><p className="mt-2 text-small text-text-muted">{selected.owner?.full_name} · {selected.municipality}</p><div className="mt-5 flex flex-wrap gap-3">{selected.publication_status !== 'publicada' && selected.publication_status !== 'eliminada' && <Button type="button" icon={Check} disabled={saving} onClick={() => changeStatus('publicada')}>Publicar</Button>}{selected.publication_status === 'publicada' && <Button type="button" variant="secondary" icon={Ban} disabled={saving} onClick={() => changeStatus('suspendida')}>Suspender</Button>}{selected.publication_status !== 'eliminada' && <Button type="button" variant="danger" icon={Trash2} disabled={saving} onClick={() => changeStatus('eliminada')}>Eliminar</Button>}</div></Card>}
+      {selected && (
+        <Card className="mt-6">
+          <p className="text-caption uppercase text-text-muted">Publicación seleccionada</p>
+          <h2 className="mt-2 text-heading-md font-semibold text-text">{selected.name}</h2>
+          <p className="mt-2 text-small text-text-muted">{selected.owner?.full_name} · {selected.municipality}</p>
+          {hiddenByAccount[selected.owner?.status] && (
+            <p className="mt-3 text-small text-text-muted">
+              Se conserva, pero no es pública porque la cuenta del arrendador está {selected.owner.status}.
+            </p>
+          )}
+          {selected.owner?.status === 'activo' && (
+            <div className="mt-5 flex flex-wrap gap-3">
+              {selected.publication_status !== 'publicada' && selected.publication_status !== 'eliminada' && <Button type="button" icon={Check} disabled={saving} onClick={() => changeStatus('publicada')}>Publicar</Button>}
+              {selected.publication_status === 'publicada' && <Button type="button" variant="secondary" icon={Ban} disabled={saving} onClick={() => changeStatus('suspendida')}>Suspender</Button>}
+              {selected.publication_status !== 'eliminada' && <Button type="button" variant="danger" icon={Trash2} disabled={saving} onClick={() => changeStatus('eliminada')}>Eliminar</Button>}
+            </div>
+          )}
+        </Card>
+      )}
     </DashboardLayout>
   );
 }

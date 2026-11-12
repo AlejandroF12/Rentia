@@ -1,7 +1,29 @@
 import { supabase } from '../lib/supabaseClient';
+import { toUserFacingError } from '../utils/userFacingError';
 import { loadPublicEquipmentOwner } from './profileService';
 
-const imageUrl = (path) => supabase.storage.from('equipment-images').getPublicUrl(path).data.publicUrl;
+export async function getEquipmentImageUrls(paths) {
+  const uniquePaths = [...new Set(paths.filter(Boolean))];
+  if (!uniquePaths.length) return new Map();
+
+  const signedUrls = new Map();
+  for (let offset = 0; offset < uniquePaths.length; offset += 100) {
+    const pathBatch = uniquePaths.slice(offset, offset + 100);
+    const { data, error } = await supabase.storage.from('equipment-images').createSignedUrls(pathBatch, 900);
+    if (error) throw toUserFacingError(error, 'No se pudieron cargar las fotos del equipo. Inténtalo nuevamente.');
+    const failedImage = data.find((image) => image.error || !image.path || !image.signedUrl);
+    if (failedImage) {
+      throw toUserFacingError(new Error(failedImage.error || 'No se pudo firmar el enlace de una foto.'), 'No se pudieron cargar las fotos del equipo. Inténtalo nuevamente.');
+    }
+    for (const image of data) signedUrls.set(image.path, image.signedUrl);
+  }
+  return signedUrls;
+}
+
+export async function getEquipmentImageUrl(path) {
+  const urls = await getEquipmentImageUrls([path]);
+  return urls.get(path);
+}
 
 async function optimizeImage(file) {
   if (!file.type.startsWith('image/') || typeof createImageBitmap !== 'function') return file;
@@ -27,8 +49,12 @@ export async function loadEquipmentImages(equipmentId) {
     .order('is_cover', { ascending: false })
     .order('display_order', { ascending: true });
 
-  if (error) throw new Error(`No se pudieron cargar las imágenes: ${error.message}`);
-  return (data ?? []).map((image) => ({ ...image, url: imageUrl(image.storage_path) }));
+  if (error) throw toUserFacingError(error, 'No se pudieron cargar las fotos del equipo. Inténtalo nuevamente.');
+  const imageUrls = await getEquipmentImageUrls((data ?? []).map((image) => image.storage_path));
+  return (data ?? []).map((image) => ({
+    ...image,
+    url: imageUrls.get(image.storage_path),
+  }));
 }
 
 export async function loadEquipmentCoverImages(equipmentIds) {
@@ -42,15 +68,16 @@ export async function loadEquipmentCoverImages(equipmentIds) {
     .order('is_cover', { ascending: false })
     .order('display_order', { ascending: true });
 
-  if (error) throw new Error(`No se pudieron cargar las imágenes: ${error.message}`);
+  if (error) throw toUserFacingError(error, 'No se pudieron cargar las fotos del equipo. Inténtalo nuevamente.');
 
-  const coverImages = new Map();
+  const coverPaths = new Map();
   for (const image of data ?? []) {
-    if (!coverImages.has(image.equipment_id)) {
-      coverImages.set(image.equipment_id, imageUrl(image.storage_path));
+    if (!coverPaths.has(image.equipment_id)) {
+      coverPaths.set(image.equipment_id, image.storage_path);
     }
   }
-  return coverImages;
+  const imageUrls = await getEquipmentImageUrls([...coverPaths.values()]);
+  return new Map([...coverPaths.entries()].map(([equipmentId, path]) => [equipmentId, imageUrls.get(path)]));
 }
 
 export async function uploadEquipmentImages(equipmentId, files) {
@@ -58,26 +85,31 @@ export async function uploadEquipmentImages(equipmentId, files) {
   const existing = await loadEquipmentImages(equipmentId);
   const hasCover = existing.some((image) => image.is_cover);
   for (const [index, file] of files.entries()) {
-    const optimizedFile = await optimizeImage(file);
+    let optimizedFile;
+    try {
+      optimizedFile = await optimizeImage(file);
+    } catch (imageError) {
+      throw toUserFacingError(imageError, 'No se pudo procesar una de las fotos. Prueba con otra imagen JPG, PNG o WebP.');
+    }
     const path = `${equipmentId}/${crypto.randomUUID()}-${optimizedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const { error: uploadError } = await supabase.storage.from('equipment-images').upload(path, optimizedFile, { upsert: false, contentType: optimizedFile.type });
-    if (uploadError) throw new Error(`No se pudo subir la imagen: ${uploadError.message}`);
+    if (uploadError) throw toUserFacingError(uploadError, 'No se pudo subir la foto. Comprueba tu conexión y que sea JPG, PNG o WebP de hasta 10 MB.');
     const { data, error } = await supabase
       .from('equipment_images')
       .insert({ equipment_id: equipmentId, storage_path: path, display_order: existing.length + index, is_cover: !hasCover && index === 0 })
       .select('id, storage_path, display_order, is_cover')
       .single();
-    if (error) throw new Error(`No se pudo registrar la imagen: ${error.message}`);
-    uploaded.push({ ...data, url: imageUrl(path) });
+    if (error) throw toUserFacingError(error, 'La foto se subió, pero no se pudo asociar al equipo. Inténtalo de nuevo.');
+    uploaded.push({ ...data, url: await getEquipmentImageUrl(path) });
   }
   return uploaded;
 }
 
 export async function deleteEquipmentImage(image) {
   const { error: storageError } = await supabase.storage.from('equipment-images').remove([image.storage_path]);
-  if (storageError) throw new Error(`No se pudo eliminar la imagen: ${storageError.message}`);
+  if (storageError) throw toUserFacingError(storageError, 'No se pudo eliminar la foto. Inténtalo nuevamente.');
   const { error } = await supabase.from('equipment_images').delete().eq('id', image.id);
-  if (error) throw new Error(`No se pudo eliminar el registro de imagen: ${error.message}`);
+  if (error) throw toUserFacingError(error, 'La foto no se eliminó correctamente. Actualiza la página e inténtalo de nuevo.');
 }
 
 export async function createEquipment(ownerId, values, publicationStatus = 'publicada') {
@@ -102,7 +134,7 @@ export async function createEquipment(ownerId, values, publicationStatus = 'publ
     .select()
     .single();
 
-  if (error) throw new Error(`No se pudo guardar el equipo: ${error.message}`);
+  if (error) throw toUserFacingError(error, 'No se pudo guardar el equipo. Revisa los datos ingresados e inténtalo de nuevo.');
   return data;
 }
 
@@ -130,7 +162,7 @@ export async function updateEquipment(equipmentId, ownerId, values, publicationS
     .select()
     .single();
 
-  if (error) throw new Error(`No se pudo actualizar el equipo: ${error.message}`);
+  if (error) throw toUserFacingError(error, 'No se pudieron guardar los cambios del equipo. Revisa los datos e inténtalo de nuevo.');
   return data;
 }
 
@@ -142,7 +174,7 @@ export async function loadOwnerEquipment(ownerId) {
     .neq('publication_status', 'eliminada')
     .order('updated_at', { ascending: false });
 
-  if (error) throw new Error(`No se pudieron cargar tus equipos: ${error.message}`);
+  if (error) throw toUserFacingError(error, 'No se pudieron cargar tus equipos. Comprueba tu conexión e inténtalo nuevamente.');
   return data ?? [];
 }
 
@@ -160,15 +192,19 @@ export async function loadPublishedEquipment({ search = '', categories = [], ava
   }
 
   const { data, error } = await query.order('created_at', { ascending: false });
-  if (error) throw new Error(`No se pudo cargar el catálogo: ${error.message}`);
-  return (data ?? []).map((item) => {
+  if (error) throw toUserFacingError(error, 'No se pudo cargar el catálogo. Comprueba tu conexión e inténtalo nuevamente.');
+  const prepared = (data ?? []).map((item) => {
     const images = [...(item.equipment_images ?? [])].sort((first, second) => (
       Number(second.is_cover) - Number(first.is_cover) || first.display_order - second.display_order
     ));
     const reviews = (item.reviews ?? []).filter((review) => review.is_published && review.review_type === 'equipo');
+    return { item, images, reviews };
+  });
+  const imageUrls = await getEquipmentImageUrls(prepared.map(({ images }) => images[0]?.storage_path));
+  return prepared.map(({ item, images, reviews }) => {
     return {
       ...item,
-      image: images[0] ? imageUrl(images[0].storage_path) : null,
+      image: images[0] ? imageUrls.get(images[0].storage_path) : null,
       rating: reviews.length ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length : null,
     };
   });
@@ -181,7 +217,7 @@ export async function loadFeaturedEquipment() {
     .eq('publication_status', 'publicada')
     .eq('is_available', true);
 
-  if (error) throw new Error(`No se pudieron cargar los equipos destacados: ${error.message}`);
+  if (error) throw toUserFacingError(error, 'No se pudieron cargar los equipos destacados. Inténtalo nuevamente.');
 
   const featured = (data ?? [])
     .map((item) => {
@@ -205,7 +241,7 @@ export async function loadEquipmentById(equipmentId) {
     .eq('publication_status', 'publicada')
     .single();
 
-  if (error) throw new Error(`No se pudo cargar el equipo: ${error.message}`);
+  if (error) throw toUserFacingError(error, 'No se pudo cargar este equipo. Puede que la publicación ya no esté disponible.');
   return data;
 }
 
@@ -222,7 +258,7 @@ export async function loadOwnerEquipmentById(equipmentId, ownerId, { includeElim
   if (!includeEliminated) query = query.neq('publication_status', 'eliminada');
   const { data, error } = await query.single();
 
-  if (error) throw new Error(`No se pudo cargar el equipo: ${error.message}`);
+  if (error) throw toUserFacingError(error, 'No se pudo cargar el equipo. Actualiza la página e inténtalo de nuevo.');
   return data;
 }
 
@@ -236,7 +272,7 @@ export async function updateEquipmentAvailability(equipmentId, ownerId, isAvaila
     .select('id, is_available, updated_at')
     .single();
 
-  if (error) throw new Error(`No se pudo actualizar la disponibilidad: ${error.message}`);
+  if (error) throw toUserFacingError(error, 'No se pudo cambiar la disponibilidad del equipo. Inténtalo nuevamente.');
   return data;
 }
 
@@ -250,7 +286,7 @@ export async function updateEquipmentPublication(equipmentId, ownerId, publicati
     .select('id, publication_status, updated_at')
     .single();
 
-  if (error) throw new Error(`No se pudo actualizar la publicación: ${error.message}`);
+  if (error) throw toUserFacingError(error, 'No se pudo cambiar el estado de la publicación. Inténtalo nuevamente.');
   return data;
 }
 
@@ -260,7 +296,7 @@ export async function deleteEquipment(equipmentId, ownerId) {
     .select('storage_path')
     .eq('equipment_id', equipmentId);
 
-  if (imagesError) throw new Error(`No se pudieron preparar las imágenes para eliminarlas: ${imagesError.message}`);
+  if (imagesError) throw toUserFacingError(imagesError, 'No se pudieron preparar las fotos para retirar la publicación.');
 
   const { data: archived, error: archiveError } = await supabase
     .from('equipment')
@@ -270,7 +306,7 @@ export async function deleteEquipment(equipmentId, ownerId) {
     .select('id')
     .maybeSingle();
 
-  if (archiveError) throw new Error(`No se pudo retirar el equipo: ${archiveError.message}`);
+  if (archiveError) throw toUserFacingError(archiveError, 'No se pudo retirar el equipo. Comprueba tu conexión e inténtalo nuevamente.');
   if (!archived) throw new Error('No se encontró el equipo o no tienes permiso para eliminarlo.');
 
   const paths = (images ?? []).map((image) => image.storage_path);
@@ -279,7 +315,7 @@ export async function deleteEquipment(equipmentId, ownerId) {
       .from('equipment-images')
       .remove(paths);
 
-    if (storageError) throw new Error(`La publicación se retiró del catálogo, pero no se pudieron eliminar las fotos: ${storageError.message}`);
+    if (storageError) throw toUserFacingError(storageError, 'El equipo se retiró del catálogo, pero no se pudieron eliminar sus fotos. Contacta al equipo de soporte.');
   }
 
   const { error: imageRowsError } = await supabase
@@ -288,6 +324,6 @@ export async function deleteEquipment(equipmentId, ownerId) {
     .eq('equipment_id', equipmentId);
 
   if (imageRowsError) {
-    throw new Error(`La publicación se retiró del catálogo, pero no se pudieron limpiar los registros de fotos: ${imageRowsError.message}`);
+    throw toUserFacingError(imageRowsError, 'El equipo se retiró del catálogo, pero no se pudieron limpiar los registros de sus fotos. Contacta al equipo de soporte.');
   }
 }

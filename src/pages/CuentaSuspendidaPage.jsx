@@ -35,7 +35,12 @@ export default function CuentaSuspendidaPage() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const activeAppeal = appeals[0]?.status === 'pendiente' ? appeals[0] : null;
-  const acceptedAppeal = appeals[0]?.status === 'aceptada' ? appeals[0] : null;
+  const latestAcceptedAppeal = appeals[0]?.status === 'aceptada' ? appeals[0] : null;
+  const acceptedAppealIsCurrent = latestAcceptedAppeal?.reviewed_at
+    && profile?.suspended_at
+    && new Date(latestAcceptedAppeal.reviewed_at).getTime() >= new Date(profile.suspended_at).getTime();
+  const acceptedAppeal = acceptedAppealIsCurrent ? latestAcceptedAppeal : null;
+  const previousAcceptedAppeal = latestAcceptedAppeal && !acceptedAppeal ? latestAcceptedAppeal : null;
 
   const loadAppeals = async () => {
     const records = await loadMyAccountAppeals(session.user.id);
@@ -169,6 +174,11 @@ export default function CuentaSuspendidaPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+              {previousAcceptedAppeal && (
+                <p className="rounded-xl border border-border bg-surface-muted p-4 text-small text-text-muted">
+                  Tu solicitud anterior fue aceptada, pero esta cuenta fue suspendida nuevamente después de esa decisión. Puedes enviar una nueva solicitud para que administración revise la suspensión actual.
+                </p>
+              )}
               {appeals[0] && (
                 <div className="rounded-xl border border-border bg-surface-muted p-4">
                   <Badge tone={appealStatus[appeals[0].status]?.tone || 'neutral'}>

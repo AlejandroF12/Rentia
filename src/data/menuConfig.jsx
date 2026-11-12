@@ -47,9 +47,10 @@ export const menus = {
     rol: 'Administración',
     items: [
       { texto: 'Resumen', activo: true, href: '/admin/resumen' },
-      { texto: 'Usuarios', activo: true, href: '/admin/usuarios' },
+      { texto: 'Usuarios', href: '/admin/usuarios' },
       { texto: 'Publicaciones', href: '/admin/publicaciones' },
       { texto: 'Reportes', href: '/admin/reportes' },
+      { texto: 'Apelaciones', href: '/admin/apelaciones' },
       { texto: 'Ver sitio público', externo: true, href: '/' },
       { texto: 'Cerrar sesión', salida: true, href: '/' },
     ],

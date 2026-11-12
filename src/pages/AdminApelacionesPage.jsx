@@ -4,6 +4,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
 import Card from '../components/Card';
+import Select from '../components/Select';
 import Textarea from '../components/Textarea';
 import { CabeceraAdmin, PestanasAdmin } from '../components/AdminComunes';
 import { loadAdminAccountAppeals, resolveAccountAppeal } from '../services/appealService';
@@ -78,19 +79,16 @@ export default function AdminApelacionesPage() {
   return (
     <DashboardLayout rol="admin" activo="apelaciones">
       <CabeceraAdmin seccion="Apelaciones" titulo="Revisar con contexto y dejar constancia." subtitulo="Las apelaciones son privadas. Aceptar una reactiva la cuenta; rechazarla mantiene la suspensión." />
-      <PestanasAdmin activa="apelaciones" reportCount={pendingCount} />
+      <PestanasAdmin activa="apelaciones" appealCount={pendingCount} />
 
       <div className="mt-5 flex flex-wrap items-end justify-between gap-3">
         <p className="text-small text-text-muted">{pendingCount} solicitud{pendingCount === 1 ? '' : 'es'} pendiente{pendingCount === 1 ? '' : 's'}</p>
-        <label className="text-label font-semibold text-text">
-          Filtrar
-          <select value={filter} onChange={(event) => setFilter(event.target.value)} className="ml-3 h-11 rounded-lg border border-border bg-surface px-3 font-normal">
-            <option value="pendiente">Pendientes</option>
-            <option value="aceptada">Aceptadas</option>
-            <option value="rechazada">No aprobadas</option>
-            <option value="todas">Todas</option>
-          </select>
-        </label>
+        <Select id="appeal-status-filter" label="Filtrar por estado" value={filter} onChange={(event) => setFilter(event.target.value)} className="w-full sm:w-64">
+          <option value="pendiente">Pendientes</option>
+          <option value="aceptada">Aceptadas</option>
+          <option value="rechazada">No aprobadas</option>
+          <option value="todas">Todas</option>
+        </Select>
       </div>
 
       {error && <p role="alert" className="mt-4 text-small text-danger">{error}</p>}

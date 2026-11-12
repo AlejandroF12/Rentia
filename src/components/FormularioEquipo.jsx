@@ -14,6 +14,7 @@ import Toggle from './Toggle';
 import { categoriasEquipo } from '../data/panel';
 import { useAuth } from '../context/AuthContext';
 import { createEquipment, updateEquipment, uploadEquipmentImages, deleteEquipmentImage } from '../services/equipmentService';
+import { validateEquipmentData } from '../utils/equipmentValidation';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -135,15 +136,16 @@ function SeccionDatos({ equipo, revision, errores }) {
     <Card>
       <TituloSeccion numero="02" chip={!revision}>Cuéntanos sobre tu equipo</TituloSeccion>
       <div className="mt-5 grid gap-5 md:grid-cols-2">
-        <Field id="nombre" name="nombre" label="Nombre del vehículo o maquinaria *" defaultValue={equipo.nombre} aria-required="true" error={errores.nombre} className="md:col-span-2" />
+        <Field id="nombre" name="nombre" label="Nombre del vehículo o maquinaria *" defaultValue={equipo.nombre} aria-required="true" maxLength={160} error={errores.nombre} className="md:col-span-2" />
         <Select id="categoria" name="categoria" label="Categoría *" defaultValue={errores.categoria ? '' : equipo.categoria} aria-required="true" error={errores.categoria}>
           <option value="" disabled>Selecciona una categoría</option>
           {categoriasEquipo.map((c) => <option key={c} value={c}>{c}</option>)}
         </Select>
         <Field id="marca" name="marca" label="Marca y modelo" defaultValue={equipo.marca} />
-        <Field id="anio" name="anio" label="Año" defaultValue={equipo.anio} inputMode="numeric" />
+        <Field id="anio" name="anio" label="Año" defaultValue={equipo.anio} type="number" min={1900} max={2100} inputMode="numeric" error={errores.anio} />
         <Field id="caracteristica" name="caracteristica" label="Característica principal" defaultValue={equipo.caracteristica} />
-        <Textarea id="descripcion" name="descripcion" label="Descripción *" rows={4} defaultValue={equipo.descripcion} aria-required="true" error={errores.descripcion} className="md:col-span-2" />
+        <Textarea id="descripcion" name="descripcion" label="Descripción *" rows={4} defaultValue={equipo.descripcion} aria-required="true" maxLength={3000} error={errores.descripcion} className="md:col-span-2" />
+        <p className="text-small text-text-muted md:col-span-2">Describe el estado, las características y el uso del equipo (de 10 a 3000 caracteres).</p>
       </div>
     </Card>
   );
@@ -342,6 +344,7 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
   const [submitting, setSubmitting] = useState(false);
   const [images, setImages] = useState(equipo.imagenes || []);
   const [pendingFiles, setPendingFiles] = useState([]);
+  const [imageError, setImageError] = useState('');
   const [disponible, setDisponible] = useState(equipo.is_available ?? equipo.disponible ?? true);
   const [location, setLocation] = useState({
     latitude: equipo.latitude ?? null,
@@ -372,17 +375,18 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
     setSubmitError('');
     const formData = new FormData(event.currentTarget);
     const isDraft = event.nativeEvent.submitter?.value === 'borrador';
-    const nextErrors = {};
-    if (!isDraft) {
-      if (!images.length) nextErrors.fotos = 'Agrega al menos una foto del equipo para publicarlo.';
-      if (!String(formData.get('nombre') || '').trim()) nextErrors.nombre = 'Ingresa el nombre del equipo.';
-      if (!formData.get('categoria')) nextErrors.categoria = 'Selecciona una categoría.';
-      if (!String(formData.get('descripcion') || '').trim()) nextErrors.descripcion = 'Describe el equipo antes de publicarlo.';
-      if (!String(formData.get('municipio') || '').trim()) nextErrors.municipio = 'Ingresa el municipio del equipo.';
-    }
+    const { errors: nextErrors, summary } = validateEquipmentData({
+      name: formData.get('nombre'),
+      category: formData.get('categoria'),
+      description: formData.get('descripcion'),
+      municipality: formData.get('municipio'),
+      year: formData.get('anio'),
+      hasImages: images.length > 0,
+      isDraft,
+    });
     setValidationErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
-      setSubmitError('Corrige los campos indicados antes de publicar.');
+      setSubmitError(summary);
       return;
     }
     setSubmitting(true);
@@ -423,10 +427,32 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
 
   const handleAddImages = (event) => {
     const files = Array.from(event.target.files || []);
-    const validFiles = files.filter((file) => file.size <= 10 * 1024 * 1024);
-    setPendingFiles((current) => [...current, ...validFiles].slice(0, 8 - images.length));
-    setImages((current) => [...current, ...validFiles.map((file) => ({ id: `pending-${file.name}-${file.lastModified}`, url: URL.createObjectURL(file), pending: true }))].slice(0, 8));
+    const supportedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const unsupportedFiles = files.filter((file) => !supportedTypes.includes(file.type));
+    const oversizedFiles = files.filter((file) => file.size > 10 * 1024 * 1024);
+    const validFiles = files.filter((file) => supportedTypes.includes(file.type) && file.size <= 10 * 1024 * 1024);
+    const availableSlots = Math.max(0, 8 - images.length);
+    const filesToAdd = validFiles.slice(0, availableSlots);
+    const messages = [];
+    if (unsupportedFiles.length) messages.push('Solo puedes agregar imágenes JPG, PNG o WebP.');
+    if (oversizedFiles.length) messages.push('Cada imagen debe pesar 10 MB o menos.');
+    if (validFiles.length > availableSlots) messages.push('Puedes agregar hasta 8 fotos por equipo.');
+    setImageError(messages.join(' '));
+    setPendingFiles((current) => [...current, ...filesToAdd]);
+    setImages((current) => [...current, ...filesToAdd.map((file) => ({ id: `pending-${file.name}-${file.lastModified}`, url: URL.createObjectURL(file), pending: true }))]);
     event.target.value = '';
+  };
+
+  const handleFormChange = (event) => {
+    const field = event.target?.name;
+    if (!field) return;
+    setValidationErrors((current) => {
+      if (!current[field]) return current;
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+    setSubmitError('');
   };
 
   const handleRemoveImage = async (image) => {
@@ -444,8 +470,8 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      {submitError && <p role="alert" className="mt-6 text-small text-danger">{submitError}</p>}
+    <form onSubmit={handleSubmit} onChange={handleFormChange}>
+      {(submitError || imageError) && <p role="alert" className="mt-6 text-small text-danger">{[submitError, imageError].filter(Boolean).join(' ')}</p>}
       {(revision && cuenta > 0) && (
         <InfoBox tone="danger" title={`Revisa ${cuenta} campos para publicar`} className="mt-6 md:mt-8">
           Faltan fotos del equipo, categoría y ubicación. Conservamos los datos que ya escribiste.

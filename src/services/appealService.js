@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { toUserFacingError } from '../utils/userFacingError';
 
 const APPEAL_FIELDS = 'id, appellant_id, reason, description, status, decision_note, reviewed_at, reviewed_by, created_at, appellant:appellant_id(full_name, email, role), reviewer:reviewed_by(full_name)';
 
@@ -9,7 +10,7 @@ export async function loadMyAccountAppeals(userId) {
     .eq('appellant_id', userId)
     .order('created_at', { ascending: false });
 
-  if (error) throw new Error(`No se pudieron cargar tus solicitudes de revisión: ${error.message}`);
+  if (error) throw toUserFacingError(error, 'No se pudieron cargar tus solicitudes de revisión. Inténtalo nuevamente.');
   return data ?? [];
 }
 
@@ -24,7 +25,7 @@ export async function submitAccountAppeal({ appellantId, reason, description }) 
     .select('id, reason, description, status, created_at')
     .single();
 
-  if (error) throw new Error(`No se pudo enviar la solicitud de revisión: ${error.message}`);
+  if (error) throw toUserFacingError(error, 'No se pudo enviar la solicitud. Revisa los datos e inténtalo nuevamente.');
   return data;
 }
 
@@ -34,7 +35,7 @@ export async function loadAdminAccountAppeals() {
     .select(APPEAL_FIELDS)
     .order('created_at', { ascending: false });
 
-  if (error) throw new Error(`No se pudieron cargar las solicitudes de revisión: ${error.message}`);
+  if (error) throw toUserFacingError(error, 'No se pudieron cargar las solicitudes de revisión. Inténtalo nuevamente.');
   return data ?? [];
 }
 
@@ -45,6 +46,6 @@ export async function resolveAccountAppeal(appealId, decision, decisionNote) {
     p_decision_note: decisionNote.trim(),
   });
 
-  if (error) throw new Error(`No se pudo resolver la solicitud de revisión: ${error.message}`);
+  if (error) throw toUserFacingError(error, 'No se pudo guardar la decisión. Inténtalo nuevamente.');
   return data;
 }

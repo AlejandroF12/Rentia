@@ -38,7 +38,7 @@ const SECCIONES = [
 ];
 
 /** Pestañas de sección con el contador de reportes pendientes. */
-export function PestanasAdmin({ activa, reportCount = 0 }) {
+export function PestanasAdmin({ activa, reportCount, appealCount }) {
   return (
     <nav
       aria-label="Secciones de moderación"
@@ -52,10 +52,16 @@ export function PestanasAdmin({ activa, reportCount = 0 }) {
           className={`shrink-0 whitespace-nowrap ${id === activa ? 'font-semibold text-text' : 'text-text-muted'}`}
         >
           {label}
-          {(id === 'reportes' || id === 'apelaciones') && (
+          {id === 'reportes' && reportCount !== undefined && (
             <>
               <span className="md:hidden"> ({reportCount})</span>
               <sup className="ml-1 hidden text-caption text-accent md:inline">{reportCount}</sup>
+            </>
+          )}
+          {id === 'apelaciones' && appealCount !== undefined && (
+            <>
+              <span className="md:hidden"> ({appealCount})</span>
+              <sup className="ml-1 hidden text-caption text-accent md:inline">{appealCount}</sup>
             </>
           )}
         </Link>

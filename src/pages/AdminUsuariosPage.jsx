@@ -44,7 +44,10 @@ export default function AdminUsuariosPage() {
       return;
     }
     const action = nextStatus === 'eliminado' ? 'eliminar' : nextStatus === 'suspendido' ? 'suspender' : 'reactivar';
-    if (!window.confirm(`¿Confirmas ${action} a ${selected.full_name}?`)) return;
+    const accountStatusWarning = ['eliminado', 'suspendido'].includes(nextStatus)
+      ? `\n\nEl contenido asociado se conservará, pero quedará oculto mientras la cuenta esté ${nextStatus === 'eliminado' ? 'eliminada' : 'suspendida'}.`
+      : '';
+    if (!window.confirm(`¿Confirmas ${action} a ${selected.full_name}?${accountStatusWarning}`)) return;
     setSaving(true); setError('');
     try {
       await updateAdminUserStatus(selected.id, nextStatus, { reason: suspensionReason, reviewerId: profile?.id });
@@ -92,7 +95,11 @@ export default function AdminUsuariosPage() {
               <p className="text-small font-semibold text-text">Motivo comunicado</p>
               <p className="mt-2 whitespace-pre-wrap text-small text-text-muted">{selected.suspension_reason || 'No quedó registrado un motivo para esta suspensión anterior.'}</p>
               {selected.suspended_at && <p className="mt-2 text-caption text-text-muted">Suspendida el {new Date(selected.suspended_at).toLocaleString('es-CO')}</p>}
+              <p className="mt-3 text-small text-text-muted">El contenido asociado se conserva y permanece oculto mientras dure la suspensión.</p>
             </div>
+          )}
+          {selected.status === 'eliminado' && (
+            <p className="mt-4 text-small text-text-muted">El perfil y su contenido se conservan; el contenido está oculto por el estado de cuenta eliminada.</p>
           )}
           {selected.status === 'activo' && selected.role !== 'admin' && (
             <Textarea

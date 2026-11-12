@@ -12,6 +12,9 @@ import { loadAdminOverview, setAdminReviewVisibility, updateAdminEquipmentStatus
 
 const labels = { pendiente: 'Pendiente', revision: 'En revisión', resuelto: 'Resuelto' };
 const tones = { pendiente: 'warning', revision: 'warning', resuelto: 'success' };
+const accountStatusLabel = (status) => (
+  status === 'suspendido' ? 'Cuenta suspendida' : status === 'eliminado' ? 'Cuenta eliminada' : ''
+);
 
 export default function AdminReportesPage() {
   const [data, setData] = useState({ reports: [] });
@@ -76,17 +79,61 @@ export default function AdminReportesPage() {
         </select>
       </label>
       <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,370px)_minmax(0,1fr)]">
-        <section aria-label="Reportes recientes" className="grid gap-3">{reports.map((report) => <button type="button" key={report.id} onClick={() => { setSelectedId(report.id); setNote(report.resolution_note || ''); }} className={`text-left ${selected?.id === report.id ? 'ring-2 ring-primary' : ''}`}><Card className="p-4"><div className="flex items-center justify-between gap-3"><p className="font-semibold text-text">{report.reason}</p><Badge tone={tones[report.status]}>{labels[report.status]}</Badge></div><p className="mt-2 text-small text-text-muted">{report.equipment?.name || (report.review ? 'Valoración reportada' : 'Contenido')} · {report.reporter?.full_name || 'Usuario'}</p><p className="mt-2 text-caption text-text-muted">{new Date(report.created_at).toLocaleString('es-CO')}</p></Card></button>)}{!reports.length && <Card><p className="text-body text-text-muted">No hay reportes registrados.</p></Card>}</section>
+        <section aria-label="Reportes recientes" className="grid gap-3">
+          {reports.map((report) => {
+            const reporterStatus = accountStatusLabel(report.reporter?.status);
+            return (
+              <button type="button" key={report.id} onClick={() => { setSelectedId(report.id); setNote(report.resolution_note || ''); }} className={`text-left ${selected?.id === report.id ? 'ring-2 ring-primary' : ''}`}>
+                <Card className="p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-text">{report.reason}</p>
+                    <Badge tone={tones[report.status]}>{labels[report.status]}</Badge>
+                  </div>
+                  <p className="mt-2 text-small text-text-muted">{report.equipment?.name || (report.review ? 'Valoración reportada' : 'Contenido')} · {report.reporter?.full_name || 'Usuario'}</p>
+                  {reporterStatus && <p className="mt-2 text-caption text-danger">{reporterStatus}; el reporte se conserva para administración.</p>}
+                  <p className="mt-2 text-caption text-text-muted">{new Date(report.created_at).toLocaleString('es-CO')}</p>
+                </Card>
+              </button>
+            );
+          })}
+          {!reports.length && <Card><p className="text-body text-text-muted">No hay reportes registrados.</p></Card>}
+        </section>
         {selected && <Card>
           <p className="text-caption uppercase text-text-muted">Reporte seleccionado</p>
           <h2 className="mt-2 text-heading-md font-semibold text-text">{selected.reason}</h2>
           <p className="mt-3 text-body text-text-muted">{selected.description || 'Sin descripción.'}</p>
           <p className="mt-4 text-small text-text-muted">Reportado por {selected.reporter?.full_name || 'usuario'} · {selected.equipment?.name || (selected.review ? 'Valoración' : 'Contenido')}</p>
+          {accountStatusLabel(selected.reporter?.status) && (
+            <p className="mt-2 text-small text-danger">
+              {accountStatusLabel(selected.reporter.status)}; el reporte se conserva para administración.
+            </p>
+          )}
+          {accountStatusLabel(selected.equipment?.owner?.status) && (
+            <p className="mt-2 text-small text-text-muted">
+              Publicación conservada y oculta: {accountStatusLabel(selected.equipment.owner.status).toLowerCase()}.
+            </p>
+          )}
           {selected.review && (
             <section className="mt-5 rounded-xl border border-border bg-surface-muted p-4" aria-label="Valoración reportada">
               <p className="font-semibold text-text">Valoración · {selected.review.rating}/5</p>
               <p className="mt-2 text-small text-text-muted">{selected.review.comment}</p>
-              <p className="mt-2 text-caption text-text-muted">Visibilidad: {selected.review.is_published ? 'Pública' : 'Oculta'}</p>
+              {accountStatusLabel(selected.review.author?.status) && (
+                <p className="mt-2 text-small text-danger">
+                  Autor: {accountStatusLabel(selected.review.author.status).toLowerCase()}; valoración oculta públicamente.
+                </p>
+              )}
+              {accountStatusLabel(selected.review.target?.status) && (
+                <p className="mt-2 text-small text-danger">
+                  Persona valorada: {accountStatusLabel(selected.review.target.status).toLowerCase()}; valoración oculta públicamente.
+                </p>
+              )}
+              <p className="mt-2 text-caption text-text-muted">
+                Visibilidad: {selected.review.is_published
+                  && selected.review.author?.status === 'activo'
+                  && selected.review.target?.status === 'activo'
+                  ? 'Pública'
+                  : 'Oculta al público'}
+              </p>
               <Button type="button" variant="secondary" icon={selected.review.is_published ? EyeOff : Eye} disabled={saving} className="mt-4" onClick={() => changeReviewVisibility(!selected.review.is_published)}>
                 {selected.review.is_published ? 'Ocultar valoración' : 'Restaurar valoración'}
               </Button>
