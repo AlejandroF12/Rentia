@@ -95,16 +95,16 @@ export default function AdminApelacionesPage() {
       {loading ? (
         <p className="mt-6 text-small text-text-muted" aria-busy="true">Cargando apelaciones…</p>
       ) : (
-        <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,370px)_minmax(0,1fr)]">
-          <section aria-label="Solicitudes de revisión" className="grid content-start gap-3">
+        <div className="mt-5 grid min-w-0 gap-5 lg:grid-cols-[minmax(0,370px)_minmax(0,1fr)]">
+          <section aria-label="Solicitudes de revisión" className="grid min-w-0 content-start gap-3">
             {filteredAppeals.map((appeal) => (
               <button
                 type="button"
                 key={appeal.id}
                 onClick={() => { setSelectedId(appeal.id); setDecisionNote(''); setError(''); }}
-                className={`text-left ${selected?.id === appeal.id ? 'rounded-2xl ring-2 ring-primary' : ''}`}
+                className={`w-full min-w-0 text-left ${selected?.id === appeal.id ? 'rounded-2xl ring-2 ring-primary' : ''}`}
               >
-                <Card className="p-4">
+                <Card className="min-w-0 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <span className="min-w-0">
                       <span className="block truncate font-semibold text-text">{appeal.appellant?.full_name || 'Cuenta'}</span>
@@ -125,21 +125,21 @@ export default function AdminApelacionesPage() {
           </section>
 
           {selected && (
-            <Card>
+            <Card className="min-w-0">
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
+                <div className="min-w-0">
                   <p className="text-caption font-semibold uppercase tracking-wide text-text-muted">Solicitud de revisión</p>
-                  <h2 className="mt-2 text-heading-md font-semibold text-text">{selected.appellant?.full_name || 'Cuenta'}</h2>
-                  <p className="mt-1 text-small text-text-muted">{selected.appellant?.email} · {selected.appellant?.role}</p>
+                  <h2 className="mt-2 break-words text-heading-md font-semibold text-text [overflow-wrap:anywhere]">{selected.appellant?.full_name || 'Cuenta'}</h2>
+                  <p className="mt-1 break-words text-small text-text-muted [overflow-wrap:anywhere]">{selected.appellant?.email} · {selected.appellant?.role}</p>
                 </div>
                 <Badge tone={tones[selected.status]}>{labels[selected.status]}</Badge>
               </div>
-              <p className="mt-5 text-label font-semibold text-text">{selected.reason}</p>
-              <p className="mt-2 whitespace-pre-wrap text-body leading-relaxed text-text-muted">{selected.description}</p>
+              <p className="mt-5 break-words text-label font-semibold text-text [overflow-wrap:anywhere]">{selected.reason}</p>
+              <p className="mt-2 whitespace-pre-wrap break-words text-body leading-relaxed text-text-muted [overflow-wrap:anywhere]">{selected.description}</p>
               {selected.decision_note && (
                 <div className="mt-5 rounded-xl bg-surface-muted p-4">
                   <p className="text-small font-semibold text-text">Respuesta enviada</p>
-                  <p className="mt-2 whitespace-pre-wrap text-small text-text-muted">{selected.decision_note}</p>
+                  <p className="mt-2 whitespace-pre-wrap break-words text-small text-text-muted [overflow-wrap:anywhere]">{selected.decision_note}</p>
                 </div>
               )}
               {selected.status === 'pendiente' && (

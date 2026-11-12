@@ -42,7 +42,7 @@ export function PestanasAdmin({ activa, reportCount, appealCount }) {
   return (
     <nav
       aria-label="Secciones de moderación"
-      className="mt-6 flex max-w-full items-center gap-x-5 overflow-x-auto text-label md:mt-8 md:border-b md:border-border md:pb-4"
+      className="mt-6 flex max-w-full flex-wrap items-center gap-x-5 gap-y-3 text-label md:mt-8 md:flex-nowrap md:border-b md:border-border md:pb-4"
     >
       {SECCIONES.map(({ id, label, to }) => (
         <Link
