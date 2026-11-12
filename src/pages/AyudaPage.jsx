@@ -9,7 +9,7 @@ const helpTopics = [
     id: 'acceso',
     icon: KeyRound,
     title: 'Acceso a tu cuenta',
-    description: 'Si olvidaste tu contraseña, solicita un enlace de recuperación. Si aún no tienes cuenta, puedes crearla.',
+    description: 'Si olvidaste tu contraseña, solicita un enlace de recuperación. El registro de cuentas nuevas está temporalmente pausado.',
     links: [
       { to: '/recuperar-acceso', label: 'Recuperar contraseña' },
       { to: '/crear-cuenta', label: 'Crear una cuenta' },

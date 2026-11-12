@@ -12,8 +12,10 @@ export const MainLayout = ({ children, navVariant, footer = true, footerProps = 
     return (
         <div>
             <Navbar variant={resolvedNavVariant} />
-            <main>{children}</main>
-            {footer && <Footer {...footerProps} />}
+            <div className="pb-[calc(4rem+env(safe-area-inset-bottom))] xl:pb-0">
+                {children}
+                {footer && <Footer {...footerProps} />}
+            </div>
         </div>
     )
 }

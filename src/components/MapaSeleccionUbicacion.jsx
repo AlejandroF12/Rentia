@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import { getMunicipalityCoordinates } from '../utils/location';
 import { municipios } from '../data/panel';
 import { normalizeLocationText } from '../utils/location';
+import { getDeviceLocation, getDeviceLocationError } from '../utils/deviceLocation';
 
 function MapInteraction({ onSelect }) {
   useMapEvents({ click: (event) => onSelect([event.latlng.lat, event.latlng.lng]) });
@@ -25,6 +26,7 @@ export default function MapaSeleccionUbicacion({ municipality, latitude, longitu
     : getMunicipalityCoordinates(municipality);
   const [coordinates, setCoordinates] = useState(initialCoordinates);
   const [locationError, setLocationError] = useState('');
+  const [locationRequesting, setLocationRequesting] = useState(false);
 
   const reverseGeocode = async (nextCoordinates) => {
     onDetectionStatus('loading');
@@ -63,17 +65,17 @@ export default function MapaSeleccionUbicacion({ municipality, latitude, longitu
     if (interactive) reverseGeocode(nextCoordinates);
   };
 
-  const useCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationError('Este navegador no permite obtener la ubicación.');
-      return;
-    }
+  const useCurrentLocation = async () => {
     setLocationError('');
-    navigator.geolocation.getCurrentPosition(
-      (position) => selectCoordinates([position.coords.latitude, position.coords.longitude]),
-      () => setLocationError('No se pudo obtener tu ubicación. Puedes fijar el punto manualmente.'),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
-    );
+    setLocationRequesting(true);
+    try {
+      const position = await getDeviceLocation();
+      selectCoordinates([position.coords.latitude, position.coords.longitude]);
+    } catch (error) {
+      setLocationError(getDeviceLocationError(error, 'No se pudo obtener tu ubicación. Puedes fijar el punto manualmente.'));
+    } finally {
+      setLocationRequesting(false);
+    }
   };
 
   return (
@@ -91,9 +93,9 @@ export default function MapaSeleccionUbicacion({ municipality, latitude, longitu
           </CircleMarker>
         </MapContainer>
         {interactive && (
-          <button type="button" onClick={useCurrentLocation} className="absolute right-3 top-3 z-[1000] inline-flex items-center gap-2 rounded-lg bg-surface px-3 py-2 text-small font-semibold text-text shadow">
+          <button type="button" onClick={useCurrentLocation} disabled={locationRequesting} className="absolute right-3 top-3 z-[1000] inline-flex items-center gap-2 rounded-lg bg-surface px-3 py-2 text-small font-semibold text-text shadow disabled:cursor-wait disabled:opacity-70">
             <LocateFixed size={15} aria-hidden="true" />
-            Usar mi ubicación GPS
+            {locationRequesting ? 'Solicitando ubicación...' : 'Usar mi ubicación GPS'}
           </button>
         )}
       </div>

@@ -246,6 +246,58 @@ body {
   background-color: var(--color-border);
 }
 
+.menu-backdrop {
+  transition: opacity 180ms ease;
+}
+
+.menu-backdrop-open {
+  animation: menu-backdrop-enter 180ms ease both;
+  opacity: 1;
+}
+
+.menu-backdrop-closed {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes menu-backdrop-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.menu-sheet {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 220ms ease, transform 220ms ease;
+  will-change: opacity, transform;
+}
+
+.menu-sheet-open {
+  animation: menu-sheet-enter 220ms ease both;
+}
+
+.menu-sheet-closed {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(24px);
+}
+
+@keyframes menu-sheet-enter {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (min-width: 1280px) {
+  .menu-sheet-closed {
+    transform: translateY(-8px);
+  }
+
+  @keyframes menu-sheet-enter {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .equipment-card:hover {
     transform: translateY(-3px);

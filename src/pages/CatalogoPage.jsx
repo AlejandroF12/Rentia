@@ -12,6 +12,7 @@ import { loadFavoriteEquipmentIds } from '../services/clientService';
 import { useAuth } from '../context/AuthContext';
 import Skeleton from '../components/Skeleton';
 import { geocodeColombianMunicipality } from '../utils/location';
+import { getDeviceLocation, getDeviceLocationError } from '../utils/deviceLocation';
 
 const MUNICIPALITIES = {
   Yopal: { label: 'Yopal, Casanare', latitude: 5.33775, longitude: -72.39586 },
@@ -214,27 +215,20 @@ export default function CatalogoPage() {
     setPage(1);
     setAppliedSearch(search);
   };
-  const useUserLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationError('Este navegador no permite obtener la ubicación.');
-      return;
-    }
+  const useUserLocation = async () => {
     setLocationError('');
     setLocationRequesting(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude });
-        setPage(1);
-        setFilters((current) => ({ ...current, gpsActive: true, radius: current.radius || 150 }));
-        setAppliedFilters((current) => ({ ...current, gpsActive: true }));
-        setLocationRequesting(false);
-      },
-      () => {
-        setLocationRequesting(false);
-        setLocationError('No se pudo obtener tu ubicación. Autoriza el GPS en el navegador para usar el radio.');
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
-    );
+    try {
+      const position = await getDeviceLocation();
+      setUserLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude });
+      setPage(1);
+      setFilters((current) => ({ ...current, gpsActive: true, radius: current.radius || 150 }));
+      setAppliedFilters((current) => ({ ...current, gpsActive: true }));
+    } catch (error) {
+      setLocationError(getDeviceLocationError(error, 'No se pudo obtener tu ubicación. Activa el GPS e inténtalo de nuevo.'));
+    } finally {
+      setLocationRequesting(false);
+    }
   };
 
   return (

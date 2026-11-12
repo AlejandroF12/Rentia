@@ -7,7 +7,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 /** Contenido de cada menú según el rol. `activo` marca el ítem resaltado. */
-export default function MenuPanel({ variant = 'public', onClose, accountOnly = false }) {
+export default function MenuPanel({ variant = 'public', onClose, accountOnly = false, presentation = 'popover' }) {
   const { profile, signOut } = useAuth();
   const { pathname } = useLocation();
   const m = menus[variant];
@@ -26,9 +26,14 @@ export default function MenuPanel({ variant = 'public', onClose, accountOnly = f
       && (pathname === item.href || pathname.startsWith(`${item.href}/`))
     ))
     .sort((first, second) => second.href.length - first.href.length)[0];
-  const items = accountOnly
-    ? m.items.filter((item) => item.salida || item.texto === 'Mi perfil' || item.href === '/catalogo')
-    : m.items;
+  let items = presentation === 'bottom'
+    ? m.items
+    : accountOnly
+      ? m.items.filter((item) => item.salida || item.texto === 'Mi perfil' || item.href === '/catalogo')
+      : m.items;
+  if (presentation === 'bottom') {
+    items = items.filter((item) => item.href !== '/catalogo' && item.href !== '/ingresar' && item.texto !== 'Mi perfil');
+  }
   const handleItemClick = async (event, item) => {
     if (item.salida) {
       event.preventDefault();
@@ -43,7 +48,11 @@ export default function MenuPanel({ variant = 'public', onClose, accountOnly = f
   };
 
   return (
-    <div className="menu-scroll-panel max-h-[calc(100dvh-4rem)] w-full min-w-0 max-w-full overflow-x-hidden overflow-y-auto overscroll-contain bg-surface p-5 shadow-[0_8px_24px_var(--color-shadow-alpha-7)] md:max-h-[calc(100dvh-5rem)] md:w-[348px] md:rounded-2xl md:border md:border-border">
+    <div className={`menu-scroll-panel max-h-[calc(100dvh-4rem)] w-full min-w-0 max-w-full overflow-x-hidden overflow-y-auto overscroll-contain bg-surface p-5 shadow-[0_8px_24px_var(--color-shadow-alpha-7)] ${
+      presentation === 'bottom'
+        ? 'max-h-[calc(100dvh-9rem-env(safe-area-inset-bottom))] rounded-t-2xl border-t border-border pb-[calc(1.25rem+env(safe-area-inset-bottom))] xl:max-h-[calc(100dvh-5rem)] xl:w-[348px] xl:rounded-2xl xl:border xl:pb-5'
+        : 'md:max-h-[calc(100dvh-5rem)] md:w-[348px] md:rounded-2xl md:border md:border-border'
+    }`}>
       {user ? (
         <div className="flex min-w-0 items-center gap-3">
           {!user.sinAvatar && <Avatar className="size-14" />}

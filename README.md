@@ -81,9 +81,13 @@ Las migraciones abarcan perfiles y roles, publicaciones e imágenes, favoritos, 
 
 Las redirecciones de confirmación de cuenta y recuperación de contraseña están configuradas en [`src/services/authService.js`](./src/services/authService.js). Al usar otro dominio, actualiza allí la URL de la aplicación y añade los dominios correspondientes a las URL permitidas de Supabase Auth.
 
+## Documentos legales y registro
+
+Las páginas de [términos](./src/data/legales.jsx), [privacidad](./src/data/legales.jsx) y normas son borradores informativos. El responsable legal, domicilio, canales para consultas y reclamos, plazos de conservación y condiciones finales de proveedores deben completarse y validarse antes de abrir el registro. El registro público permanece pausado; la aceptación de términos, el consentimiento informado de tratamiento de datos y la declaración de mayoría de edad todavía deben incorporarse al flujo de alta, con constancia de la versión aceptada. La autorización para publicar el teléfono del arrendador debe seguir siendo separada y revocable.
+
 ## Aplicación Android de prueba
 
-La app Android reutiliza la interfaz React compilada y se conecta al mismo proyecto de Supabase. Esta configuración permite instalar una versión privada para pruebas; no publica la app en Google Play.
+La app Android reutiliza la interfaz React compilada y se conecta al mismo proyecto de Supabase. Mantener una sola interfaz responsive para web y móvil evita duplicar flujos; los ajustes visuales específicos de móvil se incorporan donde las pruebas del dispositivo los justifiquen. Esta configuración permite instalar una versión privada para pruebas; no publica la app en Google Play.
 
 Requisitos:
 
@@ -97,9 +101,9 @@ Flujo de trabajo:
 1. Ejecuta `npm install`.
 2. Ejecuta `npm run android:sync` para compilar la web y copiarla al proyecto nativo.
 3. Ejecuta `npm run android:open` para abrir el proyecto en Android Studio.
-4. Espera la sincronización de Gradle, conecta el teléfono con depuración USB autorizada y pulsa **Run** en Android Studio.
+4. Espera la sincronización de Gradle. Para instalar por USB, conecta el teléfono con depuración autorizada y pulsa **Run** en Android Studio; también puedes generar un APK desde Android Studio y transferirlo al teléfono.
 
-Cada cambio de interfaz requiere volver a ejecutar `npm run android:sync` y ejecutar/instalar de nuevo la app. Los cambios de datos en Supabase se comparten con la web sin recompilar. Los enlaces de confirmación de cuenta y recuperación todavía abren el sitio web; el retorno directo desde esos enlaces a la app requiere configurar Android App Links más adelante.
+El logo web y los recursos de marca se derivan de `assets/rentia-logo-original.svg`. El icono y la pantalla de inicio se generan desde `assets/` con `npx @capacitor/assets generate --assetPath assets --android --iconBackgroundColor '#ffffff' --splashBackgroundColor '#ffffff'`. El icono usa el isotipo de Rentia y el splash presenta el logo centrado sobre fondo blanco, también en Android 12 y posteriores. La app maneja el botón Atrás de Android y solicita permiso nativo de ubicación al usar una función GPS. En pantallas móviles hay una barra inferior de Explorar, Menú y Perfil, además de acceso directo a Configuración; escritorio conserva su navegación superior. Cada cambio de interfaz o código requiere ejecutar `npm run android:sync` y volver a compilar/instalar. Los cambios de datos en Supabase se comparten con la web sin recompilar. Los enlaces de confirmación de cuenta y recuperación todavía abren el sitio web; el retorno directo desde esos enlaces a la app requiere configurar Android App Links más adelante.
 
 ## Compilar y comprobar
 

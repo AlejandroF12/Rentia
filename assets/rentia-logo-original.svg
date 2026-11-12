@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 210" width="680" height="210">
+  <defs>
+    <!-- Degradado Azul Petróleo Oscuro para la estructura principal de la R -->
+    <linearGradient id="darkTealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D3642" />
+      <stop offset="100%" stop-color="#175263" />
+    </linearGradient>
+
+    <!-- Degradado Verde Esmeralda para el trazo diagonal ascendente -->
+    <linearGradient id="emeraldGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#48A868" />
+      <stop offset="100%" stop-color="#2E8B57" />
+    </linearGradient>
+  </defs>
+
+  <!-- Isotipo: Letra R estilizada -->
+  <g id="isotipo" transform="translate(30, 30)">
+    <!-- Arco superior y pierna derecha en azul petróleo -->
+    <path d="M 0,0 L 82,0 C 122,0 148,24 148,58 C 148,86 130,106 102,113 L 146,155 L 106,155 L 62,110 L 62,88 L 80,88 C 102,88 115,76 115,58 C 115,40 102,28 80,28 L 22,28 Z" fill="url(#darkTealGrad)" />
+    
+    <!-- Trazo diagonal izquierdo en verde esmeralda -->
+    <path d="M 0,155 L 0,122 L 58,64 L 80,84 L 22,142 L 22,155 Z" fill="url(#emeraldGrad)" />
+  </g>
+
+  <!-- Logotipo: Texto "Rentia" -->
+  <g id="logotipo" transform="translate(205, 148)">
+    <text x="0" y="0" font-family="&#39;Inter&#39;, &#39;Segoe UI&#39;, Roboto, Helvetica, Arial, sans-serif" font-weight="800" font-size="108" letter-spacing="-3" fill="#0F3A47">
+      Rent
+    </text>
+    
+    <!-- Letra 'i' sin punto estándar para reemplazarlo con el círculo verde -->
+    <text x="236" y="0" font-family="&#39;Inter&#39;, &#39;Segoe UI&#39;, Roboto, Helvetica, Arial, sans-serif" font-weight="800" font-size="108" letter-spacing="-3" fill="#0F3A47">
+      ı
+    </text>
+    
+    <!-- Punto verde de la 'i' -->
+    <circle cx="250" cy="-76" r="11.5" fill="url(#emeraldGrad)" />
+    
+    <!-- Letra 'a' -->
+    <text x="268" y="0" font-family="&#39;Inter&#39;, &#39;Segoe UI&#39;, Roboto, Helvetica, Arial, sans-serif" font-weight="800" font-size="108" letter-spacing="-3" fill="#0F3A47">
+      a
+    </text>
+  </g>
+
+  <!-- Línea inferior decorativa -->
+  <g id="linea-inferior" transform="translate(208, 174)">
+    <!-- Barra principal gris azulada con corte diagonal -->
+    <polygon points="0,0 296,0 290,9 0,9" fill="#526973" />
+    <!-- Segmento final verde -->
+    <polygon points="303,0 412,0 407,9 298,9" fill="url(#emeraldGrad)" />
+  </g>
+</svg>

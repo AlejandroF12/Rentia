@@ -2,6 +2,8 @@ import { MainLayout } from './layouts/MainLayout'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { lazy, Suspense, useEffect } from 'react'
 import { useAuth } from './context/AuthContext'
+import { Capacitor } from '@capacitor/core'
+import { App as CapacitorApp } from '@capacitor/app'
 
 const Home = lazy(() => import('./pages/Home').then((module) => ({ default: module.Home })))
 const CatalogoPage = lazy(() => import('./pages/CatalogoPage'))
@@ -65,6 +67,37 @@ function ScrollToTop() {
   return null
 }
 
+function NativeBackButton() {
+  useEffect(() => {
+    if (Capacitor.getPlatform() !== 'android') return undefined
+
+    let listener
+    let disposed = false
+    CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+      if (canGoBack) {
+        window.history.back()
+      } else {
+        void CapacitorApp.exitApp()
+      }
+    }).then((handle) => {
+      if (disposed) {
+        void handle.remove()
+      } else {
+        listener = handle
+      }
+    }).catch((error) => {
+      console.error('No se pudo registrar el botón Atrás de Android:', error)
+    })
+
+    return () => {
+      disposed = true
+      void listener?.remove()
+    }
+  }, [])
+
+  return null
+}
+
 function RequireRole({ roles, children }) {
   const { loading, profile } = useAuth()
 
@@ -122,6 +155,7 @@ function RequireSuspended({ children }) {
 function App() {
   return (
     <BrowserRouter>
+      <NativeBackButton />
       <ScrollToTop />
       <Suspense fallback={<div className="min-h-screen bg-surface" aria-busy="true" />}>
         <Routes>
