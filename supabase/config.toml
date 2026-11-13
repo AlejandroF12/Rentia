@@ -1,0 +1,5 @@
+[functions.create-wompi-subscription-checkout]
+verify_jwt = true
+
+[functions.wompi-subscription-webhook]
+verify_jwt = false

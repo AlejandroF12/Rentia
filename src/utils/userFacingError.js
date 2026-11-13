@@ -7,6 +7,7 @@ const CONSTRAINT_MESSAGES = {
   equipment_longitude_valid: 'La ubicación del equipo no es válida. Selecciona un punto en el mapa.',
   profiles_full_name_length: 'El nombre debe tener entre 2 y 120 caracteres.',
   profiles_phone_length: 'El teléfono debe tener entre 7 y 30 caracteres.',
+  profiles_avatar_path_owned: 'La foto de perfil no pertenece a esta cuenta.',
   reviews_rating_valid: 'Selecciona una puntuación entre 1 y 5 estrellas.',
   reviews_participants_differ: 'No puedes publicar una valoración para tu propia cuenta.',
   reports_description_length: 'La explicación del reporte no puede superar los 500 caracteres.',
@@ -35,6 +36,13 @@ const APPLICATION_MESSAGES = new Set([
   'Solo administración puede cambiar el estado de una publicación suspendida o eliminada',
   'Solo administración puede cambiar la visibilidad de una valoración',
   'Una valoración oculta por moderación no puede ser eliminada por su autor',
+  'Solo puedes publicar una valoración en nombre de tu propia cuenta.',
+  'La valoración necesita cuentas activas y un equipo válido.',
+  'Un cliente solo puede valorar al arrendador o al equipo que pertenece a ese arrendador.',
+  'Un arrendador solo puede valorar a un cliente en un equipo propio.',
+  'El cliente debe publicar primero una valoración visible sobre ti.',
+  'Solo clientes y arrendadores pueden publicar valoraciones.',
+  'No puedes cambiar los participantes, el equipo ni el tipo de una valoración; edita su contenido.',
 ]);
 
 export function toUserFacingError(error, fallback) {
@@ -69,7 +77,7 @@ export function toUserFacingError(error, fallback) {
 
   if (error?.code === '23505') {
     if (/reviews_|review/i.test(`${constraint || ''} ${message}`)) {
-      return new Error('Ya existe una valoración para este contacto y equipo.');
+      return new Error('Ya existe una valoración de este tipo para esta experiencia. Puedes editarla en lugar de publicar otra.');
     }
     if (/email/i.test(message)) return new Error('Ya existe una cuenta con ese correo.');
     return new Error('Este registro ya existe. Actualiza la página e inténtalo de nuevo.');

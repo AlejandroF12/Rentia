@@ -103,7 +103,7 @@ export default function SinFavoritosPage() {
 
         <aside className="hidden space-y-4 lg:block">
           <Card className="flex items-center gap-4 p-5">
-            <Avatar className="size-12" />
+            <Avatar src={profile?.avatar_url} alt={`Foto de ${profile?.full_name || 'tu perfil'}`} className="size-12" />
             <div>
               <p className="text-heading-sm font-semibold text-text">{profile?.full_name || 'Tu perfil'}</p>
               <p className="mt-1 text-small text-text-muted">

@@ -223,11 +223,48 @@ export async function loadReviewContext(targetUserId, equipmentId) {
   };
 }
 
-export async function createReview({ authorId, targetUserId, equipmentId, rating, comment, highlights, reviewType }) {
-  const { data, error } = await supabase
+export async function loadLandlordReviewContext(landlordId, clientId, equipmentId) {
+  const [targetResult, equipmentResult, clientReviewResult] = await Promise.all([
+    fetchPublicProfile(clientId),
+    supabase
+      .from('equipment')
+      .select('id, name, municipality, owner_id')
+      .eq('id', equipmentId)
+      .single(),
+    supabase
+      .from('reviews')
+      .select('id, review_type, created_at')
+      .eq('author_id', clientId)
+      .eq('target_user_id', landlordId)
+      .eq('equipment_id', equipmentId)
+      .eq('review_type', 'arrendador')
+      .eq('is_published', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  if (equipmentResult.error) throw toUserFacingError(equipmentResult.error, 'No se pudo cargar el equipo relacionado. Puede que ya no esté disponible.');
+  if (clientReviewResult.error) throw toUserFacingError(clientReviewResult.error, 'No se pudo verificar la valoración previa del cliente.');
+  if (targetResult.role !== 'cliente') throw new Error('Solo puedes valorar a una cuenta de cliente.');
+  if (equipmentResult.data.owner_id !== landlordId) throw new Error('El equipo seleccionado no pertenece a tu cuenta.');
+
+  return {
+    target: targetResult,
+    equipment: equipmentResult.data,
+    clientReview: clientReviewResult.data,
+  };
+}
+
+export async function createReview({ targetUserId, equipmentId, rating, comment, highlights, reviewType }) {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError) throw toUserFacingError(authError, 'No se pudo verificar tu sesión. Inicia sesión nuevamente e inténtalo otra vez.');
+  if (!authData.user) throw new Error('Tu sesión expiró. Inicia sesión nuevamente para publicar la valoración.');
+
+  const { error } = await supabase
     .from('reviews')
     .insert({
-      author_id: authorId,
+      author_id: authData.user.id,
       target_user_id: targetUserId,
       equipment_id: equipmentId,
       rating,
@@ -236,17 +273,13 @@ export async function createReview({ authorId, targetUserId, equipmentId, rating
       review_type: reviewType,
       is_published: true,
     })
-    .select('id, rating, comment, highlighted_aspects, review_type, created_at')
-    .single();
 
   if (error) {
     if (error.code === '23505') {
-      throw new Error('Ya tienes una valoración para esta persona y este equipo.');
+      throw new Error('Ya tienes una valoración de este tipo para esta experiencia. Puedes editarla en lugar de publicar otra.');
     }
     throw toUserFacingError(error, 'No se pudo publicar la valoración. Revisa los datos e inténtalo nuevamente.');
   }
-
-  return data;
 }
 
 export async function loadReviewForEdit(authorId, targetUserId, equipmentId, reviewType) {
@@ -257,16 +290,18 @@ export async function loadReviewForEdit(authorId, targetUserId, equipmentId, rev
     .eq('target_user_id', targetUserId)
     .eq('equipment_id', equipmentId)
     .eq('review_type', reviewType)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (error) throw toUserFacingError(error, 'No se pudo cargar la valoración. Inténtalo nuevamente.');
   return data;
 }
 
-export async function updateReview({ reviewId, authorId, rating, comment, highlights, reviewType }) {
+export async function updateReview({ reviewId, authorId, rating, comment, highlights }) {
   const { data, error } = await supabase
     .from('reviews')
-    .update({ rating, comment: comment.trim() || 'Sin comentario.', highlighted_aspects: highlights, review_type: reviewType })
+    .update({ rating, comment: comment.trim() || 'Sin comentario.', highlighted_aspects: highlights })
     .eq('id', reviewId)
     .eq('author_id', authorId)
     .select('id, rating, comment, highlighted_aspects, created_at')

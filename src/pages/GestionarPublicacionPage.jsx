@@ -16,11 +16,15 @@ import {
   updateEquipmentPublication,
 } from '../services/equipmentService';
 
-function EquipoResumen({ equipment }) {
+function EquipoResumen({ equipment, imageUrl }) {
   const query = `?id=${encodeURIComponent(equipment.id)}`;
   return (
     <article className="overflow-hidden rounded-2xl border border-border bg-surface">
-      <ImagenNoEncontrada className="aspect-[16/7] w-full md:aspect-[16/9]" />
+      {imageUrl ? (
+        <img src={imageUrl} alt={`Foto de ${equipment.name || 'equipo'}`} className="aspect-[16/7] w-full object-cover md:aspect-[16/9]" />
+      ) : (
+        <ImagenNoEncontrada className="aspect-[16/7] w-full md:aspect-[16/9]" />
+      )}
       <div className="p-4">
         <EstadoBadge disponible={equipment.is_available} />
         <p className="mt-3 text-caption uppercase tracking-wide text-text-muted">{equipment.category}</p>
@@ -42,6 +46,7 @@ export default function GestionarPublicacionPage() {
   const [searchParams] = useSearchParams();
   const equipmentId = searchParams.get('id');
   const [equipment, setEquipment] = useState(null);
+  const [coverImageUrl, setCoverImageUrl] = useState('');
   const [error, setError] = useState('');
   const [publicationError, setPublicationError] = useState('');
   const [updating, setUpdating] = useState(false);
@@ -49,9 +54,20 @@ export default function GestionarPublicacionPage() {
 
   useEffect(() => {
     if (!equipmentId || !session?.user?.id) return;
-    loadOwnerEquipmentById(equipmentId, session.user.id)
-      .then(setEquipment)
-      .catch((loadError) => setError(loadError.message));
+    let active = true;
+    Promise.all([
+      loadOwnerEquipmentById(equipmentId, session.user.id),
+      loadEquipmentImages(equipmentId),
+    ])
+      .then(([loadedEquipment, images]) => {
+        if (!active) return;
+        setEquipment(loadedEquipment);
+        setCoverImageUrl(images[0]?.url || '');
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError.message);
+      });
+    return () => { active = false; };
   }, [equipmentId, session?.user?.id]);
 
   const changePublication = async (publicationStatus) => {
@@ -110,7 +126,7 @@ export default function GestionarPublicacionPage() {
       {publicationError && <p role="alert" className="mt-4 text-small text-danger">{publicationError}</p>}
 
       <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[1fr_288px] lg:items-start lg:gap-8">
-        <div className="lg:hidden"><EquipoResumen equipment={equipment} /></div>
+        <div className="lg:hidden"><EquipoResumen equipment={equipment} imageUrl={coverImageUrl} /></div>
 
         <div className="space-y-6">
           <Card>
@@ -163,7 +179,7 @@ export default function GestionarPublicacionPage() {
         </div>
 
         <aside className="hidden space-y-4 lg:block">
-          <EquipoResumen equipment={equipment} />
+          <EquipoResumen equipment={equipment} imageUrl={coverImageUrl} />
           <Card tone="muted">
             <h2 className="text-heading-md font-semibold text-text">Tres estados distintos</h2>
             <dl className="mt-5 space-y-5 text-small text-text-muted">

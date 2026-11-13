@@ -213,7 +213,11 @@ export default function PanelArrendadorPage() {
         <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           {latestReview ? (
             <div className="flex items-center gap-3">
-              <Avatar className="size-11" />
+              <Avatar
+                src={latestReview.author?.avatar_url}
+                alt={`Foto de ${latestReview.author?.full_name || 'cliente de Rentia'}`}
+                className="size-11"
+              />
               <div>
                 <p className="text-label font-semibold text-text">{latestReview.author?.full_name || 'Cliente de Rentia'}</p>
                 <p className="mt-0.5 text-small text-text-muted">

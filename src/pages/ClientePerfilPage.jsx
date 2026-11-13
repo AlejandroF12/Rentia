@@ -5,12 +5,13 @@ import Avatar from '../components/Avatar';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
 import Field from '../components/Field';
+import ProfilePhotoUpload from '../components/ProfilePhotoUpload';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { updateClientProfile } from '../services/clientService';
 
 export default function ClientePerfilPage() {
-  const { profile, session } = useAuth();
+  const { profile, session, refreshProfile } = useAuth();
   const metadata = session?.user?.user_metadata || {};
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(profile?.full_name || metadata.full_name || '');
@@ -32,6 +33,7 @@ export default function ClientePerfilPage() {
     setSaving(true);
     try {
       await updateClientProfile(session.user.id, { fullName, phone, municipality });
+      await refreshProfile();
       setSaved('Perfil actualizado correctamente.');
       setEditing(false);
     } catch (saveError) {
@@ -39,6 +41,14 @@ export default function ClientePerfilPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const cancelEditing = () => {
+    setFullName(profile?.full_name || metadata.full_name || '');
+    setPhone(profile?.phone || metadata.phone || '');
+    setMunicipality(profile?.municipality || '');
+    setError('');
+    setEditing(false);
   };
 
   return (
@@ -51,12 +61,19 @@ export default function ClientePerfilPage() {
       />
       <Card className="mt-6 max-w-2xl lg:mt-8">
         <div className="flex items-center gap-4">
-          <Avatar className="size-16" />
+          <Avatar src={profile?.avatar_url} alt={`Foto de ${fullName}`} className="size-16" />
           <div>
             <h2 className="text-heading-md font-semibold text-text">{fullName}</h2>
             <p className="mt-1 text-small text-text-muted">{profile?.municipality || 'Municipio no registrado'}</p>
           </div>
         </div>
+        <ProfilePhotoUpload
+          userId={session?.user?.id}
+          avatarPath={profile?.avatar_path}
+          avatarUrl={profile?.avatar_url}
+          name={fullName}
+          onUpdated={refreshProfile}
+        />
         <Badge tone="success" className="mt-5">Cuenta activa</Badge>
         <dl className="mt-5 space-y-4 border-t border-border pt-5">
           <div>
@@ -81,7 +98,7 @@ export default function ClientePerfilPage() {
             {error && <p role="alert" className="text-small text-danger">{error}</p>}
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button type="submit" size="lg" disabled={saving}>{saving ? 'Guardando...' : 'Guardar cambios'}</Button>
-              <Button type="button" variant="secondary" size="lg" onClick={() => setEditing(false)}>Cancelar</Button>
+              <Button type="button" variant="secondary" size="lg" onClick={cancelEditing}>Cancelar</Button>
             </div>
           </form>
         )}

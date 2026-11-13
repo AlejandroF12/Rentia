@@ -2,6 +2,7 @@ import { MapPin, Plus, X, ChevronDown, ArrowUpRight, UserRound, Settings, Truck,
 import Logo from './Logo';
 import Button from './Button';
 import Badge from './Badge';
+import Avatar from './Avatar';
 import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import MenuPanel from './MenuPanel';
@@ -137,9 +138,7 @@ export default function Navbar({ variant = 'public', menuOpen = false }) {
                 className="flex items-center gap-1 rounded-full border border-border p-1 text-text hover:bg-surface-muted"
                 onClick={isMenuOpen ? closeMenu : openMenu}
               >
-                <span className="flex size-8 items-center justify-center rounded-full bg-surface-muted text-text-muted">
-                  <UserRound size={16} strokeWidth={1.8} aria-hidden="true" />
-                </span>
+                <Avatar src={profile?.avatar_url} alt={`Foto de ${profile?.full_name || 'tu perfil'}`} className="size-8" />
                 <span className="flex size-6 items-center justify-center rounded-full text-text-muted">
                   {isMenuOpen ? <X size={16} /> : <ChevronDown size={16} />}
                 </span>

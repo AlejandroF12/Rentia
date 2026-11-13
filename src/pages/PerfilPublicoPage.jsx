@@ -53,7 +53,7 @@ export default function PerfilPublicoPage() {
           {/* Tarjeta del arrendador */}
           <aside className="h-fit rounded-2xl border border-border bg-surface p-5">
             <div className="flex items-center gap-3">
-              <Avatar className="size-14" />
+              <Avatar src={profile.avatar_url} alt={`Foto de ${profile.full_name}`} className="size-14" />
               <div>
                 <p className="text-body-lg font-semibold text-text">{profile.full_name}</p>
                 <p className="text-small text-text-muted">Arrendador · {profile.municipality || 'Casanare'}</p>

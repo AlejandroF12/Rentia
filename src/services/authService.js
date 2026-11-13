@@ -1,12 +1,15 @@
+import { Capacitor } from '@capacitor/core';
 import { setRememberSession, supabase } from '../lib/supabaseClient';
 import { toUserFacingError } from '../utils/userFacingError';
+import { loadProfilePhotoUrl } from './profilePhotoService';
 
-const APP_URL = 'https://www.rentiaapp.me';
+const APP_URL = import.meta.env.VITE_APP_URL
+  || (Capacitor.isNativePlatform() ? 'https://www.rentiaapp.me' : window.location.origin);
 
 export async function loadProfile(userId) {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, email, phone, municipality, role, status, contact_authorized, created_at, suspension_reason, suspended_at')
+    .select('id, full_name, email, phone, municipality, role, status, contact_authorized, created_at, suspension_reason, suspended_at, avatar_path')
     .eq('id', userId)
     .single();
 
@@ -14,7 +17,10 @@ export async function loadProfile(userId) {
     throw toUserFacingError(error, 'No se pudo cargar tu perfil. Inténtalo nuevamente.');
   }
 
-  return data;
+  return {
+    ...data,
+    avatar_url: await loadProfilePhotoUrl(data.avatar_path),
+  };
 }
 
 export async function signIn(email, password, remember) {

@@ -23,8 +23,12 @@ export default function AdminReportesPage() {
   const [statusFilter, setStatusFilter] = useState('todos');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { profile } = useAuth();
-  const reload = useCallback(() => loadAdminOverview().then((nextData) => { setData(nextData); setSelectedId((current) => current || nextData.reports[0]?.id || ''); }).catch((loadError) => setError(loadError.message)), []);
+  const reload = useCallback(() => loadAdminOverview()
+    .then((nextData) => { setData(nextData); setSelectedId((current) => current || nextData.reports[0]?.id || ''); })
+    .catch((loadError) => setError(loadError.message))
+    .finally(() => setLoading(false)), []);
   useEffect(() => { reload(); }, [reload]);
   const reports = useMemo(() => data.reports.filter((report) => statusFilter === 'todos' || report.status === statusFilter), [data.reports, statusFilter]);
   const selected = reports.find((report) => report.id === selectedId) || reports[0];
@@ -69,6 +73,7 @@ export default function AdminReportesPage() {
       <div className="mt-6 grid grid-cols-3 gap-3 md:mt-8 md:gap-5"><Estadistica valor={counts.pendiente} etiqueta="Pendientes" icono={Flag} /><Estadistica valor={counts.revision} etiqueta="En revisión" icono={Flag} /><Estadistica valor={counts.resuelto} etiqueta="Resueltos" icono={Flag} /></div>
       <PestanasAdmin activa="reportes" reportCount={counts.pendiente + counts.revision} />
       {error && <p role="alert" className="mt-4 text-small text-danger">{error}</p>}
+      {loading && <p role="status" aria-live="polite" className="mt-4 text-small text-text-muted">Cargando reportes…</p>}
       <label className="mt-5 block max-w-sm text-label font-semibold text-text">
         Filtrar reportes
         <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-border bg-surface px-4 font-normal">
@@ -96,7 +101,7 @@ export default function AdminReportesPage() {
               </button>
             );
           })}
-          {!reports.length && <Card><p className="text-body text-text-muted">No hay reportes registrados.</p></Card>}
+          {!loading && !error && !reports.length && <Card><p className="text-body text-text-muted">No hay reportes registrados.</p></Card>}
         </section>
         {selected && <Card>
           <p className="text-caption uppercase text-text-muted">Reporte seleccionado</p>

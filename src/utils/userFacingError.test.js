@@ -37,6 +37,25 @@ test('preserves actionable validation messages raised by the application', () =>
   assert.equal(error.message, 'No tienes permiso para resolver apelaciones');
 });
 
+test('requires a visible client review of the landlord before the landlord can respond', () => {
+  const error = toUserFacingError({
+    code: 'P0001',
+    message: 'El cliente debe publicar primero una valoración visible sobre ti.',
+  }, 'No se pudo publicar la valoración.');
+
+  assert.equal(error.message, 'El cliente debe publicar primero una valoración visible sobre ti.');
+});
+
+test('explains that each participant can submit only one review of each type per experience', () => {
+  const error = toUserFacingError({
+    code: '23505',
+    constraint: 'reviews_author_target_equipment_idx',
+    message: 'duplicate key violates unique constraint',
+  }, 'No se pudo publicar la valoración.');
+
+  assert.equal(error.message, 'Ya existe una valoración de este tipo para esta experiencia. Puedes editarla en lugar de publicar otra.');
+});
+
 test('hides an unrecognized database exception behind the operation fallback', () => {
   const error = toUserFacingError({
     code: 'P0001',

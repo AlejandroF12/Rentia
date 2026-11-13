@@ -33,7 +33,7 @@ function TarjetaPerfil({ className = '' }) {
   return (
     <Card className={className}>
       <div className="flex items-center gap-3 lg:flex-col lg:items-start lg:gap-4">
-        <Avatar className="size-14 lg:size-16" />
+        <Avatar src={profile?.avatar_url} alt={`Foto de ${c.nombre}`} className="size-14 lg:size-16" />
         <div>
           <p className="text-heading-sm font-semibold text-text lg:text-heading-lg">{c.nombre}</p>
           <p className="mt-1 text-small text-text-muted">{c.detalle}</p>
@@ -126,9 +126,7 @@ export default function MiEspacioClientePage() {
   const activeReviews = activeReviewTab === 'enviadas' ? reviewSummary?.sent : reviewSummary?.received;
   const v = activeReviews?.[0];
   const reviewName = activeReviewTab === 'enviadas' ? v?.target?.full_name : v?.author?.full_name;
-  const editReviewUrl = v
-    ? `/valoraciones/cliente-a-arrendador?targetUserId=${v.target?.id}&equipmentId=${v.equipment?.id}&reviewType=${v.review_type || 'arrendador'}&edit=1`
-    : '/valoraciones/politica';
+  const reviewProfile = activeReviewTab === 'enviadas' ? v?.target : v?.author;
   const stats = {
     favoritos: favoritesLoading ? '—' : favoritos.length,
     enviadas: reviewsLoading ? '—' : reviewSummary?.sent.length || 0,
@@ -214,7 +212,7 @@ export default function MiEspacioClientePage() {
 
             {reviewError && <p role="alert" className="mt-5 text-small text-danger">{reviewError}</p>}
             {reviewsLoading ? <p role="status" aria-live="polite" className="mt-5 text-small text-text-muted">Cargando tus valoraciones…</p> : v ? <div className="mt-5 flex items-start gap-3">
-              <Avatar className="size-11 shrink-0" />
+              <Avatar src={reviewProfile?.avatar_url} alt={`Foto de ${reviewName || 'usuario de Rentia'}`} className="size-11 shrink-0" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -227,42 +225,34 @@ export default function MiEspacioClientePage() {
                 </div>
                 <StarRating size={16} value={v.rating} className="mt-3 lg:hidden" />
                 <p className="mt-3 text-small text-text-muted">{v.comment || 'Sin comentario.'}</p>
-                <Link
-                  to={activeReviewTab === 'enviadas' ? editReviewUrl : '/cliente/valoraciones'}
-                  className="mt-3 hidden text-small font-semibold text-text lg:inline-block"
-                >
-                  {activeReviewTab === 'enviadas' ? 'Editar mi valoración' : 'Ver valoración'}
-                </Link>
+                {activeReviewTab === 'recibidas' && (
+                  <Link to="/cliente/valoraciones" className="mt-3 hidden text-small font-semibold text-text lg:inline-block">
+                    Ver valoración
+                  </Link>
+                )}
               </div>
             </div> : !reviewError ? <InfoBox
               title={activeReviewTab === 'enviadas' ? 'Aún no tienes valoraciones enviadas' : 'Aún no tienes valoraciones recibidas'}
               className="mt-5"
             >
               {activeReviewTab === 'enviadas'
-                ? 'Cuando valores a un arrendador después de contactarlo, tu opinión aparecerá aquí.'
+                ? 'Cuando tengas una experiencia que compartir, abre la ficha del equipo para valorar al arrendador o al equipo.'
                 : 'Cuando un arrendador valore tu experiencia, su opinión aparecerá aquí.'}
             </InfoBox> : null}
 
             <div className="mt-5 flex flex-col gap-3 lg:hidden">
-              {activeReviewTab === 'enviadas' && (
-                <Button as={Link} to={editReviewUrl} variant="secondary" size="lg" fullWidth>
-                  {v ? 'Editar mi valoración' : 'Crear mi valoración'}
-                </Button>
-              )}
               {activeReviewTab === 'recibidas' && v && (
                 <Button as={Link} to="/cliente/valoraciones" variant="secondary" size="lg" fullWidth>
                   Ver valoración recibida
                 </Button>
               )}
-              <Button as={Link} to="/valoraciones/politica" variant="secondary" size="lg" fullWidth>Calificar otro contacto</Button>
             </div>
 
             <div className="mt-5 hidden items-center justify-between gap-4 rounded-xl bg-surface-muted p-4 lg:flex">
               <p className="flex items-center gap-3 text-small text-text-muted">
                 <Star size={16} aria-hidden="true" className="text-text" />
-                ¿Contactaste a un propietario? Comparte tu experiencia con la comunidad.
+                Para valorar, abre la ficha del equipo que contactaste y elige qué experiencia quieres compartir.
               </p>
-              <Link to="/valoraciones/politica" className="whitespace-nowrap text-label font-semibold text-text">Calificar →</Link>
             </div>
           </Card>
 

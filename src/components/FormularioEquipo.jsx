@@ -242,7 +242,7 @@ function PanelAyuda({ modo }) {
   );
 }
 
-function PanelResumen({ equipo, modo, ownerName }) {
+function PanelResumen({ equipo, modo, ownerName, imageUrl }) {
   if (modo === 'revision') {
     return (
       <Card className="p-5">
@@ -255,7 +255,11 @@ function PanelResumen({ equipo, modo, ownerName }) {
   return (
     <Card className="p-4">
       <p className="text-label font-semibold text-text">Así verán tu equipo</p>
-      <ImagenNoEncontrada className="mt-3 aspect-[4/3] w-full rounded-xl" />
+      {imageUrl ? (
+        <img src={imageUrl} alt={`Foto de ${equipo.nombre || 'equipo'}`} className="mt-3 aspect-[4/3] w-full rounded-xl object-cover" />
+      ) : (
+        <ImagenNoEncontrada className="mt-3 aspect-[4/3] w-full rounded-xl" />
+      )}
       <EstadoBadge disponible={equipo.disponible} className="mt-3" />
       <p className="mt-3 text-heading-md font-semibold text-text">{equipo.nombre}</p>
       <p className="mt-3 text-small text-text-muted">{equipo.municipio}</p>
@@ -501,7 +505,7 @@ export default function FormularioEquipo({ modo = 'agregar', equipo, errores = {
 
         <aside className="space-y-4">
           {revision && <div className="hidden lg:block">{insignia}</div>}
-          <div className="hidden lg:block"><PanelResumen equipo={{ ...equipo, disponible }} modo={modo} ownerName={profile?.full_name} /></div>
+          <div className="hidden lg:block"><PanelResumen equipo={{ ...equipo, disponible }} modo={modo} ownerName={profile?.full_name} imageUrl={images[0]?.url} /></div>
           <PanelDisponibilidad revision={revision} disponible={disponible} onAvailabilityChange={() => setDisponible((value) => !value)} />
           <PanelAyuda modo={modo} />
         </aside>

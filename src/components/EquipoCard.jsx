@@ -1,4 +1,4 @@
-import { Heart, MapPin, ArrowUpRight } from 'lucide-react';
+import { Heart, MapPin, ArrowUpRight, Pencil } from 'lucide-react';
 import ImagenNoEncontrada from './ImagenNoEncontrada';
 import { EstadoBadge } from './Badge';
 import { Puntaje } from './StarRating';
@@ -20,6 +20,7 @@ export default function EquipoCard({ equipo, favorito = true, estadoEnCuerpo = f
   const [favoriteNotice, setFavoriteNotice] = useState('');
   const favorite = isFavorite;
   const { categoria, nombre, lugar, distancia, puntaje, disponible, imagen } = equipo;
+  const isOwnEquipment = profile?.role === 'arrendador' && equipo.owner_id === session?.user?.id;
 
   return (
     <article className="equipment-card motion-enter overflow-hidden rounded-2xl border border-border bg-surface">
@@ -33,6 +34,11 @@ export default function EquipoCard({ equipo, favorito = true, estadoEnCuerpo = f
           disponible={disponible}
           className={`absolute left-3 top-3 ${estadoEnCuerpo ? 'hidden md:inline-flex' : ''}`}
         />
+        {isOwnEquipment && (
+          <span className="absolute right-3 top-3 rounded-full bg-surface px-3 py-1 text-caption font-semibold text-text shadow-sm">
+            Tu equipo
+          </span>
+        )}
         {favorito && profile?.role === 'cliente' && (
           <button
             type="button"
@@ -83,13 +89,32 @@ export default function EquipoCard({ equipo, favorito = true, estadoEnCuerpo = f
           </span>
           <Puntaje valor={puntaje} className="shrink-0" />
         </div>
-        <Link
-          to={`/detalle-equipo?id=${equipo.id}`}
-          className="group mt-3 flex min-h-11 items-center justify-between rounded-lg bg-primary px-4 py-3 text-label font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-        >
-          Ver equipo
-          <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-        </Link>
+        {isOwnEquipment ? (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <Link
+              to={`/arrendador/equipos/editar?id=${encodeURIComponent(equipo.id)}`}
+              className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border px-3 py-3 text-label font-semibold text-text transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              <Pencil size={15} aria-hidden="true" />
+              Editar
+            </Link>
+            <Link
+              to={`/detalle-equipo?id=${encodeURIComponent(equipo.id)}`}
+              className="group flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-3 py-3 text-label font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              Ver
+              <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+            </Link>
+          </div>
+        ) : (
+          <Link
+            to={`/detalle-equipo?id=${encodeURIComponent(equipo.id)}`}
+            className="group mt-3 flex min-h-11 items-center justify-between rounded-lg bg-primary px-4 py-3 text-label font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            Ver equipo
+            <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+          </Link>
+        )}
       </div>
     </article>
   );

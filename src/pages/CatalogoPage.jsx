@@ -29,6 +29,11 @@ const DEFAULT_FILTERS = {
   gpsActive: false,
   availableOnly: false,
 };
+const EMPTY_FILTERS = {
+  ...DEFAULT_FILTERS,
+  municipality: '',
+  municipalityCoordinates: null,
+};
 const EQUIPMENT_PAGE_SIZE = 9;
 
 function Filtros({ filters, onChange, onApply, onReset, filterError, onUseLocation, locationRequesting }) {
@@ -111,6 +116,7 @@ export default function CatalogoPage() {
   const [search, setSearch] = useState(initialSearch);
   const [appliedSearch, setAppliedSearch] = useState(initialSearch);
   const [filters, setFilters] = useState(initialFilters);
+  const [radiusInput, setRadiusInput] = useState(String(initialFilters.radius));
   const [appliedFilters, setAppliedFilters] = useState(initialFilters);
   const [sort, setSort] = useState('distance');
   const [page, setPage] = useState(1);
@@ -173,17 +179,25 @@ export default function CatalogoPage() {
     visibleEquipment.slice((currentPage - 1) * EQUIPMENT_PAGE_SIZE, currentPage * EQUIPMENT_PAGE_SIZE)
   ), [visibleEquipment, currentPage]);
 
-  const updateFilters = (changes) => setFilters((current) => ({ ...current, ...changes }));
+  const updateFilters = (changes) => {
+    if (changes.radius !== undefined) setRadiusInput(String(changes.radius));
+    setFilters((current) => ({ ...current, ...changes }));
+  };
   const applyFilters = (event) => {
     event.preventDefault();
     setFilterError('');
+    const radius = Number(radiusInput);
+    if (!radiusInput.trim() || !Number.isInteger(radius) || radius < 10 || radius > 300) {
+      setFilterError('El radio de búsqueda debe ser un número entero entre 10 y 300 km.');
+      return;
+    }
     setLoading(true);
     setPage(1);
     const apply = async () => {
-      let nextFilters = filters;
-      if (!userLocation && filters.municipality.trim() && !filters.municipalityCoordinates) {
+      let nextFilters = { ...filters, radius };
+      if (!userLocation && nextFilters.municipality.trim() && !nextFilters.municipalityCoordinates) {
         try {
-          const coordinates = await geocodeColombianMunicipality(filters.municipality);
+          const coordinates = await geocodeColombianMunicipality(nextFilters.municipality);
           if (!coordinates) {
             setFilterError('No encontramos ese municipio en Colombia. Verifica el nombre e inténtalo de nuevo.');
             setLoading(false);
@@ -205,9 +219,11 @@ export default function CatalogoPage() {
     setLoading(true);
     setPage(1);
     setUserLocation(null);
-    setFilters({ ...DEFAULT_FILTERS, gpsActive: false });
-    setAppliedFilters({ ...DEFAULT_FILTERS, gpsActive: false });
+    setRadiusInput(String(EMPTY_FILTERS.radius));
+    setFilters(EMPTY_FILTERS);
+    setAppliedFilters(EMPTY_FILTERS);
     setFilterError('');
+    setLocationError('');
   };
   const applySearch = (event) => {
     event.preventDefault();
@@ -273,7 +289,7 @@ export default function CatalogoPage() {
             </select>
             <label className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-small text-text sm:h-9">
               <span>Hasta</span>
-              <input aria-label="Radio de búsqueda" type="number" min="10" max="300" value={filters.radius} disabled={!filters.gpsActive} onChange={(event) => updateFilters({ radius: Number(event.target.value) || 10 })} className="w-12 bg-transparent text-center disabled:cursor-not-allowed disabled:opacity-40" />
+              <input aria-label="Radio de búsqueda" type="number" min="10" max="300" value={radiusInput} disabled={!filters.gpsActive} onChange={(event) => setRadiusInput(event.target.value)} className="w-12 bg-transparent text-center disabled:cursor-not-allowed disabled:opacity-40" />
               <span>km</span>
             </label>
             <input
@@ -302,7 +318,13 @@ export default function CatalogoPage() {
 
           <section aria-labelledby="resultados">
             <div className="flex items-center justify-between">
-              <h2 id="resultados" className="text-label text-text md:text-body">{loading ? 'Cargando equipos...' : `${visibleEquipment.length} equipos publicados`}</h2>
+              <h2 id="resultados" className="text-label text-text md:text-body">
+                {loading
+                  ? 'Cargando equipos...'
+                  : visibleEquipment.length === 1
+                    ? '1 equipo publicado'
+                    : `${visibleEquipment.length} equipos publicados`}
+              </h2>
               <label className="inline-flex items-center gap-2 text-small text-text-muted">
                 Ordenar
                 <select value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }} className="min-h-11 bg-transparent font-semibold text-text sm:min-h-0">

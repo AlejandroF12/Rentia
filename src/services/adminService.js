@@ -1,5 +1,7 @@
 import { supabase } from '../lib/supabaseClient';
 import { toUserFacingError } from '../utils/userFacingError';
+import { loadEquipmentCoverImages } from './equipmentService';
+import { loadProfilePhotoUrls } from './profilePhotoService';
 
 const adminQuery = (table) => supabase.from(table);
 
@@ -81,10 +83,10 @@ export async function loadAdminDashboard() {
   };
 }
 
-export async function loadAdminOverview() {
+export async function loadAdminOverview({ includeProfilePhotos = false, includeEquipmentImages = false } = {}) {
   const [users, equipment, reports] = await Promise.all([
-    adminQuery('profiles').select('id, full_name, email, phone, municipality, role, status, created_at, suspension_reason, suspended_at').order('created_at', { ascending: false }),
-    adminQuery('equipment').select('id, name, category, municipality, is_available, publication_status, owner:owner_id(id, full_name, email, status), updated_at, created_at').order('updated_at', { ascending: false }),
+    adminQuery('profiles').select('id, full_name, email, phone, municipality, role, status, created_at, suspension_reason, suspended_at, avatar_path').order('created_at', { ascending: false }),
+    adminQuery('equipment').select('id, name, category, brand, model, model_year, main_feature, description, municipality, sector, is_available, publication_status, owner:owner_id(id, full_name, email, status, role, municipality, avatar_path), updated_at, created_at').order('updated_at', { ascending: false }),
     adminQuery('reports').select('id, reason, description, status, created_at, reviewed_at, reviewed_by, resolution_note, reviewer:reviewed_by(full_name), reporter:reporter_id(full_name, role, status), equipment:equipment_id(id, name, municipality, owner_id, owner:owner_id(status)), review:review_id(id, rating, comment, is_published, target_user_id, author:author_id(status), target:target_user_id(status))').order('created_at', { ascending: false }),
   ]);
 
@@ -92,9 +94,41 @@ export async function loadAdminOverview() {
     if (result.error) throw toUserFacingError(result.error, 'No se pudo cargar el panel. Inténtalo nuevamente.');
   }
 
+  let usersData = users.data ?? [];
+  let equipmentData = equipment.data ?? [];
+  if (includeProfilePhotos || includeEquipmentImages) {
+    const [profilePhotoUrls, equipmentImageUrls] = await Promise.all([
+      includeProfilePhotos || includeEquipmentImages
+        ? loadProfilePhotoUrls([
+          ...(includeProfilePhotos ? usersData.map((user) => user.avatar_path) : []),
+          ...(includeEquipmentImages ? equipmentData.map((item) => item.owner?.avatar_path) : []),
+        ])
+        : Promise.resolve(new Map()),
+      includeEquipmentImages
+        ? loadEquipmentCoverImages(equipmentData.map((item) => item.id))
+        : Promise.resolve(new Map()),
+    ]);
+    if (includeProfilePhotos) {
+      usersData = usersData.map((user) => ({
+        ...user,
+        avatar_url: profilePhotoUrls.get(user.avatar_path) ?? null,
+      }));
+    }
+    if (includeEquipmentImages) {
+      equipmentData = equipmentData.map((item) => ({
+        ...item,
+        image: equipmentImageUrls.get(item.id) ?? null,
+        owner: item.owner ? {
+          ...item.owner,
+          avatar_url: profilePhotoUrls.get(item.owner.avatar_path) ?? null,
+        } : null,
+      }));
+    }
+  }
+
   return {
-    users: users.data ?? [],
-    equipment: equipment.data ?? [],
+    users: usersData,
+    equipment: equipmentData,
     reports: reports.data ?? [],
   };
 }

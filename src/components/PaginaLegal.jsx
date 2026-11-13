@@ -17,10 +17,10 @@ export default function PaginaLegal({ contenido }) {
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <article>
-          <InfoBox tone="warning" title="Propuesta pendiente de validación legal">
-            Borrador de trabajo, no es asesoría ni certificación jurídica. Los datos del responsable y los canales marcados «Por definir» deben completarse, y los textos deben revisarse jurídicamente antes de reabrir el registro o activar suscripciones.
+          <InfoBox tone="warning" title="Información de un proyecto académico">
+            Rentia es un prototipo académico. Estos textos son informativos, no son asesoría ni certificación jurídica, y no describen un servicio comercial listo para producción. Usa datos de prueba y no compartas información sensible.
           </InfoBox>
-          <p className="mt-5 text-small text-text-muted">Borrador · 11 de noviembre de 2026 · Colombia</p>
+          <p className="mt-5 text-small text-text-muted">Proyecto académico · 12 de noviembre de 2026 · Colombia</p>
 
           {secciones.map(({ id, titulo: tituloSeccion, texto }) => (
             <section key={id} id={id} aria-labelledby={`${id}-titulo`} className="mt-8 scroll-mt-6">

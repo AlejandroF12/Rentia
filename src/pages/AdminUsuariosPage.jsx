@@ -6,6 +6,7 @@ import Card from '../components/Card';
 import Badge from '../components/Badge';
 import Estadistica from '../components/Estadistica';
 import Textarea from '../components/Textarea';
+import Avatar from '../components/Avatar';
 import { useAuth } from '../context/AuthContext';
 import { CabeceraAdmin, PestanasAdmin } from '../components/AdminComunes';
 import { loadAdminOverview, updateAdminUserStatus } from '../services/adminService';
@@ -21,9 +22,13 @@ export default function AdminUsuariosPage() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [suspensionReason, setSuspensionReason] = useState('');
+  const [loading, setLoading] = useState(true);
   const { profile } = useAuth();
 
-  const reload = () => loadAdminOverview().then(setData).catch((loadError) => setError(loadError.message));
+  const reload = () => loadAdminOverview({ includeProfilePhotos: true })
+    .then(setData)
+    .catch((loadError) => setError(loadError.message))
+    .finally(() => setLoading(false));
   useEffect(() => { reload(); }, []);
   const users = useMemo(() => data.users.filter((user) => {
     const term = search.trim().toLowerCase();
@@ -74,22 +79,43 @@ export default function AdminUsuariosPage() {
         </select>
       </div>
       {error && <p role="alert" className="mt-4 text-small text-danger">{error}</p>}
+      {loading && <p role="status" aria-live="polite" className="mt-4 text-small text-text-muted">Cargando usuarios…</p>}
       <section aria-label="Usuarios" className="mt-5 grid gap-3">
         {users.map((user) => (
           <button type="button" key={user.id} onClick={() => { setSelectedId(user.id); setSuspensionReason(''); setError(''); }} className={`text-left ${selectedId === user.id ? 'ring-2 ring-primary' : ''}`}>
             <Card className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
-              <div><p className="font-semibold text-text">{user.full_name}</p><p className="text-small text-text-muted">{user.email} · {user.role} · {user.municipality || 'Sin municipio'}</p></div>
+              <div className="flex min-w-0 items-center gap-3">
+                <Avatar src={user.avatar_url} alt={`Foto de ${user.full_name}`} className="size-12" />
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-text">{user.full_name}</p>
+                  <p className="truncate text-small text-text-muted">{user.email} · {user.role} · {user.municipality || 'Sin municipio'}</p>
+                </div>
+              </div>
               <Badge tone={statusTone[user.status]}>{statusLabel[user.status]}</Badge>
             </Card>
           </button>
         ))}
-        {!users.length && <Card><p className="text-body text-text-muted">No hay usuarios que coincidan con el filtro.</p></Card>}
+        {!loading && !error && !users.length && <Card><p className="text-body text-text-muted">No hay usuarios que coincidan con el filtro.</p></Card>}
       </section>
       {selected && (
         <Card className="mt-6">
-          <p className="text-caption uppercase text-text-muted">Usuario seleccionado</p>
-          <h2 className="mt-2 text-heading-md font-semibold text-text">{selected.full_name}</h2>
-          <p className="mt-2 text-small text-text-muted">{selected.email}</p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <Avatar src={selected.avatar_url} alt={`Foto de ${selected.full_name}`} className="size-20" />
+            <div className="min-w-0">
+              <p className="text-caption uppercase text-text-muted">Perfil seleccionado</p>
+              <h2 className="mt-1 text-heading-md font-semibold text-text">{selected.full_name}</h2>
+              <p className="mt-1 break-all text-small text-text-muted">{selected.email}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Badge tone="neutral">{selected.role}</Badge>
+                <Badge tone={statusTone[selected.status]}>{statusLabel[selected.status]}</Badge>
+              </div>
+            </div>
+          </div>
+          <dl className="mt-5 grid gap-4 rounded-xl bg-surface-muted p-4 sm:grid-cols-2">
+            <div><dt className="text-caption font-semibold text-text-muted">Teléfono</dt><dd className="mt-1 text-small text-text">{selected.phone || 'No registrado'}</dd></div>
+            <div><dt className="text-caption font-semibold text-text-muted">Municipio</dt><dd className="mt-1 text-small text-text">{selected.municipality || 'No registrado'}</dd></div>
+            <div><dt className="text-caption font-semibold text-text-muted">En Rentia desde</dt><dd className="mt-1 text-small text-text">{new Date(selected.created_at).toLocaleDateString('es-CO')}</dd></div>
+          </dl>
           {selected.status === 'suspendido' && (
             <div className="mt-4 rounded-xl bg-surface-muted p-4">
               <p className="text-small font-semibold text-text">Motivo comunicado</p>

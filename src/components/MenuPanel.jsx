@@ -29,7 +29,7 @@ export default function MenuPanel({ variant = 'public', onClose, accountOnly = f
   let items = presentation === 'bottom'
     ? m.items
     : accountOnly
-      ? m.items.filter((item) => item.salida || item.texto === 'Mi perfil' || item.href === '/catalogo')
+      ? m.items.filter((item) => item.salida || item.texto === 'Mi perfil' || item.href === '/catalogo' || item.href === '/arrendador/suscripcion')
       : m.items;
   if (presentation === 'bottom') {
     items = items.filter((item) => item.href !== '/catalogo' && item.href !== '/ingresar' && item.texto !== 'Mi perfil');
@@ -55,7 +55,9 @@ export default function MenuPanel({ variant = 'public', onClose, accountOnly = f
     }`}>
       {user ? (
         <div className="flex min-w-0 items-center gap-3">
-          {!user.sinAvatar && <Avatar className="size-14" />}
+          {(!user.sinAvatar || profile?.avatar_url) && (
+            <Avatar src={profile?.avatar_url} alt={`Foto de ${user.nombre}`} className="size-14" />
+          )}
           <div className="min-w-0 flex-1">
             <p className={`break-words text-heading-sm text-text [overflow-wrap:anywhere] ${user.sinAvatar ? '' : 'font-semibold'}`}>{user.nombre}</p>
             {user.detalle && <p className="text-small text-text-muted">{user.detalle}</p>}

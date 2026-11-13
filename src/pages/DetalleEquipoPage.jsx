@@ -34,7 +34,7 @@ function TarjetaPropietario({ owner, equipmentId }) {
       <p className="text-caption font-medium uppercase tracking-wide text-text-muted">Habla con el propietario</p>
 
       <div className="mt-4 flex items-center gap-3">
-        <Avatar className="size-12" />
+        <Avatar src={owner?.avatar_url} alt={`Foto de ${ownerName}`} className="size-12" />
         <div>
           <p className="text-body-lg font-semibold text-text">{ownerName}</p>
           <p className="text-small text-text-muted">Arrendador · {owner?.municipality || 'Casanare'}</p>
@@ -63,22 +63,34 @@ function TarjetaPropietario({ owner, equipmentId }) {
       )}
 
           {owner?.id && <a href={`/perfil-publico?ownerId=${owner.id}`} className="mt-4 inline-block text-small font-semibold text-text">Ver perfil y valoraciones →</a>}
-          {profile?.role === 'cliente' && owner?.id && (
+      {profile?.role === 'cliente' && owner?.id && (
+        <section aria-labelledby="review-options-title" className="mt-5 border-t border-border pt-5">
+          <h2 id="review-options-title" className="text-label font-semibold text-text">¿Ya tuviste contacto por este equipo?</h2>
+          <p className="mt-1 text-small text-text-muted">Comparte por separado tu experiencia con el equipo o con su arrendador.</p>
+          <div className="mt-3 grid gap-3">
             <Link
-              to={`/valoraciones/cliente-a-arrendador?targetUserId=${encodeURIComponent(owner.id)}&equipmentId=${encodeURIComponent(equipmentId)}&reviewType=equipo`}
-              className="mt-4 flex min-h-12 items-center justify-center rounded-lg bg-primary px-4 text-center text-label font-semibold text-primary-foreground"
+              to={`/valoraciones/politica?targetUserId=${encodeURIComponent(owner.id)}&equipmentId=${encodeURIComponent(equipmentId)}&reviewType=equipo`}
+              className="group rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              Valorar este equipo
+              <span className="flex items-center justify-between gap-3 text-label font-semibold text-text">
+                Valorar este equipo
+                <ArrowUpRight size={16} aria-hidden="true" className="shrink-0" />
+              </span>
+              <span className="mt-1 block text-small text-text-muted">Estado, información y experiencia de uso.</span>
             </Link>
-          )}
-          {profile?.role === 'cliente' && owner?.id && (
             <Link
               to={`/valoraciones/politica?targetUserId=${encodeURIComponent(owner.id)}&equipmentId=${encodeURIComponent(equipmentId)}&reviewType=arrendador`}
-              className="mt-3 inline-block text-small font-semibold text-text"
+              className="group rounded-xl border border-border bg-surface p-4 transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              Valorar al arrendador →
+              <span className="flex items-center justify-between gap-3 text-label font-semibold text-text">
+                Valorar al arrendador
+                <ArrowUpRight size={16} aria-hidden="true" className="shrink-0" />
+              </span>
+              <span className="mt-1 block text-small text-text-muted">Atención, comunicación e información recibida.</span>
             </Link>
-          )}
+          </div>
+        </section>
+      )}
 
       <p className="mt-4 flex items-center gap-1.5 text-caption text-text-muted">
         <Link to={`/reportar-publicacion?id=${encodeURIComponent(equipmentId)}`} className="inline-flex items-center gap-1.5">

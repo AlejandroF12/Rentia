@@ -6,6 +6,7 @@ import Badge from '../components/Badge';
 import Button from '../components/Button';
 import Checkbox from '../components/Checkbox';
 import Field from '../components/Field';
+import ProfilePhotoUpload from '../components/ProfilePhotoUpload';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { updateClientProfile } from '../services/clientService';
@@ -43,6 +44,15 @@ export default function ArrendadorPerfilPage() {
     }
   };
 
+  const cancelEditing = () => {
+    setFullName(profile?.full_name || metadata.full_name || '');
+    setPhone(profile?.phone || metadata.phone || '');
+    setMunicipality(profile?.municipality || '');
+    setContactAuthorized(Boolean(profile?.contact_authorized));
+    setError('');
+    setEditing(false);
+  };
+
   return (
     <DashboardLayout rol="arrendador" activo="perfil">
       <PageHeader
@@ -53,12 +63,19 @@ export default function ArrendadorPerfilPage() {
       />
       <Card className="mt-6 max-w-2xl lg:mt-8">
         <div className="flex items-center gap-4">
-          <Avatar className="size-16" />
+          <Avatar src={profile?.avatar_url} alt={`Foto de ${fullName}`} className="size-16" />
           <div>
             <h2 className="text-heading-md font-semibold text-text">{fullName}</h2>
             <p className="mt-1 text-small text-text-muted">{profile?.municipality || 'Municipio no registrado'}</p>
           </div>
         </div>
+        <ProfilePhotoUpload
+          userId={session?.user?.id}
+          avatarPath={profile?.avatar_path}
+          avatarUrl={profile?.avatar_url}
+          name={fullName}
+          onUpdated={refreshProfile}
+        />
         <Badge tone="success" className="mt-5">Cuenta activa</Badge>
         <dl className="mt-5 space-y-4 border-t border-border pt-5">
           <div><dt className="text-caption text-text-muted">Correo electrónico</dt><dd className="mt-1 text-label text-text">{email}</dd></div>
@@ -82,7 +99,7 @@ export default function ArrendadorPerfilPage() {
             {error && <p role="alert" className="text-small text-danger">{error}</p>}
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button type="submit" size="lg" disabled={saving}>{saving ? 'Guardando...' : 'Guardar cambios'}</Button>
-              <Button type="button" variant="secondary" size="lg" onClick={() => setEditing(false)}>Cancelar</Button>
+              <Button type="button" variant="secondary" size="lg" onClick={cancelEditing}>Cancelar</Button>
             </div>
           </form>
         )}

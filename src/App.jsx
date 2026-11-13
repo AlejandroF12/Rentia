@@ -1,9 +1,10 @@
 import { MainLayout } from './layouts/MainLayout'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useAuth } from './context/AuthContext'
 import { Capacitor } from '@capacitor/core'
 import { App as CapacitorApp } from '@capacitor/app'
+import { loadLandlordSubscription } from './services/subscriptionService'
 
 const Home = lazy(() => import('./pages/Home').then((module) => ({ default: module.Home })))
 const CatalogoPage = lazy(() => import('./pages/CatalogoPage'))
@@ -45,6 +46,7 @@ const NormasPage = lazy(() => import('./pages/NormasPage'))
 const ClientePerfilPage = lazy(() => import('./pages/ClientePerfilPage'))
 const ClienteValoracionesPage = lazy(() => import('./pages/ClienteValoracionesPage'))
 const ArrendadorValoracionesPage = lazy(() => import('./pages/ArrendadorValoracionesPage'))
+const ArrendadorSuscripcionPage = lazy(() => import('./pages/ArrendadorSuscripcionPage'))
 const ArrendadorPerfilPage = lazy(() => import('./pages/ArrendadorPerfilPage'))
 const ResumenArrendadorPage = lazy(() => import('./pages/ResumenArrendadorPage'))
 const PreferenciasPage = lazy(() => import('./pages/PreferenciasPage'))
@@ -98,7 +100,7 @@ function NativeBackButton() {
   return null
 }
 
-function RequireRole({ roles, children }) {
+function RequireRole({ roles, children, allowExpiredSubscription = false }) {
   const { loading, profile } = useAuth()
 
   if (loading) {
@@ -115,6 +117,38 @@ function RequireRole({ roles, children }) {
 
   if (!roles.includes(profile.role)) {
     return <Navigate to="/" replace />
+  }
+
+  if (profile.role === 'arrendador' && !allowExpiredSubscription) {
+    return <RequireLandlordSubscription>{children}</RequireLandlordSubscription>
+  }
+
+  return children
+}
+
+function RequireLandlordSubscription({ children }) {
+  const { profile } = useAuth()
+  const [check, setCheck] = useState({ profileId: null, loading: true, isActive: false, error: null })
+
+  useEffect(() => {
+    let active = true
+    loadLandlordSubscription(profile.id, profile.created_at)
+      .then((summary) => {
+        if (active) setCheck({ profileId: profile.id, loading: false, isActive: summary.isActive, error: null })
+      })
+      .catch((error) => {
+        if (active) setCheck({ profileId: profile.id, loading: false, isActive: false, error })
+      })
+
+    return () => { active = false }
+  }, [profile.id, profile.created_at])
+
+  if (check.profileId !== profile.id || check.loading) {
+    return <div className="min-h-screen bg-surface" aria-busy="true" />
+  }
+
+  if (check.error || !check.isActive) {
+    return <Navigate to="/arrendador/suscripcion" replace />
   }
 
   return children
@@ -183,6 +217,7 @@ function App() {
         <Route path='/arrendador/equipos/eliminar' element={<RequireRole roles={['arrendador']}><MainLayout navVariant='arrendador'><ConfirmarEliminacionPage /></MainLayout></RequireRole>} />
         <Route path='/arrendador/valoraciones' element={<RequireRole roles={['arrendador']}><MainLayout navVariant='arrendador'><ArrendadorValoracionesPage /></MainLayout></RequireRole>} />
         <Route path='/arrendador/perfil' element={<RequireRole roles={['arrendador']}><MainLayout navVariant='arrendador'><ArrendadorPerfilPage /></MainLayout></RequireRole>} />
+        <Route path='/arrendador/suscripcion' element={<RequireRole roles={['arrendador']} allowExpiredSubscription><MainLayout navVariant='arrendador' footer={false}><ArrendadorSuscripcionPage /></MainLayout></RequireRole>} />
 
         {/* Cliente */}
         <Route path='/cliente' element={<RequireRole roles={['cliente']}><MainLayout navVariant='cliente'><MiEspacioClientePage /></MainLayout></RequireRole>} />

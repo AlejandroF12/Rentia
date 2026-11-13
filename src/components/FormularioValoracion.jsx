@@ -14,6 +14,11 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { createReview, updateReview } from '../services/clientService';
 
+function ImagenEquipoValoracion({ equipo, className }) {
+  if (!equipo?.imagen) return <ImagenNoEncontrada className={className} />;
+  return <img src={equipo.imagen} alt={equipo.nombre || 'Equipo relacionado'} className={`${className} object-cover`} />;
+}
+
 /**
  * Formulario de valoración (persona y equipo relacionados).
  * `datos` contiene el contexto de la persona que se está valorando.
@@ -21,7 +26,7 @@ import { createReview, updateReview } from '../services/clientService';
 export default function FormularioValoracion({ datos, volverA = '/perfil-publico' }) {
   const { calificado, pregunta, chips, declaracion, publicadoComo, equipo, reviewType = 'arrendador' } = datos;
   const comentario = datos.review?.comment || datos.comentario || '';
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const location = useLocation();
   const [rating, setRating] = useState(datos.review?.rating || 0);
   const [selectedChips, setSelectedChips] = useState(datos.review?.highlighted_aspects || []);
@@ -30,7 +35,13 @@ export default function FormularioValoracion({ datos, volverA = '/perfil-publico
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const isEditing = Boolean(datos.review?.id && datos.editing);
+  const isEquipmentReview = reviewType === 'equipo';
   const canSubmit = Boolean(datos.targetUserId && datos.equipmentId && rating && accepted && !submitting);
+  const policyUrl = `/valoraciones/politica?${new URLSearchParams({
+    targetUserId: datos.targetUserId || '',
+    equipmentId: datos.equipmentId || '',
+    reviewType,
+  })}`;
 
   const toggleChip = (chip) => {
     setSelectedChips((current) => current.includes(chip)
@@ -60,10 +71,9 @@ export default function FormularioValoracion({ datos, volverA = '/perfil-publico
     try {
       const comment = text || 'Sin comentario.';
       if (isEditing) {
-        await updateReview({ reviewId: datos.review.id, authorId: session.user.id, rating, comment, highlights: selectedChips, reviewType });
+        await updateReview({ reviewId: datos.review.id, authorId: session.user.id, rating, comment, highlights: selectedChips });
       } else {
         await createReview({
-          authorId: session.user.id,
           targetUserId: datos.targetUserId,
           equipmentId: datos.equipmentId,
           rating,
@@ -85,10 +95,10 @@ export default function FormularioValoracion({ datos, volverA = '/perfil-publico
       <div className="min-w-0 space-y-6">
         {datos.review && !datos.editing && (
           <Card className="border-primary/30 bg-surface-muted p-5 sm:p-6">
-            <p className="text-label font-semibold text-text">Ya tienes una valoración para este contacto y equipo.</p>
+            <p className="text-label font-semibold text-text">Ya tienes una valoración de este tipo para este contacto y equipo.</p>
             <p className="mt-2 text-small text-text-muted">Puedes consultar la valoración existente o editarla en lugar de publicar otra.</p>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-              <Button as={Link} to={`${location.pathname}?${new URLSearchParams({ targetUserId: datos.targetUserId, equipmentId: datos.equipmentId, edit: '1' })}`} size="lg">
+              <Button as={Link} to={`${location.pathname}?${new URLSearchParams({ targetUserId: datos.targetUserId, equipmentId: datos.equipmentId, reviewType, edit: '1' })}`} size="lg">
                 Editar esta valoración
               </Button>
               <Button as={Link} to={volverA} variant="secondary" size="lg">Volver</Button>
@@ -99,9 +109,11 @@ export default function FormularioValoracion({ datos, volverA = '/perfil-publico
         <form onSubmit={handleSubmit} className="min-w-0">
         <Card className="p-5 sm:p-6 md:p-8">
           <div className="flex items-center gap-4">
-            <Avatar className="size-14" />
+            {isEquipmentReview
+              ? <ImagenEquipoValoracion equipo={equipo} className="size-14 shrink-0 rounded-full" />
+              : <Avatar src={calificado.imagen} alt={`Foto de ${calificado.nombre}`} className="size-14" />}
             <div>
-              <p className="text-caption uppercase tracking-wide text-text-muted">Estás calificando a</p>
+              <p className="text-caption uppercase tracking-wide text-text-muted">{isEquipmentReview ? 'Estás calificando al equipo' : 'Estás calificando a'}</p>
               <p className="mt-1 text-heading-md font-semibold text-text">{calificado.nombre}</p>
               <p className="mt-1 text-small text-text-muted">{calificado.detalle}</p>
             </div>
@@ -133,7 +145,7 @@ export default function FormularioValoracion({ datos, volverA = '/perfil-publico
             </Checkbox>
 
             <div className="mt-5 flex items-center gap-3 text-small text-text-muted">
-              <Avatar className="hidden size-8 md:flex" />
+              <Avatar src={profile?.avatar_url} alt={`Foto de ${profile?.full_name || 'tu perfil'}`} className="hidden size-8 md:flex" />
               {publicadoComo}
             </div>
 
@@ -148,27 +160,43 @@ export default function FormularioValoracion({ datos, volverA = '/perfil-publico
         </form>
         )}
 
-        {/* Móvil: equipo relacionado y aviso al final */}
-        <Card className="lg:hidden p-5">
-          <h2 className="text-heading-lg font-semibold text-text">Equipo relacionado</h2>
-          <ImagenNoEncontrada className="mt-4 aspect-[16/9] w-full rounded-xl" />
-          <p className="mt-5 text-heading-sm font-semibold text-text-muted">{equipo?.nombre || 'Equipo relacionado'}</p>
-          <p className="mt-3 text-small text-text-muted">{equipo?.detalle || 'Referencia de tu experiencia'}</p>
-        </Card>
+        {/* En móvil, el equipo solo acompaña la valoración cuando es el sujeto evaluado. */}
+        {isEquipmentReview && (
+          <Card className="p-5 lg:hidden">
+            <h2 className="text-heading-lg font-semibold text-text">Equipo que estás valorando</h2>
+            <ImagenEquipoValoracion equipo={equipo} className="mt-4 aspect-[16/9] w-full rounded-xl" />
+            {equipo?.imageError && <p role="status" className="mt-2 text-caption text-text-muted">No pudimos mostrar la foto; puedes continuar con la valoración.</p>}
+            <p className="mt-5 text-heading-sm font-semibold text-text-muted">{equipo?.nombre || 'Equipo relacionado'}</p>
+            <p className="mt-3 text-small text-text-muted">{equipo?.detalle || 'Referencia de tu experiencia'}</p>
+          </Card>
+        )}
         <InfoBox title="Honesta, útil y respetuosa" className="lg:hidden">
-          Una valoración por persona. No acredita un alquiler ni un servicio realizado. Abrir WhatsApp no demuestra que hubo contacto.
+          Una valoración por tipo y participante para cada equipo; puedes editarla después de publicar. No acredita un alquiler ni un servicio realizado. Abrir WhatsApp no demuestra que hubo contacto.
         </InfoBox>
-        <Button as={Link} to="/valoraciones/politica" variant="secondary" size="lg" fullWidth className="lg:hidden">
+        <Button as={Link} to={policyUrl} variant="secondary" size="lg" fullWidth className="lg:hidden">
           Consultar política de valoraciones
         </Button>
       </div>
 
       <aside className="hidden space-y-4 lg:block">
         <Card className="p-5">
-          <h2 className="text-label font-semibold text-text">El contacto que compartieron</h2>
-          <ImagenNoEncontrada className="mt-4 aspect-[4/3] w-full rounded-xl" />
-          <p className="mt-4 text-heading-sm font-semibold text-text">{equipo?.nombre || 'Equipo relacionado'}</p>
-          <p className="mt-3 text-small text-text-muted">{equipo?.detalle || 'Referencia de tu experiencia'}</p>
+          <h2 className="text-label font-semibold text-text">{isEquipmentReview ? 'Equipo que estás valorando' : 'Persona que estás valorando'}</h2>
+          {isEquipmentReview ? (
+            <>
+              <ImagenEquipoValoracion equipo={equipo} className="mt-4 aspect-[4/3] w-full rounded-xl" />
+              {equipo?.imageError && <p role="status" className="mt-2 text-caption text-text-muted">No pudimos mostrar la foto; puedes continuar con la valoración.</p>}
+              <p className="mt-4 text-heading-sm font-semibold text-text">{equipo?.nombre || 'Equipo relacionado'}</p>
+              <p className="mt-3 text-small text-text-muted">{equipo?.detalle || 'Referencia de tu experiencia'}</p>
+            </>
+          ) : (
+            <div className="mt-4 flex items-center gap-3">
+              <Avatar src={calificado.imagen} alt={`Foto de ${calificado.nombre}`} className="size-14" />
+              <div className="min-w-0">
+                <p className="break-words text-heading-sm font-semibold text-text">{calificado.nombre}</p>
+                <p className="mt-1 text-small text-text-muted">{calificado.detalle}</p>
+              </div>
+            </div>
+          )}
         </Card>
         <Card tone="muted" className="p-5">
           <ShieldCheck size={18} aria-hidden="true" className="text-text" />

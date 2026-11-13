@@ -1,22 +1,20 @@
 import { supabase } from '../lib/supabaseClient';
 import { toUserFacingError } from '../utils/userFacingError';
+import { loadProfilePhotoUrls } from './profilePhotoService';
 
 export async function loadPublicProfiles(userIds) {
   const ids = [...new Set(userIds.filter(Boolean))];
   if (!ids.length) return new Map();
 
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError) throw toUserFacingError(sessionError, 'No se pudo verificar la sesión. Inténtalo nuevamente.');
-
-  const result = sessionData.session
-    ? await supabase.rpc('get_public_profiles', { p_user_ids: ids })
-    : await supabase
-      .from('profiles')
-      .select('id, full_name, municipality, role, created_at')
-      .in('id', ids);
+  const result = await supabase.rpc('get_public_profiles', { p_user_ids: ids });
 
   if (result.error) throw toUserFacingError(result.error, 'No se pudieron cargar los perfiles. Inténtalo nuevamente.');
-  return new Map((result.data ?? []).map((profile) => [profile.id, profile]));
+  const profiles = result.data ?? [];
+  const photoUrls = await loadProfilePhotoUrls(profiles.map((profile) => profile.avatar_path));
+  return new Map(profiles.map((profile) => [profile.id, {
+    ...profile,
+    avatar_url: photoUrls.get(profile.avatar_path) ?? null,
+  }]));
 }
 
 export async function loadPublicProfile(userId) {

@@ -1,4 +1,4 @@
-import { LayoutGrid, Truck, Star, User, Heart, Users, Tractor, Flag, Scale } from 'lucide-react';
+import { LayoutGrid, Truck, Star, User, Heart, Users, Tractor, Flag, Scale, CreditCard, Search } from 'lucide-react';
 
 /** Menú lateral de las áreas privadas (escritorio). `id` se usa para marcar el ítem activo. */
 export const menusLaterales = {
@@ -9,11 +9,13 @@ export const menusLaterales = {
       { id: 'equipos', texto: 'Mis equipos', icono: Truck, href: '/arrendador/equipos' },
       { id: 'valoraciones', texto: 'Valoraciones', icono: Star, href: '/arrendador/valoraciones' },
       { id: 'perfil', texto: 'Mi perfil', icono: User, href: '/arrendador/perfil' },
+      { id: 'suscripcion', texto: 'Suscripción', icono: CreditCard, href: '/arrendador/suscripcion' },
     ],
   },
   admin: {
     titulo: 'Administración',
     items: [
+      { id: 'catalogo', texto: 'Explorar equipos', icono: Search, href: '/catalogo' },
       { id: 'resumen', texto: 'Resumen', icono: LayoutGrid, href: '/admin/resumen' },
       { id: 'usuarios', texto: 'Usuarios', icono: Users, href: '/admin/usuarios' },
       { id: 'publicaciones', texto: 'Publicaciones', icono: Tractor, href: '/admin/publicaciones' },

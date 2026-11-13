@@ -29,6 +29,7 @@ export const menus = {
       { texto: 'Agregar vehículo', href: '/arrendador/equipos/nuevo' },
       { texto: 'Valoraciones', href: '/arrendador/valoraciones' },
       { texto: 'Mi perfil', href: '/arrendador/perfil' },
+      { texto: 'Suscripción', href: '/arrendador/suscripcion' },
       { texto: 'Cerrar sesión', salida: true, href: '/' },
     ],
   },
@@ -46,6 +47,7 @@ export const menus = {
     usuario: { nombre: 'Administración', sinAvatar: true },
     rol: 'Administración',
     items: [
+      { texto: 'Explorar equipos', href: '/catalogo' },
       { texto: 'Resumen', activo: true, href: '/admin/resumen' },
       { texto: 'Usuarios', href: '/admin/usuarios' },
       { texto: 'Publicaciones', href: '/admin/publicaciones' },

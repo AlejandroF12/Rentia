@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabaseClient';
 import { toUserFacingError } from '../utils/userFacingError';
-import { loadPublicEquipmentOwner } from './profileService';
+import optimizeImage from '../utils/optimizeImage';
+import { loadPublicEquipmentOwner, loadPublicProfile } from './profileService';
 
 export async function getEquipmentImageUrls(paths) {
   const uniquePaths = [...new Set(paths.filter(Boolean))];
@@ -23,22 +24,6 @@ export async function getEquipmentImageUrls(paths) {
 export async function getEquipmentImageUrl(path) {
   const urls = await getEquipmentImageUrls([path]);
   return urls.get(path);
-}
-
-async function optimizeImage(file) {
-  if (!file.type.startsWith('image/') || typeof createImageBitmap !== 'function') return file;
-
-  const bitmap = await createImageBitmap(file);
-  const maxDimension = 1920;
-  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.82));
-  return blob ? new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.webp`, { type: 'image/webp' }) : file;
 }
 
 export async function loadEquipmentImages(equipmentId) {
@@ -181,7 +166,7 @@ export async function loadOwnerEquipment(ownerId) {
 export async function loadPublishedEquipment({ search = '', categories = [], availableOnly = false } = {}) {
   let query = supabase
     .from('equipment')
-    .select('id, name, category, brand, model, model_year, main_feature, description, municipality, sector, latitude, longitude, is_available, publication_status, created_at, equipment_images(id, storage_path, display_order, is_cover), reviews(rating, review_type, is_published)')
+    .select('id, owner_id, name, category, brand, model, model_year, main_feature, description, municipality, sector, latitude, longitude, is_available, publication_status, created_at, equipment_images(id, storage_path, display_order, is_cover), reviews(rating, review_type, is_published)')
     .eq('publication_status', 'publicada')
 
   if (categories.length) query = query.in('category', categories);
@@ -246,7 +231,14 @@ export async function loadEquipmentById(equipmentId) {
 }
 
 export async function loadEquipmentOwner(ownerId) {
-  return loadPublicEquipmentOwner(ownerId);
+  const [contact, profile] = await Promise.all([
+    loadPublicEquipmentOwner(ownerId),
+    loadPublicProfile(ownerId),
+  ]);
+  return {
+    ...profile,
+    phone: contact?.phone || null,
+  };
 }
 
 export async function loadOwnerEquipmentById(equipmentId, ownerId, { includeEliminated = false } = {}) {

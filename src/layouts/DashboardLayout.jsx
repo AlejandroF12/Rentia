@@ -23,6 +23,7 @@ function BarraRol({ rol, className = '' }) {
 /** Variante del panel del arrendador en móvil: pestañas + avatar. */
 function BarraPestanas({ rol, activo, className = '' }) {
   const [open, setOpen] = useState(false);
+  const { profile } = useAuth();
   const items = menusLaterales[rol].items;
   const activeItem = items.find((item) => item.id === activo) || items[0];
   return (
@@ -38,7 +39,7 @@ function BarraPestanas({ rol, activo, className = '' }) {
           <span className="truncate">{activeItem.texto}</span>
           {open ? <X size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
         </button>
-        <Avatar className="size-7 shrink-0" />
+        <Avatar src={profile?.avatar_url} alt={`Foto de ${profile?.full_name || 'tu perfil'}`} className="size-7 shrink-0" />
       </div>
 
       {open && (

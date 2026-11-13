@@ -9,7 +9,9 @@ import { loadClientReviewSummary } from '../services/clientService';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-function ReviewCard({ review, received = false, showEquipmentLink = false }) {
+const EMPTY_REVIEWS = [];
+
+function ReviewCard({ review, received = false, showEquipmentLink = false, canRespondToClient = false }) {
   return (
     <Card>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -38,6 +40,14 @@ function ReviewCard({ review, received = false, showEquipmentLink = false }) {
             Reportar valoración
           </Link>
         )}
+        {received && canRespondToClient && review.author?.id && review.equipment?.id && (
+          <Link
+            to={`/valoraciones/arrendador-a-cliente?targetUserId=${encodeURIComponent(review.author.id)}&equipmentId=${encodeURIComponent(review.equipment.id)}`}
+            className="inline-flex min-h-11 items-center text-label font-semibold text-primary"
+          >
+            Valorar a este cliente
+          </Link>
+        )}
         {showEquipmentLink && review.equipment?.id && (
           <Link
             to={`/detalle-equipo?id=${encodeURIComponent(review.equipment.id)}`}
@@ -53,22 +63,36 @@ function ReviewCard({ review, received = false, showEquipmentLink = false }) {
 
 export default function ArrendadorValoracionesPage() {
   const { session } = useAuth();
-  const [receivedReviews, setReceivedReviews] = useState([]);
-  const [sentReviews, setSentReviews] = useState([]);
-  const [error, setError] = useState('');
+  const userId = session?.user?.id;
+  const [reviewData, setReviewData] = useState(null);
+  const [loadError, setLoadError] = useState(null);
+  const loading = !userId || (reviewData?.userId !== userId && loadError?.userId !== userId);
+  const receivedReviews = reviewData?.userId === userId ? reviewData.received : EMPTY_REVIEWS;
+  const sentReviews = reviewData?.userId === userId ? reviewData.sent : EMPTY_REVIEWS;
+  const error = loadError?.userId === userId ? loadError.message : '';
 
   useEffect(() => {
-    if (!session?.user?.id) return;
-    loadClientReviewSummary(session.user.id)
+    if (!userId) return undefined;
+
+    let active = true;
+    loadClientReviewSummary(userId)
       .then((summary) => {
-        setReceivedReviews(summary.received);
-        setSentReviews(summary.sent);
+        if (!active) return;
+        setReviewData({ userId, received: summary.received, sent: summary.sent });
+        setLoadError(null);
       })
-      .catch((loadError) => setError(loadError.message));
-  }, [session?.user?.id]);
+      .catch((loadError) => {
+        if (active) setLoadError({ userId, message: loadError.message });
+      });
+
+    return () => { active = false; };
+  }, [userId]);
 
   const equipmentReviews = useMemo(() => receivedReviews.filter((review) => review.review_type === 'equipo'), [receivedReviews]);
   const personReviews = useMemo(() => receivedReviews.filter((review) => (review.review_type || 'arrendador') === 'arrendador'), [receivedReviews]);
+  const canRespond = (review) => !sentReviews.some(
+    (sent) => sent.target?.id === review.author?.id && sent.equipment?.id === review.equipment?.id,
+  );
   const average = receivedReviews.length
     ? receivedReviews.reduce((total, review) => total + review.rating, 0) / receivedReviews.length
     : null;
@@ -82,6 +106,7 @@ export default function ArrendadorValoracionesPage() {
         subtitulo="Consulta las opiniones sobre tus equipos y las valoraciones que has compartido con clientes."
       />
       {error && <p role="alert" className="mt-6 text-small text-danger">{error}</p>}
+      {loading && <p role="status" aria-live="polite" className="mt-6 text-small text-text-muted">Cargando tus valoraciones…</p>}
       {average !== null && (
         <Card className="mt-6 flex flex-wrap items-center gap-4 lg:mt-8">
           <div>
@@ -97,9 +122,9 @@ export default function ArrendadorValoracionesPage() {
           <h2 id="recibidas-arrendador" className="text-heading-md font-semibold text-text">Valoraciones recibidas</h2>
           <p className="mt-1 text-small text-text-muted">Lo que los clientes han compartido sobre ti y tus equipos.</p>
           <div className="mt-4 space-y-4">
-            {personReviews.length ? personReviews.map((review) => <ReviewCard key={review.id} review={review} received />) : (
+            {personReviews.length ? personReviews.map((review) => <ReviewCard key={review.id} review={review} received canRespondToClient={canRespond(review)} />) : !loading && !error ? (
               <InfoBox title="Aún no tienes valoraciones recibidas">Cuando un cliente valore una experiencia real contigo, aparecerá aquí.</InfoBox>
-            )}
+            ) : null}
           </div>
         </section>
 
@@ -107,9 +132,9 @@ export default function ArrendadorValoracionesPage() {
           <h2 id="enviadas-arrendador" className="text-heading-md font-semibold text-text">Mis valoraciones</h2>
           <p className="mt-1 text-small text-text-muted">Valoraciones que has publicado sobre clientes.</p>
           <div className="mt-4 space-y-4">
-            {sentReviews.length ? sentReviews.map((review) => <ReviewCard key={review.id} review={review} />) : (
+            {sentReviews.length ? sentReviews.map((review) => <ReviewCard key={review.id} review={review} />) : !loading && !error ? (
               <InfoBox title="Aún no has publicado valoraciones">Podrás valorar a un cliente después de una experiencia real.</InfoBox>
-            )}
+            ) : null}
           </div>
         </section>
       </div>
@@ -118,9 +143,9 @@ export default function ArrendadorValoracionesPage() {
         <h2 id="equipos-arrendador" className="text-heading-md font-semibold text-text">Valoraciones por equipo</h2>
         <p className="mt-1 text-small text-text-muted">Todas las valoraciones vinculadas a tus equipos publicados.</p>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          {equipmentReviews.length ? equipmentReviews.map((review) => <ReviewCard key={review.id} review={review} received showEquipmentLink />) : (
+          {equipmentReviews.length ? equipmentReviews.map((review) => <ReviewCard key={review.id} review={review} received showEquipmentLink />) : !loading && !error ? (
             <InfoBox title="Aún no hay valoraciones de equipos">Aparecerán aquí cuando alguien valore una experiencia relacionada con un equipo.</InfoBox>
-          )}
+          ) : null}
         </div>
       </section>
     </DashboardLayout>

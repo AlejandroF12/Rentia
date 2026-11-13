@@ -20,18 +20,18 @@ export const terminos = {
   secciones: [
     {
       id: 'identificacion',
-      titulo: 'Quién presta Rentia',
-      texto: 'Responsable y operador de la plataforma: Por definir (nombre o razón social y, si aplica, NIT). Domicilio para notificaciones: Por definir. Correo y teléfono de atención: Por definir. Estos datos deben completarse antes de habilitar el registro o presentar este documento como versión definitiva.',
+      titulo: 'Sobre Rentia',
+      texto: 'Rentia es el nombre de este proyecto académico y de su prototipo web y móvil. Este documento no identifica una sociedad comercial ni una persona natural como operador jurídico, y no publica un domicilio o canal externo de atención. El Centro de ayuda de la aplicación es informativo y no recibe reclamaciones formales. Usa datos de prueba y no ingreses información sensible.',
     },
     {
       id: 'servicio',
       titulo: 'Qué ofrece la plataforma',
-      texto: 'Rentia es una plataforma digital en desarrollo que permite consultar publicaciones de maquinaria, equipos y vehículos, y facilitar el contacto entre clientes y arrendadores. Actualmente no recibe reservas, no celebra ni administra los contratos de arrendamiento, no cobra el precio del alquiler, no coordina la entrega y no ofrece seguros ni certifica la identidad, propiedad, estado, disponibilidad o aptitud del equipo. El contacto para consultar una publicación se inicia por WhatsApp o llamada y continúa fuera de Rentia. Estas características no eliminan las obligaciones que la ley imponga a Rentia por sus propios servicios.',
+      texto: 'Rentia es un prototipo académico en desarrollo que permite consultar publicaciones de maquinaria, equipos y vehículos, y facilitar el contacto entre clientes y arrendadores. No recibe reservas, no celebra ni administra contratos de arrendamiento, no cobra el precio del alquiler, no coordina la entrega y no ofrece seguros ni certifica la identidad, propiedad, estado, disponibilidad o aptitud del equipo. El contacto para consultar una publicación se inicia por WhatsApp o llamada y continúa fuera de Rentia. Las funciones se ofrecen como demostración y no eliminan las obligaciones que la ley atribuya a quienes operen el servicio.',
     },
     {
       id: 'cuenta',
       titulo: 'Registro, edad y seguridad de la cuenta',
-      texto: 'El registro público se encuentra temporalmente pausado. Cuando se habilite, la cuenta estará dirigida a personas mayores de 18 años y se solicitará una declaración de mayoría de edad; no se prevé pedir ni almacenar la fecha de nacimiento. Cada persona deberá entregar información veraz, mantenerla actualizada, proteger sus credenciales y avisar si sospecha que otra persona usa su cuenta. No se permite suplantar identidades, crear cuentas para evadir restricciones ni utilizar la plataforma para fines ilícitos.',
+      texto: 'El registro está habilitado para crear perfiles de cliente o arrendador; no se permite el autorregistro de cuentas administradoras. La demostración está dirigida a personas mayores de 18 años y solicita una declaración de mayoría de edad, sin pedir la fecha de nacimiento. Usa datos de prueba, proporciona información veraz, protege tus credenciales y avisa por los canales académicos del proyecto si sospechas que otra persona usa tu cuenta. No se permite suplantar identidades, crear cuentas para evadir restricciones ni utilizar la plataforma para fines ilícitos.',
     },
     {
       id: 'arrendadores',
@@ -66,7 +66,7 @@ export const terminos = {
     {
       id: 'suscripcion',
       titulo: 'Suscripciones futuras para arrendadores',
-      texto: 'Rentia todavía no ofrece ni cobra suscripciones. El modelo previsto contempla un mes de prueba para arrendadores y que, al terminar sin activarse el pago, las publicaciones y el contacto comercial permanezcan ocultos hasta contratar un plan. Antes de habilitar esa función se informarán, en condiciones separadas, el precio, moneda, periodicidad, inicio y fin de la prueba, prestaciones, renovación, forma de pago, cancelación, tratamiento de pagos y reglas de reembolso. No se iniciará un cobro ni una conversión automática a un plan pago sin información previa y autorización expresa. Este borrador no activa una prueba ni constituye una orden de pago.',
+      texto: 'El prototipo incluye estados de prueba para las suscripciones, pero no procesa cobros. El modelo académico contempla una prueba gratuita de 30 días y un plan de referencia de $125.000 COP por mes calendario. Wompi está integrado de forma preparatoria, pero el checkout permanece deshabilitado; no se envían datos de pago ni se inicia ningún cobro. La renovación automática también está desactivada. Cualquier uso comercial futuro requeriría completar la configuración del proveedor, informar condiciones definitivas y obtener las autorizaciones que correspondan. Los estados de suscripción que aparecen en la interfaz sirven para probar el acceso a funciones.',
     },
     {
       id: 'responsabilidad',
@@ -76,7 +76,7 @@ export const terminos = {
     {
       id: 'cambios',
       titulo: 'Cambios, reclamaciones y ley aplicable',
-      texto: 'Los cambios sustanciales se publicarán con su fecha de actualización y, cuando corresponda, se solicitará una nueva aceptación antes de continuar usando la función afectada. Para consultas, reclamaciones o ejercicio de derechos, el responsable, domicilio y canales de atención están Por definir; esta información debe completarse antes de abrir el registro. Se aplican las leyes de Colombia y las autoridades competentes, incluidos los mecanismos de protección al consumidor que resulten aplicables.',
+      texto: 'Los cambios sustanciales de estos textos se publicarán con su fecha. Rentia identifica el proyecto académico, pero esta versión no dispone de un canal externo formal para consultas, reclamaciones o ejercicio de derechos; el Centro de ayuda solo ofrece orientación. No uses la demostración para enviar información personal real. Este texto no sustituye una revisión jurídica ni limita los derechos u obligaciones que establezca la ley colombiana.',
     },
   ],
 };
@@ -89,17 +89,17 @@ export const privacidad = {
     {
       id: 'responsable',
       titulo: 'Responsable del tratamiento',
-      texto: 'Responsable: Por definir (nombre completo de la persona natural o razón social y NIT, si aplica). Domicilio: Por definir. Correo electrónico y teléfono para consultas y reclamos de datos: Por definir. La identidad y los canales reales del responsable deben publicarse antes de reabrir el registro; el Centro de ayuda de esta versión no recibe solicitudes por sí mismo.',
+      texto: 'Rentia es el nombre del proyecto académico y del prototipo que trata los datos descritos en esta política; este documento no identifica una sociedad comercial ni una persona natural como responsable jurídico. No hay un domicilio ni un correo o teléfono formal para solicitudes. El Centro de ayuda es informativo y no recibe reclamaciones formales. Esta aclaración no reemplaza la identificación del responsable que sería necesaria para operar el servicio fuera de la demostración.',
     },
     {
       id: 'alcance',
       titulo: 'A quién y a qué aplica',
-      texto: 'Esta política describe el tratamiento de datos personales relacionado con Rentia, su sitio web y su aplicación. Se dirige a clientes, arrendadores y personas que consultan o reportan contenido. El registro está temporalmente pausado. Cuando se habilite, se proyecta admitir personas mayores de 18 años mediante una declaración de edad, sin solicitar su fecha de nacimiento. No se solicitan datos sensibles como requisito de registro; evita incluirlos en publicaciones, reportes o mensajes.',
+      texto: 'Esta política describe el tratamiento de datos relacionado con Rentia, su sitio web y su aplicación académica. Se dirige a clientes, arrendadores y personas que consultan o reportan contenido. El registro está habilitado para perfiles de cliente y arrendador, y solicita declarar que se tienen 18 años o más, sin pedir la fecha de nacimiento. No se solicitan datos sensibles como requisito; evita incluirlos en publicaciones, reportes o mensajes y usa únicamente datos de prueba.',
     },
     {
       id: 'datos',
       titulo: 'Datos que se recogen',
-      texto: 'Según las funciones usadas, Rentia trata nombre, correo electrónico, teléfono, rol, municipio y datos de perfil; identificadores de cuenta y credenciales gestionados por el servicio de autenticación; publicaciones de equipos (nombre, categoría, marca, modelo, descripción, municipio, sector y coordenadas), fotografías y disponibilidad; favoritos; valoraciones; reportes y sus estados; y apelaciones, incluyendo sus motivos y respuestas. También se conserva la autorización del arrendador para compartir su contacto. La ubicación precisa del dispositivo se obtiene solo tras una acción voluntaria: se usa temporalmente para filtrar el catálogo o, si la persona la selecciona en una publicación, para guardar coordenadas asociadas al equipo.',
+      texto: 'Según las funciones usadas, Rentia trata nombre, correo electrónico, teléfono, rol, municipio, datos de perfil y, si la persona la carga, su foto de perfil; identificadores de cuenta y credenciales gestionados por Supabase Auth; publicaciones de equipos (nombre, categoría, marca, modelo, descripción, municipio, sector y coordenadas), fotografías y disponibilidad; favoritos; valoraciones; reportes y sus estados; apelaciones, incluyendo sus motivos y respuestas; y estados de prueba de suscripción. El checkout de Wompi está deshabilitado, por lo que Rentia no envía datos de pago ni procesa datos de tarjetas. También se conserva la autorización del arrendador para compartir su contacto. La ubicación precisa del dispositivo se obtiene solo tras una acción voluntaria: se usa temporalmente para filtrar el catálogo o, si la persona la selecciona en una publicación, para guardar coordenadas asociadas al equipo.',
     },
     {
       id: 'finalidades',
@@ -109,7 +109,7 @@ export const privacidad = {
     {
       id: 'visibilidad',
       titulo: 'Información visible para otras personas',
-      texto: 'Las fichas publicadas y sus fotografías se alojan en un espacio de almacenamiento con acceso público y pueden ser vistas, copiadas o indexadas por terceros. La ficha puede incluir la descripción, municipio, sector y coordenadas seleccionadas para el equipo. El nombre y teléfono del arrendador se muestran a usuarios con sesión iniciada únicamente cuando existe autorización de contacto; el correo no se muestra en el catálogo. Las valoraciones publicadas y ciertos datos básicos de perfil pueden ser visibles según las funciones del sitio. No publiques domicilios, documentos, rostros u otros datos personales que no quieras hacer públicos.',
+      texto: 'Las fichas publicadas y sus fotografías se alojan en un espacio de almacenamiento con acceso público y pueden ser vistas, copiadas o indexadas por terceros. La ficha puede incluir la descripción, municipio, sector y coordenadas seleccionadas para el equipo. La foto de perfil es opcional, se guarda en almacenamiento privado y se muestra en perfiles públicos y valoraciones mediante enlaces temporales; cualquier persona que obtenga uno de esos enlaces puede abrir la imagen mientras siga vigente. El nombre y teléfono del arrendador se muestran a usuarios con sesión iniciada únicamente cuando existe autorización de contacto; el correo no se muestra en el catálogo. Las valoraciones publicadas y ciertos datos básicos de perfil pueden ser visibles según las funciones del sitio. No publiques domicilios, documentos, rostros u otros datos personales que no quieras hacer públicos.',
     },
     {
       id: 'ubicacion',
@@ -119,12 +119,12 @@ export const privacidad = {
     {
       id: 'encargados',
       titulo: 'Proveedores y transferencias',
-      texto: 'La aplicación usa Supabase para autenticación, base de datos y almacenamiento de fotografías, y Vercel para alojar el sitio. Los mapas y la geocodificación consultan servicios de OpenStreetMap/Nominatim. Si eliges llamar o abrir WhatsApp, la comunicación sale de Rentia y queda sujeta al proveedor correspondiente; Rentia no lee esas conversaciones. Los proveedores, ubicación de servidores, condiciones contractuales y eventuales transmisiones internacionales deben verificarse y documentarse por el responsable antes de habilitar el servicio. No se identifican en el código consultado herramientas de analítica o publicidad de terceros.',
+      texto: 'La aplicación usa Supabase para autenticación, base de datos y almacenamiento de fotografías, y Vercel para alojar el sitio. Los mapas y la geocodificación consultan servicios de OpenStreetMap/Nominatim. Si se habilitan suscripciones, Wompi procesará los pagos y los datos que requiera para completar la transacción; Rentia conservará referencias, valores y estados de pago, pero no los datos de tarjeta. Si eliges llamar o abrir WhatsApp, la comunicación sale de Rentia y queda sujeta al proveedor correspondiente; Rentia no lee esas conversaciones. Los proveedores, ubicación de servidores, condiciones contractuales y eventuales transmisiones internacionales deben verificarse y documentarse por el responsable antes de habilitar el servicio. No se identifican en el código consultado herramientas de analítica o publicidad de terceros.',
     },
     {
       id: 'almacenamiento',
       titulo: 'Almacenamiento, seguridad y conservación',
-      texto: 'Los tokens de sesión se guardan en el almacenamiento local o de sesión del navegador, según la preferencia de acceso. La preferencia de interfaz también puede guardarse localmente. Rentia y sus proveedores deben aplicar controles técnicos y organizativos razonables para evitar acceso, pérdida, alteración o uso no autorizado. No existe aún un plazo de conservación definido para cada categoría; debe fijarse antes de reabrir el registro. Como criterio, se conservarán los datos solo por el tiempo necesario para las finalidades informadas y los plazos u obligaciones legales, y después se eliminarán o anonimizarán cuando proceda.',
+      texto: 'Los tokens de sesión se guardan en el almacenamiento local o de sesión del navegador, según la preferencia de acceso. La preferencia de interfaz también puede guardarse localmente. Rentia usa controles de acceso configurados para la demostración, pero el prototipo no representa una certificación de seguridad. No hay un plazo automatizado de conservación para cada categoría: los datos de prueba pueden permanecer en Supabase hasta que se eliminen manualmente o se retire el entorno; las copias de respaldo pueden depender de los plazos del proveedor. No ingreses información sensible ni datos personales que no sean necesarios para probar los flujos.',
     },
     {
       id: 'derechos',
@@ -134,17 +134,17 @@ export const privacidad = {
     {
       id: 'solicitudes',
       titulo: 'Cómo presentar una consulta o reclamo',
-      texto: 'Dirige la solicitud al responsable identificado en la primera sección e incluye tu nombre, medio de respuesta, descripción clara de lo solicitado y la información necesaria para localizar los datos. No envíes contraseñas ni datos sensibles innecesarios. El correo, domicilio y formulario para recibir estas solicitudes están Por definir; hoy no hay un canal externo configurado y el Centro de ayuda es únicamente informativo. Una vez habilitado el canal, las consultas se atenderán dentro del término legal de diez (10) días hábiles, prorrogable hasta por cinco (5) días hábiles adicionales con explicación. Los reclamos completos se atenderán dentro de quince (15) días hábiles desde el día siguiente a su recepción, prorrogables hasta por ocho (8) días hábiles adicionales con explicación; si faltan datos, se aplican las reglas legales para requerir que se complete la solicitud.',
+      texto: 'El prototipo no tiene un canal formal integrado para recibir consultas o reclamos sobre datos personales. El Centro de ayuda es informativo y no envía solicitudes. Para el trabajo académico, utiliza el canal de comunicación que haya dispuesto el curso o el equipo del proyecto; no envíes contraseñas ni datos sensibles. Esta limitación de la demo no sustituye los canales y plazos que serían necesarios para una operación real.',
     },
     {
       id: 'menores',
       titulo: 'Niñas, niños y adolescentes',
-      texto: 'El servicio no está diseñado para cuentas de menores. Cuando se habilite el registro se solicitará declarar que se es mayor de 18 años, sin pedir la fecha de nacimiento. Si Rentia conoce que se han registrado datos de un menor, evaluará el caso conforme a la ley y al interés superior del menor y tomará las medidas que correspondan.',
+      texto: 'La demostración no está diseñada para cuentas de menores. El formulario solicita declarar que se tienen 18 años o más y no pide la fecha de nacimiento. No uses datos de menores en cuentas, publicaciones ni reportes.',
     },
     {
       id: 'vigencia',
       titulo: 'Vigencia y cambios de esta política',
-      texto: 'Esta versión es un borrador de trabajo fechado el 11 de noviembre de 2026 y no sustituye la revisión jurídica ni completa los datos del responsable, canales, plazos internos o proveedores. Se informarán cambios relevantes en esta página y, si un nuevo uso requiere autorización, esta se solicitará antes de aplicarlo. No debe reabrirse el registro mientras los campos Por definir y el mecanismo para dejar constancia de la autorización sigan pendientes.',
+      texto: 'Esta es una versión informativa del proyecto académico Rentia, actualizada el 12 de noviembre de 2026. No constituye asesoría ni revisión jurídica y no describe un servicio comercial. Si Rentia se prepara para operar fuera del contexto académico, será necesario actualizar esta política, identificar al responsable, establecer canales de atención y revisar los tratamientos y autorizaciones antes de esa operación.',
     },
   ],
 };
@@ -187,7 +187,7 @@ export const normas = {
     {
       id: 'responsabilidad',
       titulo: 'Incumplimientos',
-      texto: 'Quien publica responde por los datos y derechos sobre el contenido que aporta. Las medidas de moderación no sustituyen los derechos que otorgue la ley ni impiden presentar una reclamación por los canales que Rentia habilite. El responsable y los canales de contacto de Rentia están Por definir y deben completarse antes de reabrir el registro.',
+      texto: 'Quien publica responde por los datos y derechos sobre el contenido que aporta. Las medidas de moderación no sustituyen los derechos que otorgue la ley. Rentia es el nombre del proyecto académico y esta demostración no dispone de canales externos formales para reclamaciones; consulta el Centro de ayuda para orientación y no publiques información privada.',
     },
   ],
 };
