@@ -6,8 +6,7 @@ import Button from '../components/Button';
 import Checkbox from '../components/Checkbox';
 import Eyebrow from '../components/Eyebrow';
 import Field, { PasswordField } from '../components/Field';
-import InfoBox from '../components/InfoBox';
-import Select from '../components/Select';
+import OpcionSeleccionable from '../components/OpcionSeleccionable';
 import { loadProfile, signUp } from '../services/authService';
 
 const PUBLIC_REGISTRATION_ENABLED = true;
@@ -84,15 +83,33 @@ function FormularioRegistro() {
 
   return (
     <AuthLayout enlaceSuperior="Ya tengo cuenta">
-      <Eyebrow>Proyecto académico · Rentia</Eyebrow>
+      <Eyebrow>Únete a Rentia</Eyebrow>
       <h1 className="mt-3 text-title-mobile font-semibold text-text md:text-title-desktop">Crea tu cuenta.</h1>
       <p className="mt-3 text-body-lg text-text-muted">Explora equipos o publica los tuyos en Casanare.</p>
 
-      <InfoBox tone="neutral" className="mt-5">
-        Esta versión es un prototipo académico. Usa datos de prueba y no incluyas información sensible.
-      </InfoBox>
-
       <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
+        <fieldset className="space-y-3">
+          <legend className="mb-3 text-label font-medium text-text">Quiero usar Rentia como</legend>
+          <OpcionSeleccionable
+            id="role-cliente"
+            name="role"
+            value="cliente"
+            titulo="Cliente"
+            descripcion="Buscar equipos para mi proyecto"
+            checked={role === 'cliente'}
+            onChange={(event) => setRole(event.target.value)}
+            required
+          />
+          <OpcionSeleccionable
+            id="role-arrendador"
+            name="role"
+            value="arrendador"
+            titulo="Arrendador"
+            descripcion="Publicar equipos para alquilar"
+            checked={role === 'arrendador'}
+            onChange={(event) => setRole(event.target.value)}
+          />
+        </fieldset>
         <Field id="fullName" name="fullName" label="Nombre completo" autoComplete="name" minLength={2} maxLength={120} required />
         <Field id="email" name="email" label="Correo electrónico" type="email" autoComplete="email" maxLength={254} required />
         <Field
@@ -104,11 +121,6 @@ function FormularioRegistro() {
           required={role === 'arrendador'}
           hint={role === 'arrendador' ? 'Necesario para recibir consultas sobre tus equipos.' : 'Opcional para clientes.'}
         />
-        <Select id="role" name="role" label="Quiero usar Rentia como" value={role} onChange={(event) => setRole(event.target.value)} required>
-          <option value="" disabled>Selecciona un perfil</option>
-          <option value="cliente">Cliente: buscar equipos</option>
-          <option value="arrendador">Arrendador: publicar equipos</option>
-        </Select>
         <PasswordField
           id="password"
           name="password"

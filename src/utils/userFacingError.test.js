@@ -18,6 +18,16 @@ test('translates a short equipment description constraint into a clear instructi
   assert.equal(error.message, 'La descripción debe tener entre 10 y 3000 caracteres.');
 });
 
+test('explains when Supabase has disabled new account registration', () => {
+  const error = toUserFacingError({
+    code: 'signup_disabled',
+    message: 'Signups not allowed for this instance',
+  }, 'No se pudo crear la cuenta.');
+
+  assert.match(error.message, /registro está deshabilitado en Supabase/i);
+  assert.match(error.message, /Allow new users to sign up/);
+});
+
 test('does not expose raw database errors when no known translation exists', () => {
   const error = toUserFacingError({
     code: 'XX000',

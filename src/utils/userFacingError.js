@@ -60,6 +60,9 @@ export function toUserFacingError(error, fallback) {
   if (errorCode === 'email_not_confirmed' || /email not confirmed/i.test(message)) {
     return new Error('Confirma tu correo electrónico desde el enlace que te enviamos antes de iniciar sesión.');
   }
+  if (errorCode === 'signup_disabled' || /signups? not allowed for this instance/i.test(message)) {
+    return new Error('El registro está deshabilitado en Supabase. El administrador del proyecto debe habilitar “Allow new users to sign up” en Authentication > Sign In / Providers > Email.');
+  }
   if (errorCode === 'user_already_exists' || errorCode === 'email_exists') {
     return new Error('Ya existe una cuenta con ese correo. Intenta iniciar sesión o recuperar tu contraseña.');
   }
