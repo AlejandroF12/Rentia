@@ -69,6 +69,23 @@ function ScrollToTop() {
   return null
 }
 
+function PasswordRecoveryRedirect() {
+  const { passwordRecoveryRedirect, clearPasswordRecoveryRedirect } = useAuth()
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    if (passwordRecoveryRedirect && pathname === '/nueva-contrasena') {
+      clearPasswordRecoveryRedirect()
+    }
+  }, [passwordRecoveryRedirect, pathname, clearPasswordRecoveryRedirect])
+
+  if (passwordRecoveryRedirect && pathname !== '/nueva-contrasena') {
+    return <Navigate to='/nueva-contrasena' replace />
+  }
+
+  return null
+}
+
 function NativeBackButton() {
   useEffect(() => {
     if (Capacitor.getPlatform() !== 'android') return undefined
@@ -191,6 +208,7 @@ function App() {
     <BrowserRouter>
       <NativeBackButton />
       <ScrollToTop />
+      <PasswordRecoveryRedirect />
       <Suspense fallback={<div className="min-h-screen bg-surface" aria-busy="true" />}>
         <Routes>
         <Route path='/' element={<MainLayout><Home /></MainLayout>} />

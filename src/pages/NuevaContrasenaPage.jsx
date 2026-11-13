@@ -4,7 +4,7 @@ import { PasswordField } from '../components/Field';
 import Button from '../components/Button';
 import InfoBox from '../components/InfoBox';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { updatePassword } from '../services/authService';
 import { getPasswordError } from '../utils/passwordValidation';
 
@@ -55,7 +55,7 @@ export default function NuevaContrasenaPage() {
             Usa una contraseña distinta a la de otros servicios. No la envíes por WhatsApp ni la compartas con otras personas.
           </p>
           <p className="mt-4 text-small text-text-muted">¿El enlace ya no funciona?</p>
-          <Button variant="secondary" size="lg" fullWidth className="mt-3">Solicitar un nuevo enlace</Button>
+          <Button as={Link} to="/recuperar-acceso" variant="secondary" size="lg" fullWidth className="mt-3">Solicitar un nuevo enlace</Button>
         </div>
       }
     >

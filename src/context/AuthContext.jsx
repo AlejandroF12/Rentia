@@ -8,6 +8,8 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [passwordRecoveryRedirect, setPasswordRecoveryRedirect] = useState(false);
+  const clearPasswordRecoveryRedirect = useCallback(() => setPasswordRecoveryRedirect(false), []);
   const refreshProfile = useCallback(async () => {
     if (!session?.user?.id) return null;
     const nextProfile = await loadProfile(session.user.id);
@@ -40,8 +42,10 @@ export function AuthProvider({ children }) {
     const { data: subscription } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!active) return;
       setSession(nextSession);
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecoveryRedirect(true);
       if (!nextSession?.user) {
         setProfile(null);
+        setPasswordRecoveryRedirect(false);
         setLoading(false);
         return;
       }
@@ -72,9 +76,11 @@ export function AuthProvider({ children }) {
     session,
     profile,
     loading,
+    passwordRecoveryRedirect,
+    clearPasswordRecoveryRedirect,
     refreshProfile,
     signOut: () => supabase.auth.signOut(),
-  }), [session, profile, loading, refreshProfile]);
+  }), [session, profile, loading, passwordRecoveryRedirect, clearPasswordRecoveryRedirect, refreshProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

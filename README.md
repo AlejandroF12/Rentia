@@ -76,7 +76,7 @@ Los roles disponibles son `cliente`, `arrendador` y `admin`. El registro públic
    VITE_APP_URL=http://localhost:5173
    ```
 
-   El frontend necesita la URL raíz del proyecto Supabase y su clave pública `anon`/publishable. En web, si `VITE_APP_URL` no está definida, los enlaces de autenticación usan el origen actual; Android usa el sitio configurado por defecto. Añade el origen elegido a las URL permitidas de Supabase Auth. No añadas `service_role`, contraseñas de base de datos ni otros secretos a variables `VITE_*`: Vite las incorpora al código accesible desde el navegador. `.env.local` está excluido de Git.
+   El frontend necesita la URL raíz del proyecto Supabase y su clave pública `anon`/publishable. En web, si `VITE_APP_URL` no está definida, los enlaces de autenticación usan el origen actual; Android usa el sitio configurado por defecto. Añade el origen elegido y la URL completa de recuperación (`<origen>/nueva-contrasena`) a las URL permitidas de Supabase Auth. No añadas `service_role`, contraseñas de base de datos ni otros secretos a variables `VITE_*`: Vite las incorpora al código accesible desde el navegador. `.env.local` está excluido de Git.
 
 3. Inicia el servidor de desarrollo:
 
@@ -115,7 +115,7 @@ supabase functions deploy wompi-subscription-webhook
 
 No configures llaves de Wompi ni despliegues el proveedor para la demostración: `checkout_enabled` y `WOMPI_PAYMENTS_ENABLED` permanecen en `false`. Las instrucciones y variables de sandbox de la integración son preparatorias; no las habilites para producción sin una revisión del proyecto, proveedor y condiciones aplicables. Wompi determina el destino desde la configuración de su cuenta de comercio, no desde Rentia.
 
-Las redirecciones de confirmación de cuenta y recuperación de contraseña usan `VITE_APP_URL` cuando se configura; consulta [`src/services/authService.js`](./src/services/authService.js). Añade el origen de desarrollo o despliegue a las URL permitidas de Supabase Auth.
+Las redirecciones de confirmación de cuenta y recuperación de contraseña usan `VITE_APP_URL` cuando se configura; consulta [`src/services/authService.js`](./src/services/authService.js). En Supabase Auth, permite el origen de desarrollo o despliegue y la URL completa `<origen>/nueva-contrasena`; de lo contrario, Supabase puede volver a la URL del sitio y la aplicación redirigirá al formulario cuando detecte el evento de recuperación.
 
 ## Documentos legales y registro
 
