@@ -1,6 +1,7 @@
-import { ArrowUpRight, Disc, Search, MapPin, ListFilter, ArrowRight, TractorIcon, Truck, Sprout, Construction } from 'lucide-react'
+import { ArrowUpRight, Disc, Search, MapPin, ListFilter, ArrowRight, TractorIcon, Truck, Sprout, Construction, Download } from 'lucide-react'
 import heroImage from '../media/heroImage.webp'
 import EquipoCard from '../components/EquipoCard'
+import { ANDROID_APP_DOWNLOAD_URL } from '../data/appDownload'
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -83,6 +84,13 @@ export const Home = () => {
                                 <span className='text-small font-medium text-primary'>Gente de la región</span>
                             </div>
                         </div>
+                        <a
+                            href={ANDROID_APP_DOWNLOAD_URL}
+                            className='inline-flex min-h-11 w-fit items-center gap-2 rounded-lg border border-border px-4 py-2 text-label font-semibold text-primary transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'
+                        >
+                            <Download className='h-4 w-4' aria-hidden='true' />
+                            Descargar app para Android
+                        </a>
                     </div>
                     { /* Imagen del Hero */}
                     <div className='motion-enter motion-delay-2 w-full'>

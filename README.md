@@ -143,6 +143,39 @@ Flujo de trabajo:
 3. Ejecuta `npm run android:open` para abrir el proyecto en Android Studio.
 4. Espera la sincronización de Gradle. Para instalar por USB, conecta el teléfono con depuración autorizada y pulsa **Run** en Android Studio; también puedes generar un APK desde Android Studio y transferirlo al teléfono.
 
+### Distribuir una versión Android firmada
+
+El enlace **App Android** del sitio descarga directamente el asset `Rentia.apk` del release más reciente de GitHub. Cada release público debe incluir el APK con ese nombre.
+
+La firma de producción debe conservarse entre versiones: si se pierde o se reemplaza la clave, quienes instalaron una versión anterior no podrán actualizarla directamente. Crea una copia de seguridad segura de la clave y nunca la subas a Git ni la compartas en el sitio.
+
+1. En PowerShell, crea un directorio privado y genera una clave de carga. `keytool` solicitará las contraseñas y los datos del certificado; no los compartas en el chat:
+
+   ```powershell
+   New-Item -ItemType Directory -Force "$env:USERPROFILE\.rentia"
+   keytool -genkeypair -v -keystore "$env:USERPROFILE\.rentia\rentia-upload.jks" -keyalg RSA -keysize 2048 -validity 10000 -alias rentia-upload
+   ```
+
+2. Crea `%USERPROFILE%\.rentia\rentia-signing.properties` en tu equipo (fuera del repositorio) con estos valores. Sustituye la ruta y las contraseñas por las que configuraste localmente:
+
+   ```properties
+   storeFile=C:/Users/<tu_usuario>/.rentia/rentia-upload.jks
+   storePassword=<contraseña_del_keystore>
+   keyAlias=rentia-upload
+   keyPassword=<contraseña_de_la_clave>
+   ```
+
+3. Sincroniza y genera el APK firmado:
+
+   ```powershell
+   npm run android:sync
+   .\android\gradlew.bat -p .\android assembleRelease
+   ```
+
+   El archivo resultante estará en `android/app/build/outputs/apk/release/app-release.apk`. Antes de una versión posterior, incrementa `versionCode` y actualiza `versionName` en `android/app/build.gradle`.
+
+4. En GitHub, crea un release y sube el APK con el nombre `Rentia.apk`. El botón del sitio descarga directamente el APK del release más reciente. Para instalarlo, Android puede pedir permiso para instalar aplicaciones desde esa fuente.
+
 El logo web y los recursos de marca se derivan de `assets/rentia-logo-original.svg`. El icono y la pantalla de inicio se generan desde `assets/` con `npx @capacitor/assets generate --assetPath assets --android --iconBackgroundColor '#ffffff' --splashBackgroundColor '#ffffff'`. El icono usa el isotipo de Rentia y el splash presenta el logo centrado sobre fondo blanco, también en Android 12 y posteriores. La app maneja el botón Atrás de Android y solicita permiso nativo de ubicación al usar una función GPS. En pantallas móviles hay una barra inferior de Explorar, Menú y Perfil, además de acceso directo a Configuración; escritorio conserva su navegación superior. Cada cambio de interfaz o código requiere ejecutar `npm run android:sync` y volver a compilar/instalar. Los cambios de datos en Supabase se comparten con la web sin recompilar. Los enlaces de confirmación de cuenta y recuperación abren el sitio configurado; el retorno directo desde esos enlaces a la app requiere configurar Android App Links más adelante.
 
 ## Compilar y comprobar

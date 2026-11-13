@@ -1,5 +1,6 @@
 import Logo from './Logo';
 import { Link } from 'react-router-dom';
+import { ANDROID_APP_DOWNLOAD_URL } from '../data/appDownload';
 
 export default function Footer({
   copyright = '© 2026 Rentia',
@@ -15,7 +16,8 @@ export default function Footer({
         </div>
         <div className="mt-8 flex flex-col gap-3 text-small text-text-muted md:flex-row md:items-center md:justify-between">
           <p>{copyright}</p>
-          <nav aria-label="Información legal" className="flex flex-wrap gap-x-4 gap-y-2">
+          <nav aria-label="Enlaces de Rentia" className="flex flex-wrap gap-x-4 gap-y-2">
+            <a href={ANDROID_APP_DOWNLOAD_URL} className="inline-flex min-h-11 items-center hover:text-text">App Android</a>
             <Link to="/privacidad" className="inline-flex min-h-11 items-center hover:text-text">Privacidad</Link>
             <Link to="/terminos" className="inline-flex min-h-11 items-center hover:text-text">Términos</Link>
             <Link to="/normas" className="inline-flex min-h-11 items-center hover:text-text">Normas</Link>

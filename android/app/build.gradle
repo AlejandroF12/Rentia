@@ -1,5 +1,34 @@
 apply plugin: 'com.android.application'
 
+def releaseSigningFile = new File(System.getProperty('user.home'), '.rentia/rentia-signing.properties')
+def releaseSigningProperties = new java.util.Properties()
+if (releaseSigningFile.isFile()) {
+    releaseSigningFile.withInputStream { stream -> releaseSigningProperties.load(stream) }
+}
+
+def signingPropertyKeys = ['storeFile', 'storePassword', 'keyAlias', 'keyPassword']
+def releaseSigningConfigured = signingPropertyKeys.every { key ->
+    releaseSigningProperties.getProperty(key)?.trim()
+}
+def hasPartialReleaseSigning = signingPropertyKeys.any { key ->
+    releaseSigningProperties.getProperty(key)?.trim()
+} && !releaseSigningConfigured
+
+if (hasPartialReleaseSigning) {
+    throw new GradleException("Incomplete Android release signing configuration in ${releaseSigningFile}")
+}
+
+def releaseArtifactRequested = gradle.startParameter.taskNames.any { taskName ->
+    def normalizedTaskName = taskName.toLowerCase()
+    normalizedTaskName.contains('assemblerelease') || normalizedTaskName.contains('bundlerelease')
+}
+if (releaseArtifactRequested && !releaseSigningConfigured) {
+    throw new GradleException("Android release signing is not configured. See the 'Distribuir una versión Android firmada' section in README.md.")
+}
+if (releaseSigningConfigured && !new File(releaseSigningProperties.getProperty('storeFile')).isFile()) {
+    throw new GradleException("Android release keystore not found: ${releaseSigningProperties.getProperty('storeFile')}")
+}
+
 android {
     namespace = "me.rentiaapp.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,10 +45,33 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (releaseSigningConfigured) {
+            release {
+                storeFile rootProject.file(releaseSigningProperties.getProperty('storeFile'))
+                storePassword releaseSigningProperties.getProperty('storePassword')
+                keyAlias releaseSigningProperties.getProperty('keyAlias')
+                keyPassword releaseSigningProperties.getProperty('keyPassword')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (releaseSigningConfigured) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+tasks.configureEach { task ->
+    if (task.name == 'packageRelease' || task.name == 'bundleRelease') {
+        doFirst {
+            if (!releaseSigningConfigured) {
+                throw new GradleException("Android release signing is not configured. See the 'Distribuir una versión Android firmada' section in README.md.")
+            }
         }
     }
 }
